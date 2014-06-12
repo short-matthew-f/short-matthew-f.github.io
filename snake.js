@@ -8,8 +8,8 @@
   
   Snake.createBody = function () {
     var body = [];
-    for (var i = 0; i < 10; i++) {
-      body.push([16, i]);
+    for (var i = 0; i < 6; i++) {
+      body.push([10, i]);
     }
     return body;
   };

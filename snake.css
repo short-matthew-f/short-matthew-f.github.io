@@ -18,8 +18,8 @@ body {
 
 h1 {
   text-align: center;
-  font-size: 60px;
-  margin: 20px;
+  font-size: 40px;
+  margin: 10px;
   color: darkgreen;
 }
 
@@ -28,21 +28,21 @@ h1 strong {
 }
 
 .game {
-  width: 684px;
+  width: 524px;
   margin: auto;
 }
 
 ul {
   padding: 2px;
   list-style: none;
-  width: 680px;
+  width: 520px;
   margin: auto;
 }
 
 .board li {
   display: block;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border: 1px solid black;
   border-radius: 4px;
   float: left;
@@ -50,7 +50,7 @@ ul {
 }
 
 h1.message {
-  text-size: 30px;
+  text-size: 20px;
 }
 
 li.snake-body {
@@ -63,5 +63,5 @@ li.snake-head {
 
 li.apple {
   background-image: url("bird.gif");
-  background-size: 32px 32px;
+  background-size: 24px 24px;
 }

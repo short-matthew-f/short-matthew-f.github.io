@@ -10,7 +10,7 @@
     var pos = Board.randomPosition();
     
     while(_.some(this.snake.body, function(part) {
-      _.isEqual(part, pos);
+      return _.isEqual(part, pos);
     })) { pos = Board.randomPosition(); };
     
     return pos;

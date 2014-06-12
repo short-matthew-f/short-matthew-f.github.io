@@ -23,11 +23,16 @@
     
     this.$boardUL.html(boardLI.join(""));
     
-    $('body').keydown(this.handleKeyEvent.bind(this));
-    $('.message').text("Current score: " + (this.board.snake.body.length - 10) * 10);
+    $(window).keydown(this.handleKeyEvent.bind(this));
+
+    $('.message').text("Current score: 0");
         
-    this.interval = setInterval(this.step.bind(this), 150);
+    this.interval = setInterval(this.step.bind(this), 200);
   };
+
+  SnakeUI.prototype.score = function() {
+    return (this.board.snake.body.length - 6) * 10;
+  }
   
   SnakeUI.prototype.step = function() {
     var snake = this.board.snake;
@@ -38,16 +43,16 @@
     if(snake.body.slice(1).some(function(part){
       return _.isEqual(part, snake.nextPosition()); })) {
       
-        $('.message').text("Game Over, final score: " + (snake.body.length - 10) * 10);
+        $('.message').text("Game over! Final score: " + this.score());
         clearInterval(this.interval);
     }
     
     if (_.isEqual(snake.nextPosition(), apple)) {
       snake.grow();
       this.board.apple = this.board.randomApple();
-      $('.message').text("Current score: " + (snake.body.length - 10) * 10);
+      $('.message').text("Current score: " + this.score());
       clearInterval(this.interval);
-      this.interval = setInterval(this.step.bind(this), 1500 / snake.body.length);
+      this.interval = setInterval(this.step.bind(this), 1200 / snake.body.length);
     } else {
       snake.move();
     };
@@ -60,18 +65,22 @@
     switch(event.keyCode) {
     case 37:
       if(!_.isEqual(snake.direction, [0, 1])) {
+        event.preventDefault();
         this.nextDirection = [0, -1];
       }; break;   
     case 38:
       if(!_.isEqual(snake.direction, [1, 0])) {
+        event.preventDefault();
         this.nextDirection = [-1, 0];
       }; break; 
     case 39:
       if(!_.isEqual(snake.direction, [0, -1])) {
+        event.preventDefault();
         this.nextDirection = [0, 1];
       }; break; 
     case 40:
       if(!_.isEqual(snake.direction, [-1, 0])) {
+        event.preventDefault();
         this.nextDirection = [1, 0];
       }; break; 
     };
