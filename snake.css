@@ -1,0 +1,67 @@
+body, div, h1, ul, li {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+}
+
+.group:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+body {
+  font-family: sans-serif;
+  background: #ddd;
+}
+
+h1 {
+  text-align: center;
+  font-size: 60px;
+  margin: 20px;
+  color: darkgreen;
+}
+
+h1 strong {
+  color: darkred;
+}
+
+.game {
+  width: 684px;
+  margin: auto;
+}
+
+ul {
+  padding: 2px;
+  list-style: none;
+  width: 680px;
+  margin: auto;
+}
+
+.board li {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border: 1px solid black;
+  border-radius: 4px;
+  float: left;
+  background: cornflowerblue;
+}
+
+h1.message {
+  text-size: 30px;
+}
+
+li.snake-body {
+  background-color: darkgreen;
+}
+
+li.snake-head {
+  background-color: gold;
+}
+
+li.apple {
+  background-image: url("bird.gif");
+  background-size: 32px 32px;
+}

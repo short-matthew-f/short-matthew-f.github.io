@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Solid Snake</title>
+    <link rel="stylesheet" type="text/css" href="snake.css">
+  </head>
+  
+  <body>
+    <h1><strong>S</strong>nake</h1>
+    <div class="game group">
+      <ul class="board group">
+        
+      </ul>
+    </div>
+    
+    <h1 class="message"></h1>
+  </body>
+  
+  <script src="underscore.js"></script>
+  <script src="jquery.js"></script>
+  <script src="snake.js"></script>
+  <script src="board.js"></script>
+  <script src="snake_ui.js"></script>
+  <script>
+  $().ready(function() {
+    $board = $(".board");
+    window.snakeUI = new Game.SnakeUI($board);
+    snakeUI.start();
+    snakeUI.render();
+  });
+  </script>
+</html>

@@ -1,0 +1,41 @@
+(function(root) {
+  var Game = root.Game = (root.Game || {});
+
+  var Snake = Game.Snake = function() {
+    this.body = Snake.createBody();
+    this.direction = [0, 1];
+  };
+  
+  Snake.createBody = function () {
+    var body = [];
+    for (var i = 0; i < 10; i++) {
+      body.push([16, i]);
+    }
+    return body;
+  };
+  
+  Snake.prototype.move = function () {
+    this.body.shift();
+    this.grow();
+  };
+  
+  Snake.prototype.grow = function () {
+    this.body.push(this.nextPosition());
+  };
+  
+  Snake.prototype.nextPosition = function() {
+    var headCoord = this.body.slice(-1)[0];
+    
+    var x = headCoord[0] + this.direction[0];
+    var y = headCoord[1] + this.direction[1];
+    
+    var nextX = x < 0 ? x + 20 : x % 20;
+    var nextY = y < 0 ? y + 20 : y % 20;
+    
+    return [nextX, nextY];
+  };
+  
+  Snake.prototype.turn = function(direction) {
+    this.direction = direction;
+  };
+})(window);
