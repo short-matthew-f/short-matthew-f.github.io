@@ -65,3 +65,11 @@ li.apple {
   background-image: url("bird.gif");
   background-size: 24px 24px;
 }
+
+li.portal {
+  background: orange;
+  border: 2px solid blue;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+}
