@@ -62,8 +62,9 @@ li.snake-head {
 }
 
 li.apple {
+  position: relative;
   background-image: url("bird.gif");
-  background-size: 24px 24px;
+  background-size: 30px 30px;
 }
 
 li.portal {

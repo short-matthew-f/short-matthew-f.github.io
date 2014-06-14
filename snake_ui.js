@@ -77,7 +77,6 @@
 
     if( this.checkForConsumption() ) {
       snake.grow();
-      snake.move();
       board.addApple();
       this.updateScore();
       this.updateInterval();
