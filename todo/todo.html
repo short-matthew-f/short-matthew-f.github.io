@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Document</title>
+    <link rel="stylesheet" href="../lib/bootstrap.css" type="text/css" media="screen" title="no title" charset="utf-8">
+    <style>
+      body { 
+        background: #5ae;
+      }
+    
+      .list-item-confirm {
+        background: #eee;
+        padding: 4px 12px;
+        margin-left: 5px;
+        border-radius: 5px;
+      }
+    
+      .list-item-confirm.confirm-complete {
+        background: #8d8;
+      }
+    
+      .list-item-cancel {
+        background: #eee;
+        padding: 4px 12px;
+        margin-left: 5px;
+        border-radius: 5px;      
+      }
+    
+      .list-item-confirm:hover {
+        background: #8d8;
+        cursor: pointer
+      }
+    
+      .list-item-cancel:hover {
+        background: #d88;
+        cursor: pointer
+      }
+    
+      .top-clearance {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    
+    <div class="container">
+      <h1 class="text-center">Things I need to do</h1>
+      <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+          <form class="form-horizontal" role="form">
+            <input type="text" class="form-control" id="do-this" placeholder="Type your todo here.">
+            <button type="submit" class="btn btn-block" id="do-this-button">Click me to add it!</button>
+          </form>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 col-md-offset-3 top-clearance">
+          <ul id="todo-list" class="list-group">
+          </ul>
+        </div>
+      </div>
+      
+      
+      <div class="row">
+        
+        <div class="col-md-6 col-md-offset-3">
+          <hr>
+          <h3 class="text-center">Instructions</h3>
+          <h4>
+            Enter your todos in the text field.
+          </h4>
+          <h4>
+            You can confirm (&#x2713;) and cancel (&times;) todos.
+          </h4>
+          <h4>
+            You can reorder todo by dragging them within the list.
+          </h4>
+          <h4>
+            You can edit todos in the list by double clicking them.
+          </h4>
+          <h4>
+            Todos are no longer editable once confirmed.
+          </h4>
+      </div>
+    </div>
+  
+    <script src="../lib/jquery.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../lib/jquery-ui.js" type="text/javascript" charset="utf-8"></script
+    <script src="../lib/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+    
+    <script>
+      // Code to add new todos to the list.  Also adds buttons to confirm or cancel a todo
+      $('form').submit(function(event) {
+        event.preventDefault();
+
+        var $doThis = $('input#do-this');
+
+        if($doThis.val() !== "") {
+          var $ul = $('#todo-list');
+
+          var $li = $('<li>').addClass("list-group-item clearfix").css("display", "none");
+          var $textSpan = $('<span>').text($doThis.val());
+
+          var $buttonGroup = $('<div>').addClass("btn-group btn-group-xs pull-right");
+          var $confirmButton = $('<div>').addClass("list-item-confirm pull-right").html("&#x2713;");
+          var $cancelButton = $('<div>').addClass("list-item-cancel pull-right").html("&times;");
+
+          $buttonGroup.append($confirmButton).append($cancelButton);
+
+          $li.append($buttonGroup).append($textSpan);
+          $ul.append($li);
+          $li.slideDown();
+
+          $doThis.val("");
+        };
+      });
+
+      // Code to allow the list to be sortable.
+      $( "#todo-list" ).sortable();
+      $( "#todo-list" ).disableSelection();
+
+      // Code to allow the list items to be confirmable.
+      $('#todo-list').on("click", ".list-item-confirm", function(event) {
+        $(this).addClass('confirm-complete');
+        $(this).closest('li').addClass('completed');
+
+        $(this).siblings().slideUp({
+          complete: function() {
+            $(this).remove();
+          }
+        });
+
+        $(this).closest('li').off();
+      });
+
+      // Code to allow the list items to be cancellable.
+      $('#todo-list').on("click", ".list-item-cancel", function(event) {
+        $(this).closest('li').slideUp({
+          complete: function () {
+            $(this).remove();
+          }
+        });
+      });
+
+      // Code to allow the list items to be editable.
+      $('#todo-list').on("dblclick", ".list-group-item", function (event) {
+        var $currentTodo = $(this);
+        if ($currentTodo.hasClass("completed")) { return false; };
+
+        $( "#todo-list" ).sortable("disable");
+
+        var currentTodoText = $currentTodo.children('span').text();
+
+        var $li = $('<li>').addClass("list-group-item clearfix").attr('id', 'todoEdit').css("display", "none");
+        var $form = $('<form>').addClass('form-horizontal').attr('role', 'form');
+        var $input = $('<input>').addClass('form-control').attr('type', 'text').attr('value', currentTodoText);
+
+        $form.append($input);
+        $li.append($form);
+
+        $currentTodo.after($li);
+
+        $currentTodo.hide();
+        $li.show();
+
+        $input.focus().select();
+
+        $form.on("submit", function(event) {
+          event.preventDefault();
+          newTodoText = $(this).children('input').val();
+          $currentTodo.children('span').text(newTodoText);
+          $currentTodo.show();
+          $(this).closest('li').remove();
+
+          $( "#todo-list" ).sortable("enable");
+        });
+
+        $form.on("focusout", function(event) {
+          event.preventDefault();
+          newTodoText = $(this).children('input').val();
+          $currentTodo.children('span').text(newTodoText);
+          $currentTodo.show();
+          $(this).closest('li').remove();
+
+          $( "#todo-list" ).sortable("enable");
+        });
+      });
+    </script>
+  </body>
+</html>

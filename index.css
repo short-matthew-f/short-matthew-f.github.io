@@ -23,6 +23,8 @@ body {
   
   background: #12617F;
   color: #FAEDC1;
+  
+  margin-bottom: 60px;
 }
 
 h1, h2, h3 {
@@ -143,4 +145,32 @@ p {
 
 .preview.pull-left {
   margin-left: 20px;
+}
+
+.links > ul {
+  margin: 0;
+  padding: 0; 
+  
+  list-style: none;
+}
+
+.links a {
+  font-size: 28px;
+  font-weight: 500;
+  
+  text-decoration: none;
+  color: #FFD554;
+}
+
+.links a:hover {
+  text-decoration: underline;
+}
+
+.links ul.sublist {
+  margin: 0 0 20px 0;
+  list-style: none;
+}
+
+.links ul.sublist a {
+  font-size: 18px;
 }
