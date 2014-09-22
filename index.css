@@ -147,6 +147,17 @@ p {
   margin-left: 20px;
 }
 
+p > a {
+  font-weight: 500;
+  
+  text-decoration: none;
+  color: #FFD554;  
+}
+
+p > a:hover {
+  text-decoration: underline;
+}
+
 .links > ul {
   margin: 0;
   padding: 0; 
