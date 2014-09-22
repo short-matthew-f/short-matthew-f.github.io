@@ -1,0 +1,106 @@
+body, header, h1, div, ul, li {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+}
+
+body {
+  background: #666;
+  font-family: sans-serif;
+  font-size: 16px;
+}
+
+.delta > ul {
+  width: 105px;
+  height: 105px;
+  background: green;
+}
+
+.delta > ul > li {
+  width: 29px;
+  height: 29px;
+  color: blue;
+  border: 1px solid white;
+  margin: 2px;
+}
+
+
+.header > .title { 
+  font-size: 48px;
+  font-weight: bold; 
+  text-align: center;
+  margin: 16px;
+}
+
+.title > .lights {
+  display: inline;
+  color: yellow;
+}
+
+.title > .out {
+  margin-left: -18px;
+  font-style: italic;
+  display: inline;
+  color: black;
+}
+
+.group:after {
+  content: "";
+  clear: both;
+  display: block;
+}
+
+ul { 
+  list-style: none;
+  width: 300px;
+  background: darkgrey;
+  border: 5px solid #555;
+  border-radius: 8px;
+  margin: auto;
+}
+
+ul > li { 
+  margin: 1px;
+  display: block;
+  width: 54px;
+  height: 54px;
+  background: black;
+  border: 2px solid darkgrey;
+  border-radius: 16px;
+  float: left;
+}
+
+li.hovered {
+  border: 2px solid white;
+  width: 54px;
+  height: 54px;
+  background: #555;
+}
+
+li.litUp.hovered {
+  border: 2px solid white;
+  width: 54px;
+  height: 54px;
+  background: gold;
+}
+
+.messages {
+  text-align: center;
+  font-weight: bold;
+  font-size: 48px;
+  margin: 16px;
+  color: yellow;
+}
+
+.clicks {
+  text-align: center;
+  font-style  : italic;
+  font-size: 20px;
+  margin: 8px;
+  color: black;
+}
+
+.litUp {
+  background: yellow;
+}

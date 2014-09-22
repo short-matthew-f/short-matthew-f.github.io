@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Lights Out</title>
+  <link rel="stylesheet" type="text/css" href="lightsout.css">
+</head>
+<body>
+  <header class="header">
+    <h1 class="title"><div class="lights">Lights</div><div class="out"> Out</div></h1>
+  </header>
+
+  <section class="game">
+    <div class="board">
+      
+    </div>
+
+    <div class="delta">
+
+    </div>
+
+    <div class="clicks">
+      Total clicks: 0
+    </div>
+
+    <div class="messages">
+
+    </div>
+  </section>
+
+
+
+  <script src="../lib/jquery.js"></script>
+  <script src="../lib/underscore.js"></script>
+  <script src="lightsout.js"></script>
+  <script>
+
+  $(document).ready(function() {
+    var lightsOutUI = new Game.LightsOutUI($('.board'));
+  });
+  </script>
+</body>
+</html>
