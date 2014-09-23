@@ -9,7 +9,7 @@
 /* Resets */
 
 body, p, h1, h2 {
-  margin: 0;
+  mainrgin: 0;
   padding: 0;
   border: 0;  
 }
@@ -56,15 +56,14 @@ p {
 }
 
 .container {
-  width: 80%;
+  width: 900px;
   margin: 40px auto 0px;
 }
 
 /* Style */
 
 .avatar {
-  width: 150px;
-  height: 150px;
+  width: 200px;
   border: 1px dotted grey;
 }
 
@@ -78,16 +77,13 @@ p {
 .tabbed-info.tabs li {
   float: left;
   
-  position: relative;
-  top: 12px;
-  
   font-weight: 500;
   
   border: 1px solid #333;
   border-radius: 8px 8px 0 0;
 
-  padding: 6px 24px;
-  margin: 0 0 0 20px;
+  padding: 6px 18px;
+  margin: 0 8px 0 0;
   
   background: #282A36;
   color: #FAEDC1;
@@ -106,19 +102,22 @@ p {
   color: #282A36;
 }
 
+.title {
+  font-size: 32px;
+  margin-bottom: 12px;
+  
+  color: #282A36;
+  font-weight: 500;
+}
+
 .content {
   display: none;
   
   border: 1px solid #333;
-  border-radius: 8px 0 8px 8px;
-  padding: 10px 15px;
+  border-radius: 0 8px 8px 8px;
+  padding: 20px;
   
   background: #2C7B99;
-}
-
-.title {
-  font-size: 32px;
-  margin-bottom: 6px;
 }
 
 .content.active {
@@ -127,11 +126,16 @@ p {
 
 .content h1 > a {
   font-size: 28px;
+}
+
+a {
+  font-weight: 500;
   text-decoration: none;
+  
   color: #FFD554;
 }
 
-.content h1 > a:hover {
+a:hover {
   text-decoration: underline;
 }
 
@@ -147,17 +151,6 @@ p {
   margin-left: 20px;
 }
 
-p > a {
-  font-weight: 500;
-  
-  text-decoration: none;
-  color: #FFD554;  
-}
-
-p > a:hover {
-  text-decoration: underline;
-}
-
 .links > ul {
   margin: 0;
   padding: 0; 
@@ -167,14 +160,6 @@ p > a:hover {
 
 .links a {
   font-size: 28px;
-  font-weight: 500;
-  
-  text-decoration: none;
-  color: #FFD554;
-}
-
-.links a:hover {
-  text-decoration: underline;
 }
 
 .links ul.sublist {
