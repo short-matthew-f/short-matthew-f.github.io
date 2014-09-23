@@ -62,7 +62,12 @@ p {
 
 /* Style */
 
-.avatar {
+.profile small {
+  margin-left: 10px;
+  color: #FAEDC1;
+}
+
+img.avatar {
   width: 200px;
   border: 1px dotted grey;
 }
