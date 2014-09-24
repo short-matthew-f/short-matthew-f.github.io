@@ -66,6 +66,10 @@ a, .title, .tabbed-info.tabs li {
   font-weight: 700;
 }
 
+h1 > small {
+  font-size: 18px;
+}
+
 .profile small {
   margin-left: 10px;
   color: #FAEDC1;
