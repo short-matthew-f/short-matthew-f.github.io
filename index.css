@@ -9,7 +9,7 @@
 /* Resets */
 
 body, p, h1, h2 {
-  mainrgin: 0;
+  margin: 0;
   padding: 0;
   border: 0;  
 }
@@ -29,7 +29,7 @@ body {
 
 h1, h2, h3 {
   margin: 0 0 10px 0;
-  color: #282A36;
+  color: white;
   line-height: 1em;
 }
 
@@ -110,8 +110,6 @@ img.avatar {
 .title {
   font-size: 32px;
   margin-bottom: 12px;
-  
-  color: #282A36;
   font-weight: 500;
 }
 
