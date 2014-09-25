@@ -104,3 +104,19 @@ li.litUp.hovered {
 .litUp {
   background: yellow;
 }
+
+.container {
+  width: 400px;
+  margin: 20px auto;
+}
+
+.container h1 {
+  color: yellow;
+  font-size: 36px;
+  text-align: center;
+}
+
+.container h4 {
+  margin: 8px 0;
+  font-weight: normal;
+}
