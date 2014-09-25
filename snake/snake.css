@@ -74,3 +74,17 @@ li.portal {
   height: 22px;
   border-radius: 8px;
 }
+
+.container {
+  width: 524px;
+  margin: 20px auto;
+}
+
+.container h1 {
+  font-size: 24px;
+}
+
+.container h4 {
+  margin: 8px 0;
+  font-weight: normal;
+}
