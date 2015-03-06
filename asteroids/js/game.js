@@ -125,7 +125,7 @@ _.extend(Game.prototype, {
             j = 0;
 
             game.score += meteor.points();
-            
+
             game.remove(bullet);
             game.remove(meteor);
             Meteor.divide(game, meteor);
@@ -176,16 +176,20 @@ _.extend(Game.prototype, {
   },
 
   setLoseMessage: function () {
-    var message = "You've lost!";
+    this.clearCanvas();
+
+    var messageOne = "Game over!";
+    var messageTwo = "Final Score: " + this.score;
     var c       = this.context;
 
     c.save();
-    this.clearCanvas();
+
     c.font      = "48px sans-serif";
     c.textAlign = "center";
     c.fillStyle = "#fff";
     c.scale(1, -1);
-    c.fillText(message, 0, 0);
+    c.fillText(messageOne, 0, -36);
+    c.fillText(messageTwo, 0, 36);
     c.restore();
   },
 
