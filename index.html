@@ -40,6 +40,9 @@
           <li data-tab="#body-1" class="tab active">
             Rails
           </li>
+          <li data-tab="#body-6" class="tab">
+            Angular
+          </li>
           <li data-tab="#body-3" class="tab">
             Javascript
           </li>
@@ -56,265 +59,286 @@
       </div>
     </div>
 
-    <div class="tabbed-info bodies clearfix">
+    <div class="content active" id="body-1"> <!-- Rails -->
+      <div class="project clearfix">
+        <h1 class="clearfix">
+          <a href="http://www.choosethyownadventure.com" target="_blank">
+            Choose Thy Own Adventure
+          </a>
+          (<a href="https://github.com/short-matthew-f/choosethyownadventure" target="_blank">GitHub</a>)
+        </h1>
 
-      <div class="content active" id="body-1"> <!-- Rails -->
-        <div class="project clearfix">
-          <h1 class="clearfix">
-            <a href="http://www.choosethyownadventure.com" target="_blank">
-              Choose Thy Own Adventure
-            </a>
-            (<a href="https://github.com/short-matthew-f/choosethyownadventure" target="_blank">GitHub</a>)
-          </h1>
-
-          <div class="preview float-right">
-            <a href="http://www.choosethyownadventure.com" target="_blank">
-              <img src="images/choose_thy_own.png" alt="Choose Thy Own Adventure">
-            </a>
-          </div>
-
-          <p>
-            Most of us have read <em>Choose Your Own Adventure</em> books.  If you haven't each page has a few choices at the end which allows you to determine which section to read next.  Good choices lead to good endings, and bad choices lead to disaster.
-          </p>
-          <p>
-            <em>Choose Thy Own Adventure</em> brings the thrill of playing an adventure together with the fun of creating one for your friends.  After signing up you can create a maze, populate it with twists and turns, and then publish it for all the world to play.
-          </p>
+        <div class="preview float-right">
+          <a href="http://www.choosethyownadventure.com" target="_blank">
+            <img src="images/choose_thy_own.png" alt="Choose Thy Own Adventure">
+          </a>
         </div>
+
+        <p>
+          Most of us have read <em>Choose Your Own Adventure</em> books.  If you haven't each page has a few choices at the end which allows you to determine which section to read next.  Good choices lead to good endings, and bad choices lead to disaster.
+        </p>
+        <p>
+          <em>Choose Thy Own Adventure</em> brings the thrill of playing an adventure together with the fun of creating one for your friends.  After signing up you can create a maze, populate it with twists and turns, and then publish it for all the world to play.
+        </p>
+      </div>
+    </div>
+
+    <div class="content" id="body-2"> <!-- Ruby -->
+      <div class="project clearfix">
+        <h1>
+          <a href="https://github.com/short-matthew-f/chess_curses" target="_blank">
+            Chess <small>(with curses)</small>
+          </a>
+        </h1>
+
+        <div class="preview float-right">
+          <a href="https://github.com/short-matthew-f/chess_curses" target="_blank">
+            <img src="images/chess.png" alt="Chess">
+          </a>
+        </div>
+
+        <p>
+          This is a pretty standard command-line interpretation of Chess.  I implemented the Curses library to allow the users to traverse the board with arrow keys, and allows highlighting of valid moves once a piece is selected, as pictured.
+        </p>
+      </div>
+      <hr>
+      <div class="project clearfix">
+        <h1>
+          <a href="https://github.com/short-matthew-f/video_poker" target="_blank">
+            Video Poker
+          </a>
+        </h1>
+
+        <div class="preview float-right">
+          <a href="https://github.com/short-matthew-f/video_poker" target="_blank">
+            <img src="images/poker.png" alt="Poker">
+          </a>
+        </div>
+
+        <p>
+          Writing a poker program is a terrific chance to stretch your skills - representing cards efficiently, determining winning hands, and building a decent user interface all require a bit of slick code.  I implemented a video poker variant, which allows you to play against yourself, winning more on better hands.
+        </p>
+      </div>
+      <hr>
+      <div class="project clearfix">
+        <h1>
+          <a href="https://github.com/short-matthew-f/active_record_lite" target="_blank">
+            Active Record Lite
+          </a>
+        </h1>
+        <p>
+          This is one of two projects which implements some of the main features of Rails, in Ruby.  Here is an implementation of Active Record in Ruby with mysql.  It's test driven, and implements Active Record's <code>has_many</code>, <code>belongs_to</code> and <code>has_one :through</code>.
+        </p>
+      </div>
+      <hr>
+      <div class="project clearfix">
+        <h1>
+          <a href="https://github.com/short-matthew-f/thompsons_f" target="_blank">
+            thompson's Group F
+          </a>
+        </h1>
+        <p>
+          <a href="http://www.math.cornell.edu/~kbrown/slides/thompson.pdf" target="_blank">Thompson's Group F</a> is a infinite group of functions on the unit interval satisfying some interesting condtions with many interesting properties.  This project was part of pre-dissertation work allowing for exploration of properties via Ruby.
+        </p>
+      </div>
+    </div>
+
+    <div class="content" id="body-3"> <!-- Javascript -->
+      <div class="project clearfix">
+        <h1 class="clearfix">
+          <a href="asteroids/asteroids.html" target="_blank">
+            Asteroids
+          </a>
+          (<a href="https://github.com/short-matthew-f/asteroids" target="_blank">GitHub</a>)
+        </h1>
+
+        <div class="preview float-right">
+          <a href="asteroids/asteroids.html" target="_blank">
+            <img src="images/asteroids.png" alt="Asteroids">
+          </a>
+        </div>
+
+        <p>
+          This is a version of the classic asteroids game implemented using HTML5 Canvas and featuring modular design, event delegation, and objected oriented code.  The underscore library was leveraged to allow classes to inherit behavior, making it easy to extend the game with additional features.
+       </p>
       </div>
 
-      <div class="content" id="body-2"> <!-- Ruby -->
-        <div class="project clearfix">
-          <h1>
-            <a href="https://github.com/short-matthew-f/chess_curses" target="_blank">
-              Chess <small>(with curses)</small>
-            </a>
-          </h1>
+      <hr>
+      <div class="project clearfix">
+        <h1 class="clearfix">
+          <a href="snake/snake.html" target="_blank">
+            Snake
+          </a>
+          (<a href="https://github.com/short-matthew-f/snake" target="_blank">GitHub</a>)
+        </h1>
 
-          <div class="preview float-right">
-            <a href="https://github.com/short-matthew-f/chess_curses" target="_blank">
-              <img src="images/chess.png" alt="Chess">
-            </a>
-          </div>
+        <div class="preview float-right">
+          <a href="snake/snake.html" target="_blank">
+            <img src="images/snake.png" alt="Snake">
+          </a>
+        </div>
 
-          <p>
-            This is a pretty standard command-line interpretation of Chess.  I implemented the Curses library to allow the users to traverse the board with arrow keys, and allows highlighting of valid moves once a piece is selected, as pictured.
-          </p>
-        </div>
-        <hr>
-        <div class="project clearfix">
-          <h1>
-            <a href="https://github.com/short-matthew-f/video_poker" target="_blank">
-              Video Poker
-            </a>
-          </h1>
-
-          <div class="preview float-right">
-            <a href="https://github.com/short-matthew-f/video_poker" target="_blank">
-              <img src="images/poker.png" alt="Poker">
-            </a>
-          </div>
-
-          <p>
-            Writing a poker program is a terrific chance to stretch your skills - representing cards efficiently, determining winning hands, and building a decent user interface all require a bit of slick code.  I implemented a video poker variant, which allows you to play against yourself, winning more on better hands.
-          </p>
-        </div>
-        <hr>
-        <div class="project clearfix">
-          <h1>
-            <a href="https://github.com/short-matthew-f/active_record_lite" target="_blank">
-              Active Record Lite
-            </a>
-          </h1>
-          <p>
-            This is one of two projects which implements some of the main features of Rails, in Ruby.  Here is an implementation of Active Record in Ruby with mysql.  It's test driven, and implements Active Record's <code>has_many</code>, <code>belongs_to</code> and <code>has_one :through</code>.
-          </p>
-        </div>
-        <hr>
-        <div class="project clearfix">
-          <h1>
-            <a href="https://github.com/short-matthew-f/thompsons_f" target="_blank">
-              thompson's Group F
-            </a>
-          </h1>
-          <p>
-            <a href="http://www.math.cornell.edu/~kbrown/slides/thompson.pdf" target="_blank">Thompson's Group F</a> is a infinite group of functions on the unit interval satisfying some interesting condtions with many interesting properties.  This project was part of pre-dissertation work allowing for exploration of properties via Ruby.
-          </p>
-        </div>
+        <p>
+          This is your usual implementation of the classic game of Snake, with a few twists.  The board has no borders, rather the snake speeds up as it consumes birds making the game harder as you get further.  Additionaly, there are two orange portals that allow the snake to hop around the board quickly.  The portals change position after each use.
+       </p>
       </div>
 
-      <div class="content" id="body-3"> <!-- Javascript -->
-        <div class="project clearfix">
-          <h1 class="clearfix">
-            <a href="asteroids/asteroids.html" target="_blank">
-              Asteroids
-            </a>
-            (<a href="https://github.com/short-matthew-f/asteroids" target="_blank">GitHub</a>)
-          </h1>
+      <hr>
+      <div class="project clearfix">
+        <h1 class="clearfix">
+          <a href="lightsout/lightsout.html" target="_blank">
+            LightsOut
+          </a>
+          (<a href="https://github.com/short-matthew-f/lights_out" target="_blank">Github</a>)
+        </h1>
 
-          <div class="preview float-right">
-            <a href="asteroids/asteroids.html" target="_blank">
-              <img src="images/asteroids.png" alt="Asteroids">
-            </a>
-          </div>
-
-          <p>
-            This is a version of the classic asteroids game implemented using HTML5 Canvas and featuring modular design, event delegation, and objected oriented code.  The underscore library was leveraged to allow classes to inherit behavior, making it easy to extend the game with additional features.
-         </p>
-        </div>
-
-        <div class="project clearfix">
-          <h1 class="clearfix">
-            <a href="snake/snake.html" target="_blank">
-              Snake
-            </a>
-            (<a href="https://github.com/short-matthew-f/snake" target="_blank">GitHub</a>)
-          </h1>
-
-          <div class="preview float-right">
-            <a href="snake/snake.html" target="_blank">
-              <img src="images/snake.png" alt="Snake">
-            </a>
-          </div>
-
-          <p>
-            This is your usual implementation of the classic game of Snake, with a few twists.  The board has no borders, rather the snake speeds up as it consumes birds making the game harder as you get further.  Additionaly, there are two orange portals that allow the snake to hop around the board quickly.  The portals change position after each use.
-         </p>
-        </div>
-
-        <hr>
-        <div class="project clearfix">
-          <h1 class="clearfix">
-            <a href="lightsout/lightsout.html" target="_blank">
-              LightsOut
-            </a>
-            (<a href="https://github.com/short-matthew-f/lights_out" target="_blank">Github</a>)
-          </h1>
-
-          <div class="preview float-right">
-            <a href="lightsout/lightsout.html" target="_blank">
-              <img src="images/lightsout.png" alt="Snake">
-            </a>
-
-          </div>
-          <p>
-            LightsOut was written in collaboration with <a href="http://www.schenkc.com/" target="_blank">Candace Schenk</a>.
-          </p>
-          <p>
-            LightsOut is about turing the lights out.  Primarly an exercise in jQuery, this game features board creation which means that every game is solvable.  When you click a square, it and the four cardinal adjacent squares all swap lighting.  See if you can turn them all off.
-         </p>
+        <div class="preview float-right">
+          <a href="lightsout/lightsout.html" target="_blank">
+            <img src="images/lightsout.png" alt="Snake">
+          </a>
 
         </div>
-
-        <hr>
-        <div class="project clearfix">
-          <h1 class="clearfix">
-            <a href="todo/todo.html" target="_blank">
-              Todo UI
-            </a>
-            (<a href="https://github.com/short-matthew-f/todo" target="_blank">Github Tutorial & Code</a>)
-          </h1>
-
-          <div class="preview float-right">
-            <a href="todo/todo.html" target="_blank">
-              <img src="images/todo.png" alt="Snake">
-            </a>
-          </div>
-
-          <p>
-            Written as a tutorial for people learning jQuery.  The point is to write a fluid and intuitive interface for a standard Todo Application.  Features jQuery and jQueryUI to increase usability.
-          </p>
-        </div>
+        <p>
+          LightsOut was written in collaboration with <a href="http://www.schenkc.com/" target="_blank">Candace Schenk</a>.
+        </p>
+        <p>
+          LightsOut is about turing the lights out.  Primarly an exercise in jQuery, this game features board creation which means that every game is solvable.  When you click a square, it and the four cardinal adjacent squares all swap lighting.  See if you can turn them all off.
+       </p>
 
       </div>
 
-      <div class="content" id="body-4"> <!-- Educational -->
-        <div class="project clearfix">
-          <h1 class="clearfix">
-            <a href="education/Zombie_Attack.pdf" target="_blank">Zombies Ate My Class</a>
+      <hr>
+      <div class="project clearfix">
+        <h1 class="clearfix">
+          <a href="todo/todo.html" target="_blank">
+            Todo UI
+          </a>
+          (<a href="https://github.com/short-matthew-f/todo" target="_blank">Github Tutorial & Code</a>)
+        </h1>
 
-            <small>(formerly Zombie Attack)</small>
-          </h1>
-
-          <div class="preview float-right">
-            <a href="education/Zombie_Attack.pdf" target="_blank">
-              <img src="images/zombie_attack.png" alt="Snake">
-            </a>
-          </div>
-
-          <p>
-            Zombies Ate My Class was a very successful attempt at gamifying the classroom experience for my Calc and Precalc students.  It took three sections of students who were nearly failing to having an overall class average of over 80% thanks to an emphasis on group work, daily incremental learning, and interesting gameplay.
-         </p>
+        <div class="preview float-right">
+          <a href="todo/todo.html" target="_blank">
+            <img src="images/todo.png" alt="Snake">
+          </a>
         </div>
-        <hr>
-        <div class="project clearfix">
-          <h1 class="clearfix">
-            <a href="education/How_to_Train_Your_Robot.pdf" target="_blank">
-              How to Train Your Robot
-            </a>
-          </h1>
 
-          <div class="preview float-right">
-            <a href="education/How_to_Train_Your_Robot.pdf" target="_blank">
-              <img src="images/how_to.png" alt="Snake">
-            </a>
-          </div>
-
-          <p>
-            How to Train Your Robot was created to introduce programming concepts to grade school children in Houston.  It featured simple commands that students would string together to achieve incrementally harder goals, introducing the concepts of looping, conditionals, and general program flow.
-         </p>
-        </div>
+        <p>
+          Written as a tutorial for people learning jQuery.  The point is to write a fluid and intuitive interface for a standard Todo Application.  Features jQuery and jQueryUI to increase usability.
+        </p>
       </div>
 
+    </div>
 
-      <div class="content" id="body-5"> <!-- About Me -->
-        <div class="links clearfix">
-          <ul>
-            <li>
-              <a href="https://github.com/short-matthew-f" target="_blank">
-                Github Repository
-              </a>
-            </li>
+    <div class="content" id="body-4"> <!-- Educational -->
+      <div class="project clearfix">
+        <h1 class="clearfix">
+          <a href="education/Zombie_Attack.pdf" target="_blank">Zombies Ate My Class</a>
 
-            <li>
-              <a href="http://www.linkedin.com/pub/matthew-short/90/327/5b8/" target="_blank">
-                LinkedIn Profile
-              </a>
-            </li>
+          <small>(formerly Zombie Attack)</small>
+        </h1>
 
-            <li>
-              <a href="http://short-matthew-f.tumblr.com/" target="_blank">
-                Tumblr
-              </a> (and examples of technical/educational writing)
-
-              <ul class="sublist">
-                <li>
-                  <a href="http://short-matthew-f.tumblr.com/post/84973144106/w1d2" target="_blank">Mixology</a>
-                </li>
-                <li>
-                  <a href="http://short-matthew-f.tumblr.com/post/86024400646/sorting-things-part-1" target="_blank">Sorting I</a>,
-                  <a href="http://short-matthew-f.tumblr.com/post/86025247011/sorting-things-part-2" target="_blank">Sorting II</a>,
-                  <a href="http://short-matthew-f.tumblr.com/post/86027511686/so-a-final-post-on-sorting-poker-hands" target="_blank">Sorting III</a>
-                </li>
-                <li>
-                  <a href="http://short-matthew-f.tumblr.com/post/86734986616/w3d5-rails-new-human" target="_blank">Associations I</a>,
-                  <a href="http://short-matthew-f.tumblr.com/post/86741394641/w3d5-rails-new-human-part-ii" target="_blank">Associations II</a>
-                </li>
-                <li>
-                  <a href="http://short-matthew-f.tumblr.com/post/87535978776/w4d5-authentication" target="_blank">Authentication</a>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <a href="resume/resume.pdf" target="_blank">
-                Resume
-              </a>
-            </li>
-          </ul>
+        <div class="preview float-right">
+          <a href="education/Zombie_Attack.pdf" target="_blank">
+            <img src="images/zombie_attack.png" alt="Snake">
+          </a>
         </div>
+
+        <p>
+          Zombies Ate My Class was a very successful attempt at gamifying the classroom experience for my Calc and Precalc students.  It took three sections of students who were nearly failing to having an overall class average of over 80% thanks to an emphasis on group work, daily incremental learning, and interesting gameplay.
+       </p>
       </div>
+      <hr>
+      <div class="project clearfix">
+        <h1 class="clearfix">
+          <a href="education/How_to_Train_Your_Robot.pdf" target="_blank">
+            How to Train Your Robot
+          </a>
+        </h1>
+
+        <div class="preview float-right">
+          <a href="education/How_to_Train_Your_Robot.pdf" target="_blank">
+            <img src="images/how_to.png" alt="Snake">
+          </a>
+        </div>
+
+        <p>
+          How to Train Your Robot was created to introduce programming concepts to grade school children in Houston.  It featured simple commands that students would string together to achieve incrementally harder goals, introducing the concepts of looping, conditionals, and general program flow.
+       </p>
+      </div>
+    </div>
 
 
+    <div class="content" id="body-5"> <!-- About Me -->
+      <div class="links clearfix">
+        <ul>
+          <li>
+            <a href="https://github.com/short-matthew-f" target="_blank">
+              Github Repository
+            </a>
+          </li>
+
+          <li>
+            <a href="http://www.linkedin.com/pub/matthew-short/90/327/5b8/" target="_blank">
+              LinkedIn Profile
+            </a>
+          </li>
+
+          <li>
+            <a href="http://short-matthew-f.tumblr.com/" target="_blank">
+              Tumblr
+            </a> (and examples of technical/educational writing)
+
+            <ul class="sublist">
+              <li>
+                <a href="http://short-matthew-f.tumblr.com/post/84973144106/w1d2" target="_blank">Mixology</a>
+              </li>
+              <li>
+                <a href="http://short-matthew-f.tumblr.com/post/86024400646/sorting-things-part-1" target="_blank">Sorting I</a>,
+                <a href="http://short-matthew-f.tumblr.com/post/86025247011/sorting-things-part-2" target="_blank">Sorting II</a>,
+                <a href="http://short-matthew-f.tumblr.com/post/86027511686/so-a-final-post-on-sorting-poker-hands" target="_blank">Sorting III</a>
+              </li>
+              <li>
+                <a href="http://short-matthew-f.tumblr.com/post/86734986616/w3d5-rails-new-human" target="_blank">Associations I</a>,
+                <a href="http://short-matthew-f.tumblr.com/post/86741394641/w3d5-rails-new-human-part-ii" target="_blank">Associations II</a>
+              </li>
+              <li>
+                <a href="http://short-matthew-f.tumblr.com/post/87535978776/w4d5-authentication" target="_blank">Authentication</a>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <a href="resume/resume.pdf" target="_blank">
+              Resume
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+
+    <div class="content active" id="body-6"> <!-- Angular -->
+      <div class="project clearfix">
+        <h1 class="clearfix">
+          <a href="http://short-matthew-f/Sketchpad" target="_blank">
+            Sketchpad
+          </a>
+          (<a href="https://github.com/short-matthew-f/Sketchpad" target="_blank">GitHub</a>)
+        </h1>
+
+        <div class="preview float-right">
+          <a href="http://short-matthew-f/Sketchpad" target="_blank">
+            <img src="images/sketchpad.png" alt="Sketchpad">
+          </a>
+        </div>
+
+        <p>
+          I taught myself a combination of SVG and Angular to make an interactive sketching tool, dedicated to exploring geometry.
+        </p>
+        <p>
+          Create points, lines and circles, divide segments into multiple equal parts, and drag points around to see how the figure changes!
+        </p>
+      </div>
     </div>
   </div>
 
