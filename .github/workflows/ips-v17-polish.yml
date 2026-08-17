@@ -1,0 +1,65 @@
+name: IPS v1.7 status polish
+on:
+  push:
+    branches: [idle-pachinko-v1.7-combat-readability]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.event.head_commit.message == 'APPLY STATUS POLISH'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: idle-pachinko-v1.7-combat-readability
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Tighten v1.7 status semantics
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('idle-pachinko-shootout/engine-v17.js')
+          s=p.read_text()
+          def rep(old,new,label):
+              global s
+              n=s.count(old)
+              if n!=1: raise SystemExit(f'{label}: expected 1 match, found {n}')
+              s=s.replace(old,new,1)
+          rep("function addBoardFx(x,y,type){FX.push({x:x,y:y,type:type,life:.36,max:.36});}function pegEffect(b,p){var c;b.pegHits=Number(b.pegHits||0)+1;if(p.t==='n')",
+              "function addBoardFx(x,y,type){FX.push({x:x,y:y,type:type,life:.36,max:.36});}function pegEffect(b,p){var c;if(p.t==='n')",
+              'remove unique-peg shrapnel count')
+          rep("if(dot<0){b.vx-=1.72*dot*nx;",
+              "if(dot<0){b.pegHits=Number(b.pegHits||0)+1;b.vx-=1.72*dot*nx;",
+              'count each physical peg collision')
+          rep("function updateStatusEffects(now){if(!G)return;var i,j,e,fx,b,c,a,k,nodes;",
+              "function updateStatusEffects(now){if(!G)return;var i,j,e,fx,b,c,a,k,nodes,dirty=false;",
+              'status render dirty flag')
+          rep("e=G.enemies[i];if(e.hp<=0)continue;fx=ensureEffects(e);",
+              "e=G.enemies[i];if(e.hp<=0)continue;if(e.stunUntil&&now>=e.stunUntil){e.stunUntil=0;dirty=true;}fx=ensureEffects(e);",
+              'expire concussion visual state')
+          rep("if(b.ticks<=0||e.hp<=0)fx.burns.splice(j,1);",
+              "if(b.ticks<=0||e.hp<=0){fx.burns.splice(j,1);dirty=true;}",
+              'expire burn visual state')
+          rep("if(Math.abs(Number(e.lane||0)-c.lane)<=c.laneRadius&&Math.abs(Number(e.advance||0)-c.center)<=c.radius)hit(e,c.damage,false,false,'POISON',['poison','status']);}}}function shoot",
+              "if(Math.abs(Number(e.lane||0)-c.lane)<=c.laneRadius&&Math.abs(Number(e.advance||0)-c.center)<=c.radius)hit(e,c.damage,false,false,'POISON',['poison','status']);}}if(dirty)renderEnemies();}function shoot",
+              'refresh badges when statuses expire')
+          rep("hit(a[0],primary,crit,has(tags,'gold'),'',tags);if(has(tags,'poison'))createPoisonCloud(a[0],raw);",
+              "if(has(tags,'poison'))createPoisonCloud(a[0],raw);hit(a[0],primary,crit,has(tags,'gold'),'',tags);",
+              'create poison visual before lethal impact removes target')
+          p.write_text(s)
+          if "function pegEffect(b,p){var c;b.pegHits" in s: raise SystemExit('shrapnel still counts only first peg activation')
+          if "if(dot<0){b.pegHits=Number(b.pegHits||0)+1;" not in s: raise SystemExit('physical collision counter missing')
+          if "if(dirty)renderEnemies();" not in s: raise SystemExit('status expiry rendering missing')
+      - name: Syntax check
+        run: node --check idle-pachinko-shootout/engine-v17.js
+      - name: Remove one-shot machinery
+        run: rm -f .github/workflows/ips-v17-polish.yml .ips-v17-polish-trigger
+      - name: Commit polish
+        run: |
+          git config user.name "Matthew Short"
+          git config user.email "short.matthew.f@gmail.com"
+          git add -A
+          git commit -m "Idle Pachinko v1.7: tighten status expiry and shrapnel collisions"
+          git push origin idle-pachinko-v1.7-combat-readability
