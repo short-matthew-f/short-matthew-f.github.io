@@ -1,0 +1,26 @@
+/* v1.8 — gritty occult-Western presentation layer */
+:root{--iron:#171310;--iron2:#2a211a;--brass:#b3823f;--brass-hi:#e2bd73;--wood:#25170f;--wood2:#120d09;--soot:#090806}
+.combat{isolation:isolate;box-shadow:inset 0 -28px 42px rgba(4,3,2,.72),inset 0 0 80px rgba(14,8,4,.35);}
+.combat:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:3;background:radial-gradient(ellipse at 58% 34%,transparent 0 34%,rgba(5,3,2,.08) 58%,rgba(3,2,1,.5) 100%),repeating-linear-gradient(98deg,rgba(255,225,173,.018) 0 1px,transparent 1px 5px);mix-blend-mode:multiply}
+.hero-art,.unit-figure{filter:drop-shadow(0 8px 7px rgba(0,0,0,.55));}
+.hero-art canvas,.unit-figure canvas{display:block;width:100%;height:100%;image-rendering:auto}
+.hero-art svg,.unit-figure svg{display:none}
+.enemy.focused .unit-figure{filter:drop-shadow(0 0 8px rgba(240,191,91,.78)) drop-shadow(0 9px 7px rgba(0,0,0,.65));}
+.enemy .enemy-name{text-shadow:0 1px 2px #000,0 0 8px rgba(0,0,0,.7);letter-spacing:.07em}
+.board-wrap{background:linear-gradient(90deg,#0e0906,#28170d 5%,#1c120c 50%,#2b190e 95%,#0e0906);box-shadow:inset 0 0 0 2px #0b0806,inset 0 0 0 4px rgba(175,119,49,.28),inset 0 18px 35px rgba(255,182,77,.025),0 -7px 20px rgba(0,0,0,.35);}
+.board-wrap:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;background:repeating-linear-gradient(4deg,transparent 0 19px,rgba(219,153,76,.018) 20px,transparent 21px 38px),radial-gradient(circle at 50% 45%,transparent 0 42%,rgba(0,0,0,.38) 100%)}
+#board{filter:saturate(.72) contrast(1.08) brightness(.88);}
+.peg-art-overlay{position:absolute;pointer-events:none;z-index:4;display:block}
+.slot-labels{z-index:6!important;gap:3px;padding:0 7px 5px!important}
+.slot-label{position:relative!important;overflow:hidden;background:linear-gradient(180deg,#3e2c1c 0%,#1a120c 48%,#0d0a07 100%)!important;color:#e4c582!important;border:1px solid #6f4b25!important;border-top-color:#aa793a!important;border-radius:3px!important;box-shadow:inset 0 1px rgba(255,226,161,.13),inset 0 -4px 8px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.4)!important;text-shadow:0 1px #000,0 0 7px rgba(224,177,82,.22);font-family:Georgia,serif!important;font-weight:800!important}
+.slot-label:before{content:"";position:absolute;inset:3px;border:1px solid rgba(213,160,76,.12);pointer-events:none}
+.slot-label.edge{background:linear-gradient(180deg,#5b3c1d,#28180d 50%,#100b07)!important;color:#ffdc87!important;border-color:#a66f2d!important}
+.launcher-cap{z-index:7!important;background:linear-gradient(180deg,#15100c,#26180f 48%,#0d0907)!important;border-bottom:1px solid #6c4925;box-shadow:0 5px 15px rgba(0,0,0,.5),inset 0 -1px rgba(218,163,81,.15)}
+.queue-bullet{box-shadow:inset -2px -3px 4px rgba(0,0,0,.55),inset 1px 1px 2px rgba(255,245,210,.55),0 0 5px rgba(222,169,84,.15)!important;border:1px solid rgba(23,14,8,.8)!important}
+.town-sign,.region-badge,.wave-badge,.boss-badge{border-radius:3px!important;box-shadow:inset 0 0 0 1px rgba(232,190,113,.08),0 3px 7px rgba(0,0,0,.35)}
+.loot-card,.death-card,.return-card,.tutorial-card,.settings-card,.telemetry-card{border-radius:12px!important;background:linear-gradient(145deg,rgba(41,27,18,.985),rgba(16,12,9,.992) 62%,rgba(28,18,12,.99))!important;box-shadow:0 28px 70px rgba(0,0,0,.72),inset 0 0 0 1px rgba(224,171,78,.16)!important}
+.loot-side{border-radius:8px!important;background:linear-gradient(160deg,rgba(33,26,19,.92),rgba(13,11,9,.95))!important}
+.loot-watchdog-note{margin:12px 0 0;padding:9px 12px;border:1px solid rgba(210,155,67,.35);background:rgba(49,31,17,.72);color:#e3c98d;font-size:11px;font-weight:800;letter-spacing:.09em;text-align:center}
+.campaign-toast{pointer-events:none!important}
+body.reward-blocked .campaign-toast{opacity:0!important;transform:translateY(-8px)!important;pointer-events:none!important}
+@media (prefers-reduced-motion:reduce){.combat:after{background:radial-gradient(ellipse at 58% 34%,transparent 0 34%,rgba(5,3,2,.08) 58%,rgba(3,2,1,.5) 100%)}}
