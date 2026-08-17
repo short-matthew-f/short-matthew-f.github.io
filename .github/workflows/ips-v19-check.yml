@@ -1,8 +1,0 @@
-name: IPS v1.9 sprite validation
-on:
-  workflow_dispatch:
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Disabled — sprite binary upload path is being replaced."
