@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#17110d" />
+  <title>Idle Pachinko Shootout — Prototype</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app" class="game-shell">
+    <header class="topbar">
+      <div class="brand">IDLE PACHINKO <span>SHOOTOUT</span></div>
+      <div class="wallet">
+        <span title="XP">✦ <b id="xpValue">0</b></span>
+        <span title="Bounty Coins">🪙 <b id="coinValue">0</b></span>
+      </div>
+    </header>
+
+    <section class="combat" aria-label="Wild West shootout">
+      <div class="sky-glow"></div>
+      <div class="mesa mesa-a"></div>
+      <div class="mesa mesa-b"></div>
+      <div class="town-sign">DUSTWATER</div>
+      <div class="wave-badge" id="waveBadge">WAVE 1</div>
+      <div class="boss-badge" id="bossBadge">BOSS IN 9</div>
+
+      <div class="hero-unit">
+        <div class="unit-figure hero-figure">🤠</div>
+        <div class="unit-name">THE GUNSLINGER</div>
+        <div class="hp-track"><div id="heroHpFill" class="hp-fill hero-hp"></div></div>
+        <div class="unit-meta"><span id="heroHpText">100 / 100</span><span id="magText">5 / 5</span></div>
+        <div class="reload-track"><div id="reloadFill" class="reload-fill"></div></div>
+        <div class="reload-label" id="reloadLabel">FIRING</div>
+      </div>
+
+      <div id="enemyLane" class="enemy-lane"></div>
+      <div id="damageFeed" class="damage-feed"></div>
+    </section>
+
+    <section class="board-wrap" aria-label="Pachinko weapon board">
+      <div class="launcher-cap">
+        <div class="bullet-queue" id="bulletQueue"></div>
+        <div class="launcher-label">CYLINDER</div>
+      </div>
+      <canvas id="board" width="393" height="472"></canvas>
+      <div class="slot-labels" id="slotLabels"></div>
+    </section>
+
+    <nav class="dock" aria-label="Game menus">
+      <button data-sheet="hero"><span>🤠</span>Hero</button>
+      <button data-sheet="board"><span>🟠</span>Board</button>
+      <button data-sheet="ammo"><span>🔸</span>Ammo</button>
+      <button data-sheet="gear"><span>🎩</span>Gear</button>
+      <button data-sheet="bounties"><span>💀</span>Bounties</button>
+    </nav>
+
+    <section id="sheet" class="sheet" aria-hidden="true">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div>
+          <div class="eyebrow">UPGRADES</div>
+          <h2 id="sheetTitle">Hero</h2>
+        </div>
+        <button id="closeSheet" class="close-btn" aria-label="Close">✕</button>
+      </div>
+      <div id="sheetContent" class="sheet-content"></div>
+    </section>
+
+    <section id="deathModal" class="modal-overlay hidden" aria-live="polite">
+      <div class="death-card">
+        <div class="eyebrow">THE WEST GOT YOU</div>
+        <h2>Ride Again?</h2>
+        <p id="deathSummary"></p>
+        <div class="death-actions">
+          <button id="deathHero" class="secondary">Spend XP</button>
+          <button id="deathBoard" class="secondary">Spend Coins</button>
+          <button id="rideAgain" class="primary">Ride Again</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="lootModal" class="modal-overlay hidden" aria-live="polite">
+      <div class="loot-card">
+        <div class="eyebrow">BOSS DOWN</div>
+        <h2>Choose Your Loot</h2>
+        <div class="loot-compare">
+          <article>
+            <div class="loot-label">CURRENT</div>
+            <div class="loot-art">🔫</div>
+            <h3 id="currentLootName">Service Revolver</h3>
+            <div id="currentLootStats" class="loot-stats"></div>
+          </article>
+          <div class="versus">VS</div>
+          <article class="new-loot">
+            <div class="loot-label">NEW DROP</div>
+            <div class="loot-art">✨🔫</div>
+            <h3 id="newLootName">Ember Colt</h3>
+            <div id="newLootStats" class="loot-stats"></div>
+          </article>
+        </div>
+        <div class="death-actions">
+          <button id="sellNew" class="secondary">Sell New</button>
+          <button id="equipNew" class="primary">Equip New</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
