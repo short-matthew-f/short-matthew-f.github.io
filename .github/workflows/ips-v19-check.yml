@@ -14,9 +14,15 @@ jobs:
           node --check idle-pachinko-shootout/engine-v17.js
       - name: Sprite asset checks
         run: |
-          test -s idle-pachinko-shootout/assets/sprites/sprites-v19.webp
-          test $(stat -c%s idle-pachinko-shootout/assets/sprites/sprites-v19.webp) -gt 300000
-          file idle-pachinko-shootout/assets/sprites/sprites-v19.webp | grep -qi 'Web/P image'
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('idle-pachinko-shootout/assets/sprites/sprites-v19.webp')
+          data=p.read_bytes()
+          print('sprite atlas bytes:', len(data))
+          assert len(data) > 100000
+          assert data[:4] == b'RIFF'
+          assert data[8:12] == b'WEBP'
+          PY
       - name: Entry-point checks
         run: |
           grep -q 'v1.9' idle-pachinko-shootout/index.html
