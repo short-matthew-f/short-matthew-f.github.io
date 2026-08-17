@@ -1,0 +1,3 @@
+Idle Pachinko Shootout v1.2.2 deployment retrigger
+2026-08-17T13:30:00-04:00
+Contains self-contained combatRoleV12 fix and v1.2.1 empty-wave recovery compatibility.
