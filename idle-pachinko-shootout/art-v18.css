@@ -20,6 +20,7 @@
 .town-sign,.region-badge,.wave-badge,.boss-badge{border-radius:3px!important;box-shadow:inset 0 0 0 1px rgba(232,190,113,.08),0 3px 7px rgba(0,0,0,.35)}
 .loot-card,.death-card,.return-card,.tutorial-card,.settings-card,.telemetry-card{border-radius:12px!important;background:linear-gradient(145deg,rgba(41,27,18,.985),rgba(16,12,9,.992) 62%,rgba(28,18,12,.99))!important;box-shadow:0 28px 70px rgba(0,0,0,.72),inset 0 0 0 1px rgba(224,171,78,.16)!important}
 .loot-side{border-radius:8px!important;background:linear-gradient(160deg,rgba(33,26,19,.92),rgba(13,11,9,.95))!important}
+.loot-watchdog-note{margin:12px 0 0;padding:9px 12px;border:1px solid rgba(210,155,67,.35);background:rgba(49,31,17,.72);color:#e3c98d;font-size:11px;font-weight:800;letter-spacing:.09em;text-align:center}
 .campaign-toast{pointer-events:none!important}
 body.reward-blocked .campaign-toast{opacity:0!important;transform:translateY(-8px)!important;pointer-events:none!important}
 @media (prefers-reduced-motion:reduce){.combat:after{background:radial-gradient(ellipse at 58% 34%,transparent 0 34%,rgba(5,3,2,.08) 58%,rgba(3,2,1,.5) 100%)}}
