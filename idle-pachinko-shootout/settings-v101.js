@@ -4,7 +4,7 @@ var RESET_KEYS=[
   'idle-pachinko-shootout-v01',
   'idle-pachinko-shootout-v0.1',
   'ips-v1','ips-v2','ips-v3','ips-v4','ips-v5','ips-v6','ips-v7','ips-v8','ips-v9','ips-v10',
-  'ips-idle-v1','ips-telemetry-v1','ips-campaign-v1','ips-contracts-v1','ips-combat-telemetry-v1'
+  'ips-idle-v1','ips-telemetry-v1','ips-campaign-v1','ips-contracts-v1','ips-combat-telemetry-v1','ips-blueprints-v1'
 ];
 function $(id){return document.getElementById(id);}
 function open(id){var el=$(id);if(el)el.classList.remove('hidden');}
@@ -16,7 +16,7 @@ function removeGameData(){var i;for(i=0;i<RESET_KEYS.length;i++){try{localStorag
     var remove=[],k;
     for(i=0;i<localStorage.length;i++){
       k=localStorage.key(i)||'';
-      if(/^ips-(v\d+|idle-|telemetry-|campaign-|contracts-|combat-telemetry-)/.test(k)||/^idle-pachinko-shootout/.test(k))remove.push(k);
+      if(/^ips-(v\d+|idle-|telemetry-|campaign-|contracts-|combat-telemetry-|blueprints-)/.test(k)||/^idle-pachinko-shootout/.test(k))remove.push(k);
     }
     for(i=0;i<remove.length;i++)localStorage.removeItem(remove[i]);
   }catch(e){}
