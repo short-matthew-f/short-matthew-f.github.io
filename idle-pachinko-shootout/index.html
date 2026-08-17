@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#17110d" />
-  <title>Idle Pachinko Shootout — v1.2</title>
+  <title>Idle Pachinko Shootout — v1.2.1</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="v4.css" />
   <link rel="stylesheet" href="v5.css" />
@@ -19,7 +19,7 @@
 <body>
   <main id="app" class="game-shell">
     <header class="topbar">
-      <div class="brand">IDLE PACHINKO <span>SHOOTOUT</span><small> v1.2</small></div>
+      <div class="brand">IDLE PACHINKO <span>SHOOTOUT</span><small> v1.2.1</small></div>
       <div class="wallet">
         <span title="XP">✦ <b id="xpValue">0</b></span>
         <span title="Bounty Coins">● <b id="coinValue">0</b></span>
@@ -27,7 +27,6 @@
         <button id="devButton" class="dev-button" type="button" aria-label="Open prototype telemetry">DEV</button>
       </div>
     </header>
-
     <section class="combat" id="combat" aria-label="Wild West shootout">
       <div class="sun-disc"></div><div class="mesa mesa-a"></div><div class="mesa mesa-b"></div><div class="town-silhouette"><i></i><i></i><i></i><i></i></div>
       <div class="town-sign">DUSTWATER GULCH</div><div class="wave-badge" id="waveBadge">WAVE 1</div><div class="boss-badge" id="bossBadge">BOSS IN 9</div><div class="region-badge" id="regionBadge">REGION 1 · DUSTWATER GULCH</div>
@@ -37,35 +36,24 @@
       </div>
       <div id="enemyLane" class="enemy-lane"></div><div id="damageFeed" class="damage-feed"></div><div id="combatFx" class="combat-fx"></div>
     </section>
-
     <section class="board-wrap" aria-label="Pachinko weapon board"><div class="launcher-cap"><div class="bullet-queue" id="bulletQueue"></div><div class="launcher-label">CYLINDER</div></div><div id="placementBanner" class="placement-banner hidden"><span id="placementText">Tap a peg to place</span><button id="cancelPlacement" type="button">CANCEL</button></div><canvas id="board" width="393" height="472"></canvas><div class="slot-labels" id="slotLabels"></div><div class="prototype-badge">OFFLINE PATROL ACTIVE · 8H CAP</div></section>
-
     <nav class="dock" aria-label="Game menus"><button data-sheet="hero"><span>★</span>Hero</button><button data-sheet="board"><span>●</span>Board</button><button data-sheet="ammo"><span>◆</span>Ammo</button><button data-sheet="gear"><span>♠</span>Gear</button><button data-sheet="bounties"><span>☠</span>Bounties</button></nav>
     <section id="sheet" class="sheet" aria-hidden="true"><div class="sheet-handle"></div><div class="sheet-head"><div><div class="eyebrow">UPGRADES</div><h2 id="sheetTitle">Hero</h2></div><button id="closeSheet" class="close-btn" aria-label="Close">×</button></div><div id="sheetContent" class="sheet-content"></div></section>
-
     <section id="deathModal" class="modal-overlay hidden" aria-live="polite"><div class="death-card"><div class="eyebrow">THE WEST GOT YOU</div><h2>Ride Again?</h2><p id="deathSummary"></p><div class="death-actions"><button id="deathHero" class="secondary">Spend XP</button><button id="deathBoard" class="secondary">Spend Coins</button><button id="rideAgain" class="primary">Ride Again</button></div></div></section>
-
     <section id="lootModal" class="modal-overlay hidden" aria-live="polite"><div class="loot-card"><div class="loot-slot-label" id="lootSlotLabel">BOSS DROP</div><h2>Choose Your Loot</h2><div class="loot-compare-v4"><article id="currentLootCard" class="loot-side empty"><div class="loot-rarity" id="currentLootRarity">None</div><h3 id="currentLootName">Empty slot</h3><div id="currentLootStats" class="loot-stat-lines"></div></article><article id="newLootCard" class="loot-side new-loot rare"><div class="loot-rarity" id="newLootRarity">Rare</div><h3 id="newLootName">Boss Drop</h3><div id="newLootStats" class="loot-stat-lines"></div></article></div><div class="loot-delta-wrap"><div class="loot-delta-title">IF EQUIPPED</div><div id="lootDelta" class="loot-delta"></div></div><div class="loot-actions"><button id="equipNew" class="equip">EQUIP NEW</button><button id="sellNew" class="sell">KEEP CURRENT + SELL NEW</button></div></div></section>
-
     <section id="returnModal" class="modal-overlay hidden" aria-live="polite"><div class="return-card"><div class="eyebrow">WELCOME BACK, GUNSLINGER</div><h2>The posse kept watch.</h2><p>While you were away, your crew patrolled from your last secured checkpoint. They can earn resources, but they never fight bosses or make loot decisions for you.</p><div class="return-meta"><span id="returnTime">0m away</span><span id="returnCheckpoint">Checkpoint 1</span></div><div class="return-meta"><span id="returnPatrols">0 patrol skirmishes</span><span>Conservative idle rate</span></div><div class="return-rewards"><div class="return-reward"><b id="returnXp">+0 XP</b><small>GUNSLINGER XP</small></div><div class="return-reward"><b id="returnCoins">+0 coins</b><small>BOUNTY COINS</small></div></div><p id="returnCapNote" class="return-note"></p><button id="returnContinue" class="primary" type="button">BACK TO THE SHOOTOUT</button></div></section>
-
     <section id="telemetryModal" class="modal-overlay hidden" aria-live="polite"><div class="telemetry-card"><div class="telemetry-head"><div><div class="eyebrow">PROTOTYPE ONLY</div><h2>Balance Telemetry</h2></div><button id="closeTelemetry" class="close-btn" aria-label="Close">×</button></div><div id="telemetryContent"></div><div class="telemetry-actions"><button id="resetTelemetry" type="button">RESET TELEMETRY ONLY</button></div></div></section>
-
     <section id="tutorialModal" class="modal-overlay hidden" aria-live="polite"><div class="tutorial-card"><div class="eyebrow" id="tutorialKicker">QUICK DRAW 1 / 3</div><h2 id="tutorialTitle">The board is your gun.</h2><p id="tutorialText"></p><div class="tutorial-actions"><button id="tutorialSkip" class="skip" type="button">SKIP</button><button id="tutorialNext" class="primary" type="button">NEXT</button></div></div></section>
-
-    <section id="settingsModal" class="modal-overlay hidden" aria-live="polite"><div class="settings-card"><div class="settings-head"><div><div class="eyebrow">PLAYER</div><h2>Settings</h2></div><button id="closeSettings" class="close-btn" aria-label="Close">×</button></div><div class="settings-section"><h3>Save data</h3><p>Your progress is stored locally in this browser. Resetting here does not affect any of your other GitHub Pages projects.</p><div class="settings-meta"><span>Game version</span><b>v1.2</b><span>Save location</span><b>This browser</b></div></div><div class="settings-section danger-zone"><h3>Reset Game</h3><p>Start completely over from Wave 1. This permanently removes XP, Bounty Coins, upgrades, ammunition, peg placement, gear, checkpoints, contracts, blueprints, onboarding state, offline progress, and game telemetry.</p><button id="resetGameButton" class="danger-button" type="button">RESET GAME…</button></div></div></section>
-
+    <section id="settingsModal" class="modal-overlay hidden" aria-live="polite"><div class="settings-card"><div class="settings-head"><div><div class="eyebrow">PLAYER</div><h2>Settings</h2></div><button id="closeSettings" class="close-btn" aria-label="Close">×</button></div><div class="settings-section"><h3>Save data</h3><p>Your progress is stored locally in this browser. Resetting here does not affect any of your other GitHub Pages projects.</p><div class="settings-meta"><span>Game version</span><b>v1.2.1</b><span>Save location</span><b>This browser</b></div></div><div class="settings-section danger-zone"><h3>Reset Game</h3><p>Start completely over from Wave 1. This permanently removes XP, Bounty Coins, upgrades, ammunition, peg placement, gear, checkpoints, contracts, blueprints, onboarding state, offline progress, and game telemetry.</p><button id="resetGameButton" class="danger-button" type="button">RESET GAME…</button></div></div></section>
     <section id="resetConfirmModal" class="modal-overlay hidden" aria-live="assertive"><div class="reset-confirm-card"><div class="eyebrow">PERMANENT ACTION</div><h2>Erase all game progress?</h2><div class="reset-warning"><b>This cannot be undone.</b><br>Your current run and every persistent Idle Pachinko Shootout save value on this browser will be deleted.</div><p>To confirm, type <b>RESET</b> exactly below.</p><label for="resetConfirmInput">TYPE RESET</label><input id="resetConfirmInput" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Type RESET to confirm" /><button id="confirmGameReset" class="confirm-reset-button" type="button" disabled>PERMANENTLY RESET GAME</button><button id="cancelGameReset" class="cancel-reset-button" type="button">CANCEL — KEEP MY SAVE</button></div></section>
-
     <div id="campaignToast" class="campaign-toast" aria-live="polite"></div><div id="bootError" class="boot-error hidden" role="alert"></div>
   </main>
-
   <script src="settings-v101.js?v=20260817-2"></script>
   <script src="idle-v8.js?v=20260817-1"></script>
   <script src="compat-v111.js?v=20260817-1"></script>
-  <script>window.__ipsBooted=false;window.addEventListener('error',function(e){var box=document.getElementById('bootError');if(box){box.className='boot-error';box.textContent='Game error: '+(e.message||'unknown error')+(e.lineno?' (line '+e.lineno+')':'');}});setTimeout(function(){if(!window.__ipsBooted){var box=document.getElementById('bootError');if(box){box.className='boot-error';box.textContent='Game startup error: v1.2 engine did not finish booting.';}}},8000);</script>
+  <script>window.__ipsBooted=false;window.addEventListener('error',function(e){var box=document.getElementById('bootError');if(box){box.className='boot-error';box.textContent='Game error: '+(e.message||'unknown error')+(e.lineno?' (line '+e.lineno+')':'');}});setTimeout(function(){if(!window.__ipsBooted){var box=document.getElementById('bootError');if(box){box.className='boot-error';box.textContent='Game startup error: v1.2.1 engine did not finish booting.';}}},8000);</script>
   <script src="campaign-v10.js?v=20260817-1" defer></script>
   <script src="progression-v12.js?v=20260817-1" defer></script>
-  <script src="game-v12-loader.js?v=20260817-1" defer></script>
+  <script src="game-v121-loader.js?v=20260817-1" defer></script>
 </body>
 </html>
