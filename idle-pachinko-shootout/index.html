@@ -4,29 +4,46 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#17110d" />
-  <title>Idle Pachinko Shootout — Prototype</title>
+  <title>Idle Pachinko Shootout — v0.2</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="v4.css" />
 </head>
 <body>
   <main id="app" class="game-shell">
     <header class="topbar">
-      <div class="brand">IDLE PACHINKO <span>SHOOTOUT</span></div>
+      <div class="brand">IDLE PACHINKO <span>SHOOTOUT</span><small> v0.2</small></div>
       <div class="wallet">
         <span title="XP">✦ <b id="xpValue">0</b></span>
-        <span title="Bounty Coins">🪙 <b id="coinValue">0</b></span>
+        <span title="Bounty Coins">● <b id="coinValue">0</b></span>
       </div>
     </header>
 
-    <section class="combat" aria-label="Wild West shootout">
-      <div class="sky-glow"></div>
+    <section class="combat" id="combat" aria-label="Wild West shootout">
+      <div class="sun-disc"></div>
       <div class="mesa mesa-a"></div>
       <div class="mesa mesa-b"></div>
+      <div class="town-silhouette"><i></i><i></i><i></i><i></i></div>
       <div class="town-sign">DUSTWATER</div>
       <div class="wave-badge" id="waveBadge">WAVE 1</div>
       <div class="boss-badge" id="bossBadge">BOSS IN 9</div>
 
-      <div class="hero-unit">
-        <div class="unit-figure hero-figure">🤠</div>
+      <div class="hero-unit" id="heroUnit">
+        <div class="hero-art" aria-hidden="true">
+          <svg viewBox="0 0 100 120" role="img">
+            <path class="art-shadow" d="M17 108h66l-8 8H25z"/>
+            <path class="art-coat" d="M31 51q19-12 38 0l10 55H21z"/>
+            <path class="art-shirt" d="M43 55h14l7 37H36z"/>
+            <circle class="art-skin" cx="50" cy="39" r="17"/>
+            <path class="art-hair" d="M34 37q1-16 16-17 17 1 17 18-7-8-16-7-10 1-17 6z"/>
+            <path class="art-hat" d="M23 26h54q-2 8-13 8H36q-11 0-13-8z"/>
+            <path class="art-hat" d="M35 10h30l5 18H30z"/>
+            <path class="art-dark" d="M39 39h7v3h-7zm15 0h7v3h-7z"/>
+            <path class="art-dark" d="M42 49q8 6 16 0-3 10-8 10t-8-10z"/>
+            <path class="art-arm" d="M68 61l22 18-5 8-25-14z"/>
+            <path class="art-gun" d="M82 76h16v7H87v12h-5z"/>
+            <path class="art-belt" d="M25 87h50v8H25z"/>
+          </svg>
+        </div>
         <div class="unit-name">THE GUNSLINGER</div>
         <div class="hp-track"><div id="heroHpFill" class="hp-fill hero-hp"></div></div>
         <div class="unit-meta"><span id="heroHpText">100 / 100</span><span id="magText">5 / 5</span></div>
@@ -36,6 +53,7 @@
 
       <div id="enemyLane" class="enemy-lane"></div>
       <div id="damageFeed" class="damage-feed"></div>
+      <div id="combatFx" class="combat-fx"></div>
     </section>
 
     <section class="board-wrap" aria-label="Pachinko weapon board">
@@ -43,26 +61,27 @@
         <div class="bullet-queue" id="bulletQueue"></div>
         <div class="launcher-label">CYLINDER</div>
       </div>
+      <div id="placementBanner" class="placement-banner hidden">
+        <span id="placementText">Tap a peg to place</span>
+        <button id="cancelPlacement" type="button">CANCEL</button>
+      </div>
       <canvas id="board" width="393" height="472"></canvas>
       <div class="slot-labels" id="slotLabels"></div>
     </section>
 
     <nav class="dock" aria-label="Game menus">
-      <button data-sheet="hero"><span>🤠</span>Hero</button>
-      <button data-sheet="board"><span>🟠</span>Board</button>
-      <button data-sheet="ammo"><span>🔸</span>Ammo</button>
-      <button data-sheet="gear"><span>🎩</span>Gear</button>
-      <button data-sheet="bounties"><span>💀</span>Bounties</button>
+      <button data-sheet="hero"><span>★</span>Hero</button>
+      <button data-sheet="board"><span>●</span>Board</button>
+      <button data-sheet="ammo"><span>◆</span>Ammo</button>
+      <button data-sheet="gear"><span>♠</span>Gear</button>
+      <button data-sheet="bounties"><span>☠</span>Bounties</button>
     </nav>
 
     <section id="sheet" class="sheet" aria-hidden="true">
       <div class="sheet-handle"></div>
       <div class="sheet-head">
-        <div>
-          <div class="eyebrow">UPGRADES</div>
-          <h2 id="sheetTitle">Hero</h2>
-        </div>
-        <button id="closeSheet" class="close-btn" aria-label="Close">✕</button>
+        <div><div class="eyebrow">UPGRADES</div><h2 id="sheetTitle">Hero</h2></div>
+        <button id="closeSheet" class="close-btn" aria-label="Close">×</button>
       </div>
       <div id="sheetContent" class="sheet-content"></div>
     </section>
@@ -80,61 +99,19 @@
       </div>
     </section>
 
-    <section id="lootModal" class="modal-overlay hidden" aria-live="polite">
-      <div class="loot-card">
-        <div class="eyebrow">BOSS DOWN</div>
-        <h2>Choose Your Loot</h2>
-        <div class="loot-compare">
-          <article>
-            <div class="loot-label">CURRENT</div>
-            <div class="loot-art">🔫</div>
-            <h3 id="currentLootName">Service Revolver</h3>
-            <div id="currentLootStats" class="loot-stats"></div>
-          </article>
-          <div class="versus">VS</div>
-          <article class="new-loot">
-            <div class="loot-label">NEW DROP</div>
-            <div class="loot-art">✨🔫</div>
-            <h3 id="newLootName">Ember Colt</h3>
-            <div id="newLootStats" class="loot-stats"></div>
-          </article>
-        </div>
-        <div class="death-actions">
-          <button id="sellNew" class="secondary">Sell New</button>
-          <button id="equipNew" class="primary">Equip New</button>
-        </div>
-      </div>
-    </section>
+    <div id="bootError" class="boot-error hidden" role="alert"></div>
   </main>
+
   <script>
-    window.__IPS_BOOTED__ = false;
-    window.addEventListener('error', function (event) {
-      var msg = document.getElementById('bootError');
-      if (!msg) {
-        msg = document.createElement('div');
-        msg.id = 'bootError';
-        msg.style.cssText = 'position:fixed;left:12px;right:12px;top:120px;z-index:99999;background:#5b1515;color:#fff3d0;border:2px solid #ffbd59;border-radius:10px;padding:12px;font:13px/1.35 system-ui;white-space:pre-wrap';
-        document.body.appendChild(msg);
-      }
-      msg.textContent = 'Game startup error: ' + (event.message || 'unknown error') + (event.filename ? '\n' + event.filename + ':' + event.lineno : '');
+    window.__ipsBooted = false;
+    window.addEventListener('error', function(e){
+      var box=document.getElementById('bootError');
+      if(box){box.className='boot-error';box.textContent='Game error: '+(e.message||'unknown error')+(e.lineno?' (line '+e.lineno+')':'');}
     });
+    setTimeout(function(){
+      if(!window.__ipsBooted){var box=document.getElementById('bootError');if(box){box.className='boot-error';box.textContent='Game startup error: engine did not finish booting.';}}
+    },2200);
   </script>
-  <script src="game-v3.js" defer></script>
-  <script>
-    window.addEventListener('load', function () {
-      setTimeout(function () {
-        if (!window.__IPS_BOOTED__) {
-          var msg = document.getElementById('bootError');
-          if (!msg) {
-            msg = document.createElement('div');
-            msg.id = 'bootError';
-            msg.style.cssText = 'position:fixed;left:12px;right:12px;top:120px;z-index:99999;background:#5b1515;color:#fff3d0;border:2px solid #ffbd59;border-radius:10px;padding:12px;font:13px/1.35 system-ui';
-            document.body.appendChild(msg);
-          }
-          msg.textContent = 'Game script did not finish starting. Reload once; if this remains, screenshot this message.';
-        }
-      }, 1500);
-    });
-  </script>
+  <script src="game-v4.js?v=20260817-1" defer></script>
 </body>
 </html>
