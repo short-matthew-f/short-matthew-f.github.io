@@ -1,58 +1,76 @@
-# Idle Pachinko Shootout — Prototype v0.4
+# Idle Pachinko Shootout — Prototype v0.5
 
-Mobile-first playable vertical slice for **Idle Pachinko Shootout**: the pachinko board is the gun. Ammunition enters the board with properties, trick pegs can add more properties, the landing slot sets shot power, and boss victories now feed a persistent equipment build.
+Mobile-first playable vertical slice for **Idle Pachinko Shootout**: the pachinko board is the gun. The current build now has three interlocking build layers — hero, pachinko/ammunition, and equipment — plus enemies that demand different answers instead of functioning as interchangeable HP bars.
 
 ## Playable now
 
 - Automatic pachinko bullet physics with `10 | 7 | 4 | 2 | 1 | 2 | 4 | 7 | 10` damage slots.
-- Timed cylinder/reload loop, enemy pressure, player HP/death, scaling waves, checkpoints, elites, and bosses.
+- Timed cylinder/reload loop, enemy advance pressure, player HP/death, checkpoints, elites, and bosses.
 - Persistent XP and Bounty Coins.
-- Permanent hero upgrades, editable trick pegs, and configurable per-chamber ammunition.
-- Standard, Golden, Incendiary, Piercing, Dynamite, and Storm ammunition with stacking peg interactions.
-- Vector combat art, muzzle flashes, tracers, hit reactions, death bursts, and peg feedback.
-- **Boss loot with persistent gear buildcraft.**
+- Permanent hero upgrades and editable Fire / Splitter / Piercing / Dynamite / Storm pegs.
+- Per-chamber Standard, Golden, Incendiary, Piercing, Dynamite, and Storm ammunition with stacking peg interactions.
+- Boss gear in five slots with Common → Unique rarity, side-by-side comparison, equip/sell decisions, and live stat effects.
+- Vector combat art, muzzle flashes, tracers, hit reactions, death bursts, ward bars, and readable enemy trait/affix badges.
+- **Enemy-specific mechanics, resistances, weaknesses, elite affixes, and three rotating bosses.**
 
-## v0.4 — boss loot and gear
+## v0.5 — enemy identity
 
-Every tenth wave is a boss. Defeating the boss pauses progression and presents a side-by-side comparison between the item currently equipped in that slot and the new drop. The comparison shows the actual stat change if the new item is equipped.
+The enemy type now changes what a good build looks like.
 
-The two choices are deliberately explicit:
+| Enemy | Trait | Mechanical consequence |
+|---|---|---|
+| Zombie Outlaw | **Deathless** | The first lethal hit makes it rise again at 22% HP unless the killing hit is Fire. |
+| Ghoul Rustler | **Skitter** | Every second reload it rushes an extra range band before its normal advance. |
+| Ghost Gunhand | **Spectral** | Plain shots deal only 55% damage. Special-property shots bypass the resistance; Storm/Chain damage is especially effective. |
+| Troll Prospector | **Regeneration** | Heals 7% max HP each reload while wounded. Fire both deals bonus damage and suppresses the next regeneration. |
 
-- **Equip New + Sell Old** — equip the drop and convert the replaced item into Bounty Coins.
-- **Keep Current + Sell New** — keep the current build and sell the boss drop instead.
+These traits are displayed directly above enemies so the game teaches its rules while running rather than hiding them in a codex.
 
-### Gear slots
+### Elite affixes
 
-| Slot | Typical effects |
-|---|---|
-| Gun | Base damage, critical chance |
-| Hat | Critical chance, Bounty Coin bonus |
-| Duster / Armor | Maximum HP, damage reduction |
-| Boots | Reload speed, small damage bonus |
-| Charm | Pachinko slot damage, specialty-ammo damage |
+Every fifth-wave elite can carry an additional visible affix:
 
-Bosses rotate through the five slots so a run naturally develops a complete loadout instead of repeatedly rolling only one category.
+- **Armored** — reduces non-explosive damage; Dynamite/Explosion bypasses the plating.
+- **Quickdraw** — advances/attacks on a shorter cycle.
+- **Frenzied** — below half HP it gains damage and speed.
+- **Gravebound** — revives once at 32% HP unless finished with Fire.
 
-### Rarity ladder
+Elite rewards are increased to compensate for the additional pressure.
 
-`Common → Uncommon → Rare → Legendary → Mythic → Unique`
+## Rotating bosses
 
-Higher boss tiers push the rarity floor upward. Unique items use authored names such as **The Widowmaker**, **Halo of the Last Marshal**, **Gravewind Duster**, **Hellspur Boots**, and **Saint Elmo’s Bullet**.
+Bosses now rotate instead of every tenth wave being a larger copy of the same enemy.
 
-Gear effects are live immediately and persist across deaths/checkpoint restarts. Equipping a Duster that raises maximum HP also adjusts the current run's HP ceiling rather than waiting until the next death.
+### The Undertaker — Bone Ward
 
-## Ammunition rules under test
+Starts with a ward equal to 30% of maximum HP. The ward must be stripped before HP damage lands; explosive damage is especially effective against it. At 50% HP the Undertaker enrages, attacking faster and harder.
 
-| Round | Starting damage | Property |
-|---|---:|---|
-| Standard | 100% | Reliable baseline. |
-| Golden | 88% | Killing blow awards 2× Bounty Coins. |
-| Incendiary | 82% | Reduced impact plus three burn ticks. |
-| Piercing | 82% | Additional targets retain 65% damage per penetration. |
-| Dynamite | 75% | 50% / 25% splash to nearby enemies. |
-| Storm | 72% | Reduced primary impact plus diminishing lightning jumps. |
+### Widow Bell — Grave Toll
 
-Ammunition properties exist before the pachinko drop; board properties stack on top.
+Every second reload she tolls the grave bell and can summon a **Wraith Deputy**. The adds are Spectral ghosts, forcing the player to decide whether to carry enough crowd/special ammunition to prevent the fight from snowballing.
+
+### Iron Jack — Black Iron
+
+Massive armor reduces ordinary damage. Explosive effects breach the plating and deal bonus damage, making Dynamite rounds and pegs a deliberate boss-tech choice rather than generic crowd clear.
+
+## Build interactions now possible
+
+Examples of the intended decision pressure:
+
+- A Standard-heavy cylinder is excellent efficient damage, but performs poorly into a Ghost wave.
+- Incendiary ammunition can permanently solve Troll regeneration and stop Deathless/Gravebound revivals.
+- Dynamite is less efficient against a single normal enemy but becomes premium against Armored elites and Iron Jack.
+- Storm ammunition pays a base-damage tax but becomes the clean answer to Spectral enemies and multi-target waves.
+- Equipment can push a build toward specialty ammo, reload speed, survivability, bounty farming, crits, or raw slot damage.
+
+## Boss loot / gear
+
+Every tenth wave still pauses for a boss drop. The player sees the currently equipped item and the new item side by side, including exact stat deltas, then chooses:
+
+- **Equip New + Sell Old**, or
+- **Keep Current + Sell New**.
+
+Gear slots: Gun, Hat, Duster, Boots, Charm. Rarity: `Common → Uncommon → Rare → Legendary → Mythic → Unique`.
 
 ## Milestone status
 
@@ -60,10 +78,10 @@ Ammunition properties exist before the pachinko drop; board properties stack on 
 2. **Game-feel/art pass** — playable.
 3. **Editable special-peg board** — playable.
 4. **True ammunition loadouts** — playable.
-5. **Boss loot/buildcraft** — **v0.4 playable**.
-6. **Enemy identity** — next: enemy abilities, resistances, elite affixes, and distinct boss mechanics.
-7. **Idle layer** — offline progress plus balance/debug telemetry.
+5. **Boss loot/buildcraft** — playable.
+6. **Enemy identity** — **v0.5 playable**.
+7. **Idle layer** — next: offline progress, return summary, and balance/debug telemetry.
 
 ## Current playtest question
 
-Do boss drops create a real “one more boss” pull, and are the equip/sell decisions readable enough to make a choice quickly while still understanding how the new item changes the build?
+Do enemy traits make you look at the incoming wave and care about what is in the cylinder/board, or do they feel like chores? The target is **counterplay that rewards having built a toolbox**, not hard immunities that invalidate a build.
