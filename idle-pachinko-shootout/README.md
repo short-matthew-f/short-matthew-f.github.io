@@ -1,63 +1,121 @@
-# Idle Pachinko Shootout — Prototype v0.6
+# Idle Pachinko Shootout — v1.0 Playtest Candidate
 
-Mobile-first playable vertical slice for **Idle Pachinko Shootout**. The pachinko board is the gun: ammunition enters with properties, trick pegs modify it, landing slots set shot power, enemies demand different counters, bosses award persistent equipment, and the game now continues to make limited progress while the player is away.
+Mobile-first playable build of **Idle Pachinko Shootout**. The pachinko board is the gun: ammunition enters with properties, trick pegs modify it, landing slots set shot power, enemies pressure the Gunslinger during reloads, deaths preserve progression, bosses award equipment, and offline patrols keep the economy moving while the player is away.
 
-## Playable now
+## v1.0 campaign structure
 
-- Automatic pachinko bullet physics with `10 | 7 | 4 | 2 | 1 | 2 | 4 | 7 | 10` damage slots.
-- Timed cylinder/reload loop, enemy advance pressure, HP/death, checkpoints, elites, and rotating bosses.
-- Persistent XP and Bounty Coins.
-- Permanent hero upgrades and editable Fire / Splitter / Piercing / Dynamite / Storm pegs.
-- Per-chamber Standard, Golden, Incendiary, Piercing, Dynamite, and Storm ammunition with stacking peg interactions.
-- Boss gear in five slots with Common → Unique rarity and side-by-side equip/sell decisions.
-- Enemy-specific mechanics, resistances, weaknesses, elite affixes, boss phases, and readable combat badges.
-- **Offline patrol earnings, return summary, and prototype balance telemetry.**
+The prototype now has five authored 10-wave regions. Each region has its own visual treatment, enemy names, boss, first-clear cache, and progression beat:
 
-## v0.6 — the idle layer
+1. **Dustwater Gulch** — The Undertaker
+2. **Boot Hill Midnight** — Madame Dead-Eye
+3. **Bone Orchard** — Big Hank the Grave Troll
+4. **Cinder Junction** — Sheriff Nevermore
+5. **Hollow Mesa** — The Last Train
 
-The game records when the player was last active. After at least two minutes away, reopening or resuming the game calculates a conservative **offline patrol** from the last secured checkpoint.
+After Wave 50 the campaign can continue into an endless repeat of the five-region content set while the numerical pressure continues to rise.
 
-Offline patrols can award Gunslinger XP, Bounty Coins, and a summary estimate of patrol skirmishes completed while away. They **cannot** advance the current wave/checkpoint, defeat or skip bosses, generate boss equipment, or make equip/sell choices. Idle time advances the economy but never consumes the decisions that are supposed to pull the player back into active play.
+Checkpoints remain every five waves. Every tenth wave is a boss and pauses for the equip/sell loot decision before the next region begins.
 
-### Offline rate
+## Content now playable
 
-The current prototype rate uses the secured checkpoint as the main progression anchor, with a modest bonus from permanent hero upgrades, ammunition tuning, special pegs, and equipped gear. It is deliberately much slower than active play and capped at **8 hours per return**.
+- Five region palettes / identities.
+- Twenty named normal-enemy variants across the four core mechanical archetypes.
+- Four elite affixes: **Armored, Quickdraw, Frenzied, Gravebound**.
+- Five bosses with distinct counterplay.
+- Six ammunition families: Standard, Golden, Incendiary, Piercing, Dynamite, Storm.
+- Five editable trick-peg families: Fire, Splitter, Piercing, Dynamite, Storm.
+- Five persistent gear slots with Common → Unique rarity.
+- Offline patrol earnings with an 8-hour cap.
+- Repeatable bounty contracts.
+- First-time onboarding and staged blueprint unlocks.
 
-There is a two-minute grace period so briefly switching apps does not generate noisy return screens. If a suspended mobile tab becomes active after more than two minutes, the prototype reloads once to reconcile the offline reward safely with the live game save.
+## Boss roster
 
-## Return summary
+### The Undertaker — Bone Ward
+Starts behind a ward. Explosives strip the ward efficiently; below half HP he enrages and attacks faster/harder.
 
-The return screen reports real time away, secured checkpoint, estimated patrol skirmishes, XP earned, Bounty Coins earned, and whether the 8-hour cap was reached. The live game continues immediately after dismissing the summary.
+### Madame Dead-Eye — Grave Toll
+Periodically summons Spectral Wraith Deputies. Crowd damage and special ammunition prevent the fight from snowballing.
 
-## Prototype telemetry
+### Big Hank the Grave Troll — Grave Regen
+Regenerates while wounded and becomes more dangerous below 45% HP. Fire both deals bonus damage and suppresses his regeneration.
 
-A small **DEV** button in the top bar opens a tester-facing telemetry panel. This is not intended as final-player UI. It reports current wave/HP, session duration, wave transitions and waves/minute, reload cycles, deaths, boss loot screens, checkpoint/highest wave, estimated offline rates, lifetime offline rewards, cylinder composition, equipped gear, aggregate prototype play time, and best observed wave.
+### Sheriff Nevermore — Raven Veil
+Strongly resists plain shots, is vulnerable to Storm/Chain damage, and can rebuild a spectral ward during the fight.
 
-Telemetry is stored locally in the browser. **RESET TELEMETRY ONLY** clears those measurements without deleting game progression.
+### The Last Train — Black Iron
+Heavily resists ordinary damage, is breached by explosives, and periodically fires an unavoidable cannon volley if the fight drags on.
 
-## Enemy identity retained from v0.5
+## Progression pacing
 
-| Enemy | Trait | Mechanical consequence |
-|---|---|---|
-| Zombie Outlaw | **Deathless** | Revives once unless finished with Fire. |
-| Ghoul Rustler | **Skitter** | Periodically rushes an extra range band. |
-| Ghost Gunhand | **Spectral** | Resists plain shots; Storm/Chain is especially effective. |
-| Troll Prospector | **Regeneration** | Heals between reloads unless Fire suppresses regeneration. |
+Special systems are no longer presented all at once to a new save. The current authored unlock schedule is:
 
-Elite affixes remain **Armored, Quickdraw, Frenzied, and Gravebound**. Bosses rotate among **The Undertaker**, **Widow Bell**, and **Iron Jack**, each with distinct counterplay.
+| Highest wave | New tool |
+|---:|---|
+| 3 | Incendiary ammunition + Fire Peg |
+| 4 | Golden ammunition |
+| 5 | Splitter Peg |
+| 8 | Piercing ammunition / peg |
+| 11 | Dynamite ammunition / peg |
+| 16 | Storm ammunition / peg |
+
+Existing test saves keep anything already purchased/unlocked; the gates only constrain new progression.
+
+First clears of each 10-wave region award a one-time **Frontier Secured** cache of XP and Bounty Coins.
+
+## Bounties
+
+The Bounties tab is now an actual progression screen with three repeatable contracts:
+
+- **Trailblazer** — clear waves.
+- **Keep It Hot** — complete reload cycles.
+- **Boss Hunter** — reach boss loot screens.
+
+Contract tiers increase after claims, and rewards scale with campaign progress. Claims pay directly into the live XP/Coin economy without interrupting the run.
+
+## Onboarding
+
+A new save receives a short three-step introduction explaining:
+
+1. the pachinko-board-as-gun relationship,
+2. the XP / Coin / ammunition build layers,
+3. why death and checkpoints are part of progression.
+
+Blueprint unlocks also announce themselves as the player reaches the relevant waves.
+
+## Balance baseline
+
+v1.0 keeps difficulty **authored and deterministic**. Normal enemy HP currently grows at roughly 13.5% per wave before encounter/elite modifiers, while attack damage grows at roughly 7.5% per wave. This is slightly smoother than the earlier prototype curve while still ensuring that an un-upgraded build is eventually overtaken.
+
+The DEV telemetry panel now includes an observed combat-output section based on recent wave duration, damage numbers, and reload cycles. This gives us actual DPS/clear-time measurements for future tuning.
+
+### Adaptive difficulty director: intentionally NOT enabled
+
+We explored a possible future system that estimates the player’s effective DPS/defense and lets enemy pressure slowly catch up after power spikes. **v1.0 does not use it.** Enemy HP does not secretly jump because the player bought an upgrade. We are collecting the measurements first so a future director can be tested against a clean authored baseline rather than assumed to be necessary.
+
+## Idle layer
+
+After at least two minutes away, the game calculates conservative patrol earnings from the last secured checkpoint and persistent build strength. Offline play can award XP and Bounty Coins but cannot:
+
+- advance waves or checkpoints,
+- defeat bosses,
+- generate boss gear,
+- make equip/sell choices,
+- complete/claim active-play bounty objectives.
+
+Offline rewards remain capped at 8 hours per return.
 
 ## Milestone status
 
-1. **Core pachinko → gunfight loop** — playable.
-2. **Game-feel/art pass** — playable.
-3. **Editable special-peg board** — playable.
-4. **True ammunition loadouts** — playable.
-5. **Boss loot/buildcraft** — playable.
-6. **Enemy identity** — playable.
-7. **Idle layer** — **v0.6 playable**.
+1. Core pachinko → gunfight loop — **complete**.
+2. First game-feel / art pass — **complete**.
+3. Editable special-peg board — **complete**.
+4. Configurable ammunition loadouts — **complete**.
+5. Boss loot / gear buildcraft — **complete**.
+6. Enemy identity / boss mechanics — **complete**.
+7. Idle / offline progression — **complete**.
+8. Multi-region campaign content — **complete**.
+9. Bounties, onboarding, and unlock pacing — **complete**.
+10. Authored balance baseline + combat telemetry — **complete**.
 
-## Current playtest questions
-
-The main v0.6 questions are whether coming back to a useful pile of resources feels rewarding without trivializing active play, whether the 8-hour cap is generous enough, and whether progression starts to feel like a satisfying loop of **return → improve build → push farther → secure a better checkpoint → earn faster while away**.
-
-The telemetry panel exists so those answers can turn into concrete balance changes rather than guesses.
+**v1.0 is the first systems-complete playtest candidate.** The next work should be driven by playtest evidence: tuning pacing/economy, replacing remaining prototype presentation with production art/audio, adding content variety where repetition appears, and deciding from telemetry whether adaptive pressure is actually beneficial.
