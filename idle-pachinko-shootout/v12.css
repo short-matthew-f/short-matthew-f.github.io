@@ -1,0 +1,14 @@
+/* v1.2 — independent enemy lanes, focus targeting, blueprint gates */
+.enemy-lane{display:block;height:126px;overflow:visible;}
+.enemy-lane .enemy{position:absolute;right:0;bottom:5px;width:74px;transition:none;will-change:transform;cursor:pointer;touch-action:manipulation;}
+.enemy-lane .enemy.boss{width:90px;}
+.enemy .focus-reticle{position:absolute;z-index:9;left:50%;top:-13px;transform:translateX(-50%) scale(.7);opacity:0;color:#ffe071;font-size:22px;line-height:1;text-shadow:0 0 9px #ff9d22;transition:opacity .15s,transform .15s;pointer-events:none;}
+.enemy.focused .focus-reticle{opacity:1;transform:translateX(-50%) scale(1);}
+.enemy.focused{filter:drop-shadow(0 0 6px rgba(255,210,83,.9));}
+.enemy.focused .hp-track{outline:1px solid #ffe071;box-shadow:0 0 8px rgba(255,190,55,.6);}
+.enemy:active .unit-figure{transform:scale(.94);}
+.enemy-tracer{z-index:18;}
+.blueprint-gate{border-color:#a777db!important;background:linear-gradient(#4d2d69,#29183d)!important;color:#f0d9ff!important;}
+.blueprint-gate:disabled{background:#241d2c!important;color:#9887a6!important;border-color:#51425d!important;}
+.blueprint-lock-status{margin-top:7px;padding:7px 8px;border:1px dashed #5b4966;border-radius:7px;background:#19141f;color:#a995b7;font-size:8px;font-weight:900;letter-spacing:.06em;text-align:center;}
+@media (max-height:720px){.enemy-lane{height:112px;}.enemy-lane .enemy{transform-origin:right bottom;}}
