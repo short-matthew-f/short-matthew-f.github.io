@@ -1,0 +1,21 @@
+/* v1.9 generated sprite runtime */
+.hero-art,.unit-figure{position:relative;overflow:visible!important}
+.hero-art .sprite-canvas,.unit-figure .sprite-canvas{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;image-rendering:auto;filter:drop-shadow(0 7px 7px rgba(0,0,0,.58));transform-origin:50% 100%}
+.hero-art.sprite-ready>svg,.unit-figure.sprite-ready>svg,.hero-art.sprite-ready>canvas[data-painted],.unit-figure.sprite-ready>canvas[data-painted]{display:none!important}
+.hero-art .sprite-canvas{transform:scale(1.14) translateY(3px)}
+.enemy .unit-figure .sprite-canvas{transform:scale(1.34) translateY(5px)}
+.enemy.boss .unit-figure .sprite-canvas{transform:scale(1.48) translateY(4px)}
+.enemy[data-boss-type="hank"] .unit-figure .sprite-canvas,.enemy[data-kind="troll"] .unit-figure .sprite-canvas{transform:scale(1.52) translateY(5px)}
+.enemy[data-boss-type="train"]{width:116px!important}
+.enemy[data-boss-type="train"] .unit-figure .sprite-canvas{transform:scale(1.72) translateY(2px)}
+.enemy[data-kind="ghost"] .sprite-canvas,.enemy[data-boss-type="undertaker"] .sprite-canvas,.enemy[data-boss-type="nevermore"] .sprite-canvas{filter:drop-shadow(0 0 7px rgba(92,224,255,.48)) drop-shadow(0 7px 7px rgba(0,0,0,.58))}
+.enemy.summoned .sprite-canvas{opacity:.86;filter:drop-shadow(0 0 8px rgba(103,225,255,.6))}
+.enemy.hit .sprite-canvas,.sprite-state-hurt .sprite-canvas{filter:brightness(1.45) saturate(.82) drop-shadow(0 0 8px rgba(255,233,183,.7))}
+.enemy.enemy-lunge .sprite-canvas,.sprite-state-attack .sprite-canvas{filter:brightness(1.08) drop-shadow(0 8px 9px rgba(0,0,0,.65))}
+.hero-unit.hero-hit .sprite-canvas{filter:brightness(1.35) sepia(.25) drop-shadow(0 0 7px rgba(255,121,74,.7))}
+.enemy.focused .sprite-canvas{filter:drop-shadow(0 0 8px rgba(255,215,105,.85)) drop-shadow(0 8px 8px rgba(0,0,0,.7))}
+.enemy.armored .sprite-canvas{filter:saturate(.72) contrast(1.12) drop-shadow(0 0 4px rgba(150,173,190,.45))}
+.enemy.enraged .sprite-canvas{filter:drop-shadow(0 0 8px rgba(255,83,42,.68)) drop-shadow(0 8px 7px rgba(0,0,0,.62))}
+.enemy.gravebound .sprite-canvas{filter:drop-shadow(0 0 8px rgba(105,235,107,.58)) drop-shadow(0 8px 7px rgba(0,0,0,.62))}
+.sprite-loading .sprite-canvas{opacity:0}
+@media(max-height:720px){.enemy .unit-figure .sprite-canvas{transform:scale(1.24) translateY(5px)}.enemy.boss .unit-figure .sprite-canvas{transform:scale(1.38) translateY(4px)}.hero-art .sprite-canvas{transform:scale(1.06) translateY(3px)}}
