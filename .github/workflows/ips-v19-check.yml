@@ -16,7 +16,7 @@ jobs:
         run: |
           test -s idle-pachinko-shootout/assets/sprites/sprites-v19.webp
           test $(stat -c%s idle-pachinko-shootout/assets/sprites/sprites-v19.webp) -gt 300000
-          file idle-pachinko-shootout/assets/sprites/sprites-v19.webp | grep -qi webp
+          file idle-pachinko-shootout/assets/sprites/sprites-v19.webp | grep -qi 'Web/P image'
       - name: Entry-point checks
         run: |
           grep -q 'v1.9' idle-pachinko-shootout/index.html
