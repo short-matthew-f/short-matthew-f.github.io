@@ -107,12 +107,34 @@
     </section>
   </main>
   <script>
-    // Compatibility fallback for browsers/contexts without crypto.randomUUID().
-    if (!globalThis.crypto) globalThis.crypto = {};
-    if (typeof globalThis.crypto.randomUUID !== 'function') {
-      globalThis.crypto.randomUUID = () => `ips-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-    }
+    window.__IPS_BOOTED__ = false;
+    window.addEventListener('error', function (event) {
+      var msg = document.getElementById('bootError');
+      if (!msg) {
+        msg = document.createElement('div');
+        msg.id = 'bootError';
+        msg.style.cssText = 'position:fixed;left:12px;right:12px;top:120px;z-index:99999;background:#5b1515;color:#fff3d0;border:2px solid #ffbd59;border-radius:10px;padding:12px;font:13px/1.35 system-ui;white-space:pre-wrap';
+        document.body.appendChild(msg);
+      }
+      msg.textContent = 'Game startup error: ' + (event.message || 'unknown error') + (event.filename ? '\n' + event.filename + ':' + event.lineno : '');
+    });
   </script>
-  <script src="game.js" defer></script>
+  <script src="game-v3.js" defer></script>
+  <script>
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        if (!window.__IPS_BOOTED__) {
+          var msg = document.getElementById('bootError');
+          if (!msg) {
+            msg = document.createElement('div');
+            msg.id = 'bootError';
+            msg.style.cssText = 'position:fixed;left:12px;right:12px;top:120px;z-index:99999;background:#5b1515;color:#fff3d0;border:2px solid #ffbd59;border-radius:10px;padding:12px;font:13px/1.35 system-ui';
+            document.body.appendChild(msg);
+          }
+          msg.textContent = 'Game script did not finish starting. Reload once; if this remains, screenshot this message.';
+        }
+      }, 1500);
+    });
+  </script>
 </body>
 </html>
