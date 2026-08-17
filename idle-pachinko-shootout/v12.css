@@ -10,4 +10,5 @@
 .enemy-tracer{z-index:18;}
 .blueprint-gate{border-color:#a777db!important;background:linear-gradient(#4d2d69,#29183d)!important;color:#f0d9ff!important;}
 .blueprint-gate:disabled{background:#241d2c!important;color:#9887a6!important;border-color:#51425d!important;}
+.blueprint-lock-status{margin-top:7px;padding:7px 8px;border:1px dashed #5b4966;border-radius:7px;background:#19141f;color:#a995b7;font-size:8px;font-weight:900;letter-spacing:.06em;text-align:center;}
 @media (max-height:720px){.enemy-lane{height:112px;}.enemy-lane .enemy{transform-origin:right bottom;}}
