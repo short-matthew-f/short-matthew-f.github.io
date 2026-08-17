@@ -4,20 +4,22 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#17110d" />
-  <title>Idle Pachinko Shootout — v0.5</title>
+  <title>Idle Pachinko Shootout — v0.6</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="v4.css" />
   <link rel="stylesheet" href="v5.css" />
   <link rel="stylesheet" href="v6.css" />
   <link rel="stylesheet" href="v7.css" />
+  <link rel="stylesheet" href="v8.css" />
 </head>
 <body>
   <main id="app" class="game-shell">
     <header class="topbar">
-      <div class="brand">IDLE PACHINKO <span>SHOOTOUT</span><small> v0.5</small></div>
+      <div class="brand">IDLE PACHINKO <span>SHOOTOUT</span><small> v0.6</small></div>
       <div class="wallet">
         <span title="XP">✦ <b id="xpValue">0</b></span>
         <span title="Bounty Coins">● <b id="coinValue">0</b></span>
+        <button id="devButton" class="dev-button" type="button" aria-label="Open prototype telemetry">DEV</button>
       </div>
     </header>
 
@@ -70,6 +72,7 @@
       </div>
       <canvas id="board" width="393" height="472"></canvas>
       <div class="slot-labels" id="slotLabels"></div>
+      <div class="prototype-badge">OFFLINE PATROL ACTIVE · 8H CAP</div>
     </section>
 
     <nav class="dock" aria-label="Game menus">
@@ -129,9 +132,37 @@
       </div>
     </section>
 
+    <section id="returnModal" class="modal-overlay hidden" aria-live="polite">
+      <div class="return-card">
+        <div class="eyebrow">WELCOME BACK, GUNSLINGER</div>
+        <h2>The posse kept watch.</h2>
+        <p>While you were away, your crew patrolled from your last secured checkpoint. They can earn resources, but they never fight bosses or make loot decisions for you.</p>
+        <div class="return-meta"><span id="returnTime">0m away</span><span id="returnCheckpoint">Checkpoint 1</span></div>
+        <div class="return-meta"><span id="returnPatrols">0 patrol skirmishes</span><span>25% idle efficiency</span></div>
+        <div class="return-rewards">
+          <div class="return-reward"><b id="returnXp">+0 XP</b><small>GUNSLINGER XP</small></div>
+          <div class="return-reward"><b id="returnCoins">+0 coins</b><small>BOUNTY COINS</small></div>
+        </div>
+        <p id="returnCapNote" class="return-note"></p>
+        <button id="returnContinue" class="primary" type="button">BACK TO THE SHOOTOUT</button>
+      </div>
+    </section>
+
+    <section id="telemetryModal" class="modal-overlay hidden" aria-live="polite">
+      <div class="telemetry-card">
+        <div class="telemetry-head">
+          <div><div class="eyebrow">PROTOTYPE ONLY</div><h2>Balance Telemetry</h2></div>
+          <button id="closeTelemetry" class="close-btn" aria-label="Close">×</button>
+        </div>
+        <div id="telemetryContent"></div>
+        <div class="telemetry-actions"><button id="resetTelemetry" type="button">RESET TELEMETRY ONLY</button></div>
+      </div>
+    </section>
+
     <div id="bootError" class="boot-error hidden" role="alert"></div>
   </main>
 
+  <script src="idle-v8.js?v=20260817-1"></script>
   <script>
     window.__ipsBooted = false;
     window.addEventListener('error', function(e){
@@ -139,7 +170,7 @@
       if(box){box.className='boot-error';box.textContent='Game error: '+(e.message||'unknown error')+(e.lineno?' (line '+e.lineno+')':'');}
     });
     setTimeout(function(){
-      if(!window.__ipsBooted){var box=document.getElementById('bootError');if(box){box.className='boot-error';box.textContent='Game startup error: v0.5 engine did not finish booting.';}}
+      if(!window.__ipsBooted){var box=document.getElementById('bootError');if(box){box.className='boot-error';box.textContent='Game startup error: v0.6 engine did not finish booting.';}}
     },6000);
   </script>
   <script src="game-v7-loader.js?v=20260817-1" defer></script>
