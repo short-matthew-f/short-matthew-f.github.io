@@ -106,6 +106,13 @@
       </div>
     </section>
   </main>
-  <script type="module" src="game.js"></script>
+  <script>
+    // Compatibility fallback for browsers/contexts without crypto.randomUUID().
+    if (!globalThis.crypto) globalThis.crypto = {};
+    if (typeof globalThis.crypto.randomUUID !== 'function') {
+      globalThis.crypto.randomUUID = () => `ips-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+    }
+  </script>
+  <script src="game.js" defer></script>
 </body>
 </html>
