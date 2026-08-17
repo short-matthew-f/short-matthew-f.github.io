@@ -1,0 +1,41 @@
+/* v1.10 — native-resolution pixel combat sprites */
+.hero-art,.unit-figure{position:relative;overflow:visible!important}
+.hero-art canvas.sprite-v110,.unit-figure canvas.sprite-v110{
+  position:absolute;
+  left:50%;
+  bottom:0;
+  display:block;
+  width:auto!important;
+  height:auto!important;
+  max-width:none!important;
+  max-height:none!important;
+  pointer-events:none;
+  transform:translateX(-50%);
+  transform-origin:50% 100%;
+  image-rendering:pixelated!important;
+  image-rendering:crisp-edges!important;
+  filter:none!important;
+}
+.sprite-v110-ready>svg,.sprite-v110-ready>canvas[data-painted]{display:none!important}
+.hero-art canvas.sprite-v110{width:64px!important;height:80px!important;bottom:2px}
+.enemy .unit-figure canvas.sprite-v110{width:64px!important;height:80px!important;bottom:0}
+.enemy[data-sprite-key="ghost"] .unit-figure canvas.sprite-v110{bottom:5px}
+.enemy[data-sprite-key="troll"] .unit-figure canvas.sprite-v110{width:80px!important;height:96px!important;bottom:-1px}
+/* Keep generated pixels crisp; communicate game state with hard-edged outer effects instead of softening the art. */
+.enemy.focused .unit-figure canvas.sprite-v110{filter:drop-shadow(0 0 2px #ffd45e)!important}
+.enemy[data-summoned="1"] .unit-figure canvas.sprite-v110{opacity:.88}
+.enemy.sprite-hurt .unit-figure canvas.sprite-v110{filter:brightness(1.55) saturate(.45)!important}
+.enemy.sprite-attack .unit-figure canvas.sprite-v110{filter:brightness(1.12)!important}
+.hero-unit.sprite-hurt .hero-art canvas.sprite-v110{filter:brightness(1.45) sepia(.22)!important}
+.hero-unit.sprite-attack .hero-art canvas.sprite-v110{filter:brightness(1.10)!important}
+.enemy.armored .unit-figure canvas.sprite-v110{filter:saturate(.65) contrast(1.18)!important}
+.enemy.enraged .unit-figure canvas.sprite-v110{filter:saturate(1.3) brightness(1.06)!important}
+.enemy.stunned .unit-figure canvas.sprite-v110{filter:saturate(.45) brightness(1.18)!important}
+/* Do not enlarge the combat strip. Labels remain on top of sprite art. */
+.hero-unit .unit-name,.hero-unit .hp-track,.hero-unit .unit-meta,.hero-unit .reload-track,.hero-unit .reload-label,
+.enemy .enemy-name,.enemy .enemy-badges,.enemy .hp-track,.enemy .unit-meta{position:relative;z-index:4}
+@media(max-height:720px){
+  .hero-art canvas.sprite-v110{bottom:1px}
+  .enemy .unit-figure canvas.sprite-v110{bottom:0}
+  .enemy[data-sprite-key="troll"] .unit-figure canvas.sprite-v110{width:72px!important;height:86px!important}
+}
