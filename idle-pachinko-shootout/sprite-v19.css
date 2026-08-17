@@ -1,12 +1,13 @@
 /* v1.9 — generated character sprites */
 .hero-art,.unit-figure{position:relative;overflow:visible!important}
-.sprite-v19{display:block;width:100%;height:100%;pointer-events:none;image-rendering:auto;transform-origin:50% 100%;filter:drop-shadow(0 7px 7px rgba(0,0,0,.62))}
+.sprite-v19{display:block;width:auto!important;height:100%!important;max-width:none!important;margin:0 auto;pointer-events:none;image-rendering:auto;transform-origin:50% 100%;filter:drop-shadow(0 7px 7px rgba(0,0,0,.62))}
 .sprite-ready>svg,.sprite-ready>canvas[data-painted]{display:none!important}
 .hero-art .sprite-v19{transform:scale(1.18) translateY(4px)}
 .enemy .unit-figure .sprite-v19{transform:scale(1.38) translateY(6px)}
 .enemy.boss .unit-figure .sprite-v19{transform:scale(1.52) translateY(5px)}
 .enemy[data-sprite-key="troll"] .sprite-v19,.enemy[data-sprite-key="hank"] .sprite-v19{transform:scale(1.58) translateY(5px)}
 .enemy[data-sprite-key="train"]{width:116px!important}
+.enemy[data-sprite-key="train"] .unit-figure{width:104px;height:86px}
 .enemy[data-sprite-key="train"] .sprite-v19{transform:scale(1.72) translateY(3px)}
 .enemy[data-sprite-key="ghost"] .sprite-v19,.enemy[data-sprite-key="undertaker"] .sprite-v19,.enemy[data-sprite-key="nevermore"] .sprite-v19{filter:drop-shadow(0 0 8px rgba(83,221,255,.55)) drop-shadow(0 7px 7px rgba(0,0,0,.62))}
 .enemy[data-summoned="1"] .sprite-v19{opacity:.86;filter:drop-shadow(0 0 9px rgba(93,231,255,.66))}
