@@ -45,7 +45,7 @@ jobs:
       - name: Commit generated engine
         if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
         run: |
-          if git diff --quiet -- idle-pachinko-shootout/engine-v130.js; then
+          if git ls-files --error-unmatch idle-pachinko-shootout/engine-v130.js >/dev/null 2>&1 && git diff --quiet -- idle-pachinko-shootout/engine-v130.js; then
             echo 'engine-v130.js already current'
             exit 0
           fi
