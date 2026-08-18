@@ -21,6 +21,8 @@ assert(/waves:\{progress:0,target:6,tier:1\}/.test(campaign),'First Trailblazer 
 assert(/FIRST_DEATH=\{xp:60,coins:80\}/.test(progression),'First-death cache drifted from 60 XP / 80 coins');
 
 // Exact gross rewards from the current Wave 1-10 enemy and wave-clear formulas.
+// This intentionally uses JS Math.round so .5 rounds upward exactly as it does
+// in the engine.
 const base=[9,10,11,14];
 let grossXp=0,grossCoins=0;
 const rows=[];
@@ -36,9 +38,10 @@ for(let w=1;w<=10;w++){
   const coins=rewards.reduce((sum,r)=>sum+r,0)+(20+w*4);
   grossXp+=xp;grossCoins+=coins;rows.push({w,xp,coins,cumXp:grossXp,cumCoins:grossCoins});
 }
-assert(rows[4].cumXp===100 && rows[4].cumCoins===293,'Wave-5 gross economy no longer matches onboarding baseline');
-assert(rows[8].cumXp===269 && rows[8].cumCoins===719,'Wave-9 gross economy no longer matches workshop baseline');
-assert(rows[9].cumXp===408 && rows[9].cumCoins===964,'First-boss gross economy drifted');
+assert(rows[4].cumXp===101 && rows[4].cumCoins===293,'Wave-5 gross economy no longer matches onboarding baseline');
+assert(rows[7].cumXp===223 && rows[7].cumCoins===598,'Wave-8 gross economy no longer matches workshop baseline');
+assert(rows[8].cumXp===272 && rows[8].cumCoins===719,'Wave-9 gross economy no longer matches workshop baseline');
+assert(rows[9].cumXp===411 && rows[9].cumCoins===964,'First-boss gross economy drifted');
 
 // Guided baseline: Hero/Board tutorial subsidies make their first purchases
 // economy-neutral. At Wave 5, the player has 293 natural coins; Incendiary
@@ -67,6 +70,7 @@ window.__ipsAPI={snapshot(){return JSON.parse(JSON.stringify(save));},grant(xp,c
 window.localStorage.setItem('ips-onboarding-v1',JSON.stringify({migrated:false}));
 window.eval(progression+'\n//# sourceURL=progression-v132.js');
 await sleep(90);
+assert(window.__ipsEconomyTelemetry.snapshot().runs===1,'initial live run was not counted by economy telemetry');
 document.getElementById('deathSummary').textContent='Run ended.';
 document.dispatchEvent(new window.CustomEvent('ips:heroDeath',{detail:{wave:6}}));
 await sleep(10);
@@ -97,6 +101,7 @@ assert(firstSession.workshop.complete===true,'Tremor workshop goal did not compl
 assert(window.__ipsEconomyTelemetry&&window.__ipsEconomyTelemetry.targets.tremor.research===420,'economy telemetry API missing');
 
 console.log('v1.13.2 progression/economy smoke PASS');
+console.log('gross XP: W5 = 101, W8 = 223, W9 = 272, W10 = 411');
 console.log('guided no-death wallet: Wave 8 = 390, Wave 9 = 511');
 console.log('first-death cache: +60 XP / +80 coins');
 dom.window.close();
