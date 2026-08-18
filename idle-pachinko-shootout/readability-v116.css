@@ -1,0 +1,40 @@
+/* v1.11.6 — enemy HUD readability + one targeting language */
+
+/* The lane depth transform can push lane 2's lower HUD through the clipped combat floor.
+   Keep the visual depth, but lift the two rear depth bands enough that every HP bar survives. */
+.enemy-lane .enemy.lane-1{bottom:9px!important}
+.enemy-lane .enemy.lane-2{bottom:15px!important}
+
+/* HP is combat-critical information. Anchor the bar above the figure instead of beneath it,
+   where queue overlap and the combat floor can hide it. */
+.enemy .hp-track{
+  position:absolute!important;
+  z-index:18!important;
+  left:50%!important;
+  top:-8px!important;
+  width:68px!important;
+  height:7px!important;
+  margin:0!important;
+  transform:translateX(-50%)!important;
+  border:1px solid rgba(255,235,198,.42)!important;
+  background:#120807!important;
+  box-shadow:0 1px 0 #050302,0 0 0 1px rgba(0,0,0,.38)!important;
+}
+.enemy.boss .hp-track{width:86px!important;height:8px!important;top:-9px!important}
+.enemy .hp-fill{min-width:1px}
+
+/* v1.12, v1.8, and cleanup-v111 each contributed older focus treatments.
+   Match the old high-specificity selector so the legacy full rectangle cannot win. */
+.enemy .focus-reticle,.enemy.focused .focus-reticle{display:none!important;border:0!important;box-shadow:none!important}
+.enemy.focused{filter:none!important}
+.enemy.focused .unit-figure{filter:drop-shadow(0 8px 7px rgba(0,0,0,.55))!important}
+.enemy.focused .hp-track{outline:none!important;box-shadow:0 1px 0 #050302,0 0 0 1px rgba(0,0,0,.38)!important}
+
+/* Let the v1.11.5 pixel corner brackets + gold diamond be the sole selection marker. */
+.enemy.focused .unit-figure:before,.enemy.focused .unit-figure:after{opacity:1}
+
+@media(max-height:720px){
+  .enemy-lane .enemy.lane-1{bottom:8px!important}
+  .enemy-lane .enemy.lane-2{bottom:13px!important}
+  .enemy .hp-track{top:-7px!important}
+}

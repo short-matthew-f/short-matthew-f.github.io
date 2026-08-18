@@ -1,0 +1,45 @@
+/* v1.11.6 — death spending UX */
+.death-actions{grid-template-columns:1fr 1fr!important}
+.death-actions #deathHero{grid-column:1/-1}
+.death-actions #deathBoard,.death-actions #deathAmmo{font-size:9px;line-height:1.15;padding:8px 5px}
+.death-actions #rideAgain{grid-column:1/-1}
+
+.death-spend-bar{
+  position:absolute;
+  z-index:55;
+  top:43px;
+  left:8px;
+  right:8px;
+  min-height:34px;
+  display:grid;
+  grid-template-columns:auto 1fr 1fr auto;
+  align-items:center;
+  gap:4px;
+  padding:4px 5px;
+  border:1px solid rgba(224,171,78,.56);
+  background:linear-gradient(180deg,rgba(41,27,18,.98),rgba(17,12,9,.98));
+  box-shadow:0 5px 16px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,222,143,.07);
+}
+.death-spend-bar>span{padding:0 4px;color:#f1c45f;font-size:7px;font-weight:1000;letter-spacing:.13em;white-space:nowrap}
+.death-spend-bar button{
+  min-height:24px;
+  border:1px solid #6d4d27;
+  border-radius:4px;
+  background:#24170f;
+  color:#ead19b;
+  font-size:7px;
+  font-weight:1000;
+  letter-spacing:.06em;
+  padding:3px 5px;
+}
+.death-spend-bar button[data-death-done]{border-color:#a56f2e;background:#4b2d13;color:#ffe1a0}
+
+body.ips-death-spending #deathModal{display:none!important}
+body.ips-death-spending .campaign-toast{z-index:56}
+
+@media(max-width:370px){
+  .death-spend-bar{grid-template-columns:auto 1fr 1fr;top:42px}
+  .death-spend-bar>span{grid-column:1/-1;text-align:center;padding:0}
+  .death-spend-bar button{min-height:22px}
+  .death-spend-bar button[data-death-done]{grid-column:auto}
+}
