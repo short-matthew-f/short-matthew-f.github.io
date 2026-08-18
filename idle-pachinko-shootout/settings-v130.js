@@ -18,17 +18,17 @@ function close(id){var el=$(id);if(el)el.classList.add('hidden');}
 
 // One-time compatibility migration. Older builds kept peg levels in a shadow
 // ledger because the legacy save merger discarded dynamic peg-position keys.
-// v1.13 restores those keys natively, so hydrate once before engine startup and
-// then let the engine own peg persistence directly.
+// v1.13 restores those keys natively, so hydrate once before engine startup,
+// retire the shadow keys, and leave ips-v7 as the single source of truth.
 function migratePegLedger(){
-  var engine=readJson(ENGINE_KEY),ledger=readJson(PEG_LEDGER_KEY)||readJson(OLD_PEG_KEY),placements,i,j,t,idx,key,src,dst;
+  var engine=readJson(ENGINE_KEY),ledger=readJson(PEG_LEDGER_KEY)||readJson(OLD_PEG_KEY),placements,i,j,t,idx,key,src,dst,arr;
   if(!engine||!ledger||!ledger.pegMeta)return;
   placements=engine.placements||ledger.placements||{};
   engine.pegMeta=engine.pegMeta||{};
   for(i=0;i<PEG_TYPES.length;i++){
     t=PEG_TYPES[i];
     engine.pegMeta[t]=engine.pegMeta[t]||{};
-    var arr=placements[t]||[];
+    arr=placements[t]||[];
     for(j=0;j<arr.length;j++){
       idx=arr[j];key=String(idx);
       src=(ledger.pegMeta[t]&&ledger.pegMeta[t][key])||null;
@@ -40,6 +40,7 @@ function migratePegLedger(){
     }
   }
   writeJson(ENGINE_KEY,engine);
+  try{localStorage.removeItem(PEG_LEDGER_KEY);localStorage.removeItem(OLD_PEG_KEY);}catch(e){}
 }
 migratePegLedger();
 
