@@ -16,7 +16,7 @@ function installBootRedirect(){
     if(!old||!old.parentNode)return;
     bootRedirected=true;
     n=document.createElement('script');
-    n.src='engine-v119-loader.js?v=20260818-119';
+    n.src='engine-v120-loader.js?v=20260818-120';
     n.defer=true;
     old.parentNode.insertBefore(n,old);
     old.parentNode.removeChild(old);
@@ -24,11 +24,11 @@ function installBootRedirect(){
   var mo=new MutationObserver(function(){redirect();if(bootRedirected)mo.disconnect();});
   mo.observe(document.documentElement,{childList:true,subtree:true});
   redirect();
-  setTimeout(function(){if(!window.__ipsBooted&&!bootRedirected){var n=document.createElement('script');bootRedirected=true;n.src='engine-v119-loader.js?v=20260818-119-fallback';document.head.appendChild(n);}},1200);
+  setTimeout(function(){if(!window.__ipsBooted&&!bootRedirected){var n=document.createElement('script');bootRedirected=true;n.src='engine-v120-loader.js?v=20260818-120-fallback';document.head.appendChild(n);}},1200);
 }
 function installBoardAssets(){
-  if(!document.querySelector('link[href^="board-v120.css"]')){var l=document.createElement('link');l.rel='stylesheet';l.href='board-v120.css?v=20260818-1';document.head.appendChild(l);}
-  if(!document.querySelector('script[src^="board-v120.js"]')){var s=document.createElement('script');s.src='board-v120.js?v=20260818-1';document.head.appendChild(s);}
+  if(!document.querySelector('link[href^="board-v120.css"]')){var l=document.createElement('link');l.rel='stylesheet';l.href='board-v120.css?v=20260818-2';document.head.appendChild(l);}
+  if(!document.querySelector('script[src^="board-v120.js"]')){var s=document.createElement('script');s.src='board-v120.js?v=20260818-2';document.head.appendChild(s);}
 }
 installBootRedirect();
 installBoardAssets();
