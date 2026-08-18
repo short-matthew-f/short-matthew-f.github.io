@@ -1,0 +1,46 @@
+name: IPS flatten engine
+
+on:
+  push:
+    branches:
+      - idle-pachinko-v1.13-engine-cleanup
+    paths:
+      - 'idle-pachinko-shootout/tools/flatten-engine.mjs'
+      - 'idle-pachinko-shootout/engine-v130.js'
+      - 'idle-pachinko-shootout/engine-v121-loader.js'
+      - 'idle-pachinko-shootout/engine-v117-loader.js'
+      - 'idle-pachinko-shootout/engine-v114-loader.js'
+      - 'idle-pachinko-shootout/engine-v113-loader.js'
+      - 'idle-pachinko-shootout/engine-v111-loader.js'
+      - 'idle-pachinko-shootout/engine-v17.js'
+      - '.github/workflows/ips-flatten-engine.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'idle-pachinko-shootout/tools/flatten-engine.mjs'
+      - 'idle-pachinko-shootout/engine-v130.js'
+      - 'idle-pachinko-shootout/engine-v121-loader.js'
+      - 'idle-pachinko-shootout/engine-v117-loader.js'
+      - 'idle-pachinko-shootout/engine-v114-loader.js'
+      - 'idle-pachinko-shootout/engine-v113-loader.js'
+      - 'idle-pachinko-shootout/engine-v111-loader.js'
+      - 'idle-pachinko-shootout/engine-v17.js'
+      - '.github/workflows/ips-flatten-engine.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  flatten:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Regenerate static engine
+        run: node idle-pachinko-shootout/tools/flatten-engine.mjs
+      - name: Syntax check
+        run: node --check idle-pachinko-shootout/engine-v130.js
+      - name: Verify generated engine is committed
+        run: git diff --exit-code -- idle-pachinko-shootout/engine-v130.js
+      - name: Diff sanity
+        run: git diff --check
