@@ -1,0 +1,29 @@
+name: Export current master ZIP
+
+on:
+  push:
+    branches:
+      - agent/export-master-zip-20260818-current
+    paths:
+      - '.github/workflows/export-current-master.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: master
+      - name: Upload current master snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: short-matthew-f.github.io-current-master
+          path: |
+            .
+            !.git/**
+          include-hidden-files: true
+          compression-level: 6
+          retention-days: 1
