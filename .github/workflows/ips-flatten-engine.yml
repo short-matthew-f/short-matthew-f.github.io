@@ -13,6 +13,18 @@ on:
       - 'idle-pachinko-shootout/engine-v111-loader.js'
       - 'idle-pachinko-shootout/engine-v17.js'
       - '.github/workflows/ips-flatten-engine.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'idle-pachinko-shootout/tools/flatten-engine.mjs'
+      - 'idle-pachinko-shootout/engine-v121-loader.js'
+      - 'idle-pachinko-shootout/engine-v117-loader.js'
+      - 'idle-pachinko-shootout/engine-v114-loader.js'
+      - 'idle-pachinko-shootout/engine-v113-loader.js'
+      - 'idle-pachinko-shootout/engine-v111-loader.js'
+      - 'idle-pachinko-shootout/engine-v17.js'
+      - '.github/workflows/ips-flatten-engine.yml'
 
 permissions:
   contents: write
@@ -23,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.head_ref || github.ref_name }}
       - name: Generate flattened engine
         run: node idle-pachinko-shootout/tools/flatten-engine.mjs
       - name: Syntax check
@@ -31,6 +43,7 @@ jobs:
       - name: Diff sanity
         run: git diff --check
       - name: Commit generated engine
+        if: github.event_name == 'push'
         run: |
           if git diff --quiet -- idle-pachinko-shootout/engine-v130.js; then
             echo 'engine-v130.js already current'
