@@ -23,9 +23,9 @@
 .enemy.boss .hp-track{width:86px!important;height:8px!important;top:-9px!important}
 .enemy .hp-fill{min-width:1px}
 
-/* v1.12 and v1.8 both had their own focus language. v1.11.5 introduced pixel brackets.
-   Retire every earlier focus indicator so selection reads as exactly one target box. */
-.enemy .focus-reticle{display:none!important}
+/* v1.12, v1.8, and cleanup-v111 each contributed older focus treatments.
+   Match the old high-specificity selector so the legacy full rectangle cannot win. */
+.enemy .focus-reticle,.enemy.focused .focus-reticle{display:none!important;border:0!important;box-shadow:none!important}
 .enemy.focused{filter:none!important}
 .enemy.focused .unit-figure{filter:drop-shadow(0 8px 7px rgba(0,0,0,.55))!important}
 .enemy.focused .hp-track{outline:none!important;box-shadow:0 1px 0 #050302,0 0 0 1px rgba(0,0,0,.38)!important}
