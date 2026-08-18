@@ -6,6 +6,7 @@ on:
       - idle-pachinko-v1.13-engine-cleanup
     paths:
       - 'idle-pachinko-shootout/tools/flatten-engine.mjs'
+      - 'idle-pachinko-shootout/engine-v130.js'
       - 'idle-pachinko-shootout/engine-v121-loader.js'
       - 'idle-pachinko-shootout/engine-v117-loader.js'
       - 'idle-pachinko-shootout/engine-v114-loader.js'
@@ -18,6 +19,7 @@ on:
       - master
     paths:
       - 'idle-pachinko-shootout/tools/flatten-engine.mjs'
+      - 'idle-pachinko-shootout/engine-v130.js'
       - 'idle-pachinko-shootout/engine-v121-loader.js'
       - 'idle-pachinko-shootout/engine-v117-loader.js'
       - 'idle-pachinko-shootout/engine-v114-loader.js'
@@ -27,31 +29,18 @@ on:
       - '.github/workflows/ips-flatten-engine.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   flatten:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-      - name: Generate flattened engine
+      - name: Regenerate static engine
         run: node idle-pachinko-shootout/tools/flatten-engine.mjs
       - name: Syntax check
         run: node --check idle-pachinko-shootout/engine-v130.js
+      - name: Verify generated engine is committed
+        run: git diff --exit-code -- idle-pachinko-shootout/engine-v130.js
       - name: Diff sanity
         run: git diff --check
-      - name: Commit generated engine
-        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-        run: |
-          if git ls-files --error-unmatch idle-pachinko-shootout/engine-v130.js >/dev/null 2>&1 && git diff --quiet -- idle-pachinko-shootout/engine-v130.js; then
-            echo 'engine-v130.js already current'
-            exit 0
-          fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add idle-pachinko-shootout/engine-v130.js
-          git commit -m 'Build flattened v1.13 engine'
-          TARGET="${{ github.head_ref || github.ref_name }}"
-          git push origin "HEAD:${TARGET}"
