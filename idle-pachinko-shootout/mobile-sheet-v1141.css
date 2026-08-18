@@ -1,7 +1,7 @@
 /* v1.14.1 — viewport-fixed upgrade sheet for mobile Safari and tall/short visual viewports */
 .sheet{
   position:fixed!important;
-  z-index:80;
+  z-index:30;
   left:50%!important;
   right:auto!important;
   bottom:0!important;
