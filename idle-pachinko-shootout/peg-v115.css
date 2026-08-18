@@ -1,0 +1,7 @@
+/* v1.11.5 — peg move instructions never cover the playfield */
+.launcher-cap{position:relative}
+.launcher-cap .placement-banner.launcher-placement{position:absolute!important;inset:4px 8px!important;width:auto!important;height:auto!important;min-height:0!important;margin:0!important;padding:4px 7px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:7px!important;z-index:30!important;border:1px solid rgba(228,174,75,.55)!important;border-radius:6px!important;background:linear-gradient(180deg,rgba(49,32,19,.97),rgba(23,15,10,.98))!important;box-shadow:0 3px 9px rgba(0,0,0,.48)!important;pointer-events:auto!important}
+.launcher-cap .placement-banner.launcher-placement.hidden{display:none!important}
+.launcher-cap .placement-banner.launcher-placement span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px!important;line-height:1!important;letter-spacing:.055em!important;color:#f2d792!important}
+.launcher-cap .placement-banner.launcher-placement button{flex:none;min-width:48px!important;min-height:25px!important;padding:3px 7px!important;border-radius:5px!important;font-size:7px!important;line-height:1!important}
+.board-wrap.peg-moving .launcher-cap .bullet-queue,.board-wrap.peg-moving .launcher-cap .launcher-label{opacity:.07;transition:opacity .12s ease}
