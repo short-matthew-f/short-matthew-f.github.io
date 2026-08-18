@@ -1,0 +1,40 @@
+name: IPS v1.14.7 core coherency
+
+on:
+  push:
+    branches:
+      - agent/ips-v1147-board-cache-coherency
+    paths:
+      - 'idle-pachinko-shootout/index.html'
+      - 'idle-pachinko-shootout/engine-v130.js'
+      - 'idle-pachinko-shootout/runtime-v130.js'
+      - 'idle-pachinko-shootout/core-coherency-v1147.js'
+      - 'idle-pachinko-shootout/tools/smoke-v1147-core-coherency.mjs'
+      - '.github/workflows/ips-v1147-core-coherency.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'idle-pachinko-shootout/index.html'
+      - 'idle-pachinko-shootout/engine-v130.js'
+      - 'idle-pachinko-shootout/runtime-v130.js'
+      - 'idle-pachinko-shootout/core-coherency-v1147.js'
+      - 'idle-pachinko-shootout/tools/smoke-v1147-core-coherency.mjs'
+      - '.github/workflows/ips-v1147-core-coherency.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: JavaScript syntax
+        run: |
+          node --check idle-pachinko-shootout/core-coherency-v1147.js
+          node --check idle-pachinko-shootout/tools/smoke-v1147-core-coherency.mjs
+      - name: Board core cache coherency regression
+        run: node idle-pachinko-shootout/tools/smoke-v1147-core-coherency.mjs
+      - name: Diff sanity
+        run: git diff --check
