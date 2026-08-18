@@ -1,0 +1,7 @@
+/* v1.11.7 — loot progression, Tremor peg, fixed firing pin */
+.loot-upgrade-card .rankline span:last-child{font-size:8px;line-height:1.3}
+.loot-side.boss-unique{border-color:#ffd86b!important;box-shadow:inset 0 0 28px rgba(255,215,91,.13),0 0 16px rgba(255,190,52,.12)!important}
+.loot-side.boss-unique .loot-rarity{color:#ffe37f!important;text-shadow:0 0 8px rgba(255,203,68,.35)}
+.firing-pin-label{position:absolute;z-index:8;transform:translateX(-50%);pointer-events:none;padding:2px 4px;border:1px solid rgba(190,198,209,.48);border-radius:3px;background:rgba(14,15,17,.86);color:#cbd1d9;font-size:6px;font-weight:900;letter-spacing:.12em;text-shadow:0 1px #000}
+.firing-pin-context{width:210px!important;border-color:#7f8790!important}.firing-pin-context .peg-context-head span{color:#cbd1d9!important}.firing-pin-context .peg-effect{color:#bcc4cd!important}
+.peg-dot.fire{background:#d6b05a!important;box-shadow:0 0 8px rgba(214,176,90,.55)!important}
