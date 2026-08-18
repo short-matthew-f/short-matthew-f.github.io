@@ -1,9 +1,9 @@
-name: IPS v1.14.1 runtime check
+name: IPS v1.14.2 runtime check
 
 on:
   push:
     branches:
-      - agent/ips-v1141-mobile-sheet
+      - agent/ips-v1142-board-machine
     paths:
       - 'idle-pachinko-shootout/index.html'
       - 'idle-pachinko-shootout/engine-v130.js'
@@ -19,12 +19,15 @@ on:
       - 'idle-pachinko-shootout/dustwater-v1140.css'
       - 'idle-pachinko-shootout/dustwater-audio-v1140.js'
       - 'idle-pachinko-shootout/mobile-sheet-v1141.css'
+      - 'idle-pachinko-shootout/board-machine-v1142.js'
+      - 'idle-pachinko-shootout/board-machine-v1142.css'
       - 'idle-pachinko-shootout/tools/smoke-v130.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v132-progression.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v133-feel.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1140-identity.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs'
       - '.github/workflows/ips-v130-check.yml'
   pull_request:
     branches:
@@ -44,12 +47,15 @@ on:
       - 'idle-pachinko-shootout/dustwater-v1140.css'
       - 'idle-pachinko-shootout/dustwater-audio-v1140.js'
       - 'idle-pachinko-shootout/mobile-sheet-v1141.css'
+      - 'idle-pachinko-shootout/board-machine-v1142.js'
+      - 'idle-pachinko-shootout/board-machine-v1142.css'
       - 'idle-pachinko-shootout/tools/smoke-v130.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v132-progression.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v133-feel.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1140-identity.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs'
       - '.github/workflows/ips-v130-check.yml'
 
 permissions:
@@ -71,12 +77,14 @@ jobs:
           node --check idle-pachinko-shootout/feel-v133.js
           node --check idle-pachinko-shootout/dustwater-v1140.js
           node --check idle-pachinko-shootout/dustwater-audio-v1140.js
+          node --check idle-pachinko-shootout/board-machine-v1142.js
           node --check idle-pachinko-shootout/tools/smoke-v130.mjs
           node --check idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs
           node --check idle-pachinko-shootout/tools/smoke-v132-progression.mjs
           node --check idle-pachinko-shootout/tools/smoke-v133-feel.mjs
           node --check idle-pachinko-shootout/tools/smoke-v1140-identity.mjs
           node --check idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs
+          node --check idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs
       - name: Static engine architecture
         run: |
           ! grep -Eq "fetch\(['\"]engine-v|new Function\(" idle-pachinko-shootout/engine-v130.js
@@ -93,6 +101,8 @@ jobs:
           grep -q 'dustwater-v1140.css' idle-pachinko-shootout/index.html
           grep -q 'dustwater-audio-v1140.js' idle-pachinko-shootout/index.html
           grep -q 'mobile-sheet-v1141.css' idle-pachinko-shootout/index.html
+          grep -q 'board-machine-v1142.js' idle-pachinko-shootout/index.html
+          grep -q 'board-machine-v1142.css' idle-pachinko-shootout/index.html
       - name: Legacy runtime layers are inactive
         run: |
           ! grep -Eq 'progression-v117.js|ui-v111.js|peg-v113.js|peg-v115.js|peg-v117.js|board-v121.js|engine-v121-loader.js|campaign-v10.js' idle-pachinko-shootout/index.html
@@ -105,6 +115,7 @@ jobs:
           ! grep -Eq "observe\([^\n]*sheetContent|observe\(content,\{childList:true,subtree:true\}" idle-pachinko-shootout/feel-v133.js
           ! grep -Eq "observe\([^\n]*sheetContent|observe\(content,\{childList:true,subtree:true\}" idle-pachinko-shootout/dustwater-v1140.js
           ! grep -Eq "observe\([^\n]*sheetContent|observe\(content,\{childList:true,subtree:true\}" idle-pachinko-shootout/dustwater-audio-v1140.js
+          ! grep -Eq "MutationObserver|observe\(" idle-pachinko-shootout/board-machine-v1142.js
       - name: Install smoke-test DOM
         run: npm install --no-save --no-package-lock jsdom@26
       - name: Board / peg persistence smoke test
@@ -119,5 +130,7 @@ jobs:
         run: node idle-pachinko-shootout/tools/smoke-v1140-identity.mjs
       - name: Mobile sheet viewport smoke test
         run: node idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs
+      - name: Board machine legibility smoke test
+        run: node idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs
       - name: Diff sanity
         run: git diff --check
