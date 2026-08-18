@@ -3,7 +3,7 @@
 if(window.__ipsSettings130)return;
 window.__ipsSettings130=true;
 
-var VERSION='1.14.4';
+var VERSION='1.14.7';
 var ENGINE_KEY='ips-v7';
 var PEG_LEDGER_KEY='ips-peg-state-v2';
 var OLD_PEG_KEY='ips-peg-meta-v1';
