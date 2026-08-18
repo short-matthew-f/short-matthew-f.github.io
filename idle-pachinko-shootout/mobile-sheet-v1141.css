@@ -1,0 +1,33 @@
+/* v1.14.1 — viewport-fixed upgrade sheet for mobile Safari and tall/short visual viewports */
+.sheet{
+  position:fixed!important;
+  z-index:30;
+  left:50%!important;
+  right:auto!important;
+  bottom:0!important;
+  width:min(100vw,460px)!important;
+  height:min(80vh,720px)!important;
+  max-height:calc(100vh - 8px)!important;
+  transform:translate(-50%,102%)!important;
+  border-radius:18px 18px 0 0;
+  padding-bottom:env(safe-area-inset-bottom);
+  will-change:transform;
+}
+.sheet.open{transform:translate(-50%,0)!important}
+.sheet-content{
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:max(90px,calc(28px + env(safe-area-inset-bottom)))!important;
+}
+@supports(height:100dvh){
+  .sheet{
+    height:min(80dvh,720px)!important;
+    max-height:calc(100dvh - 8px)!important;
+  }
+}
+@media(max-width:460px){
+  .sheet{width:100vw!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .sheet{transition:none!important}
+}
