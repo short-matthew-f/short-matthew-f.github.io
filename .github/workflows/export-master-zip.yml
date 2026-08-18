@@ -6,6 +6,11 @@ on:
       - agent/export-master-zip-20260818
     paths:
       - '.github/workflows/export-master-zip.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/export-master-zip.yml'
 
 permissions:
   contents: read
