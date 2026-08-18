@@ -1,9 +1,9 @@
-name: IPS v1.14.2 runtime check
+name: IPS v1.14.3 runtime check
 
 on:
   push:
     branches:
-      - agent/ips-v1142-board-machine
+      - agent/ips-v1143-pin-flicker
     paths:
       - 'idle-pachinko-shootout/index.html'
       - 'idle-pachinko-shootout/engine-v130.js'
@@ -28,6 +28,7 @@ on:
       - 'idle-pachinko-shootout/tools/smoke-v1140-identity.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v1143-pin-flicker.mjs'
       - '.github/workflows/ips-v130-check.yml'
   pull_request:
     branches:
@@ -56,6 +57,7 @@ on:
       - 'idle-pachinko-shootout/tools/smoke-v1140-identity.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v1143-pin-flicker.mjs'
       - '.github/workflows/ips-v130-check.yml'
 
 permissions:
@@ -85,6 +87,7 @@ jobs:
           node --check idle-pachinko-shootout/tools/smoke-v1140-identity.mjs
           node --check idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs
           node --check idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs
+          node --check idle-pachinko-shootout/tools/smoke-v1143-pin-flicker.mjs
       - name: Static engine architecture
         run: |
           ! grep -Eq "fetch\(['\"]engine-v|new Function\(" idle-pachinko-shootout/engine-v130.js
@@ -132,5 +135,7 @@ jobs:
         run: node idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs
       - name: Board machine legibility smoke test
         run: node idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs
+      - name: Firing Pin flicker smoke test
+        run: node idle-pachinko-shootout/tools/smoke-v1143-pin-flicker.mjs
       - name: Diff sanity
         run: git diff --check
