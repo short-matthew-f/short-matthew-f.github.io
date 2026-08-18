@@ -1,11 +1,6 @@
 name: IPS v1.14.7 settings version sync build
 
 on:
-  push:
-    branches:
-      - agent/ips-v1147-settings-version-sync
-    paths:
-      - '.github/workflows/ips-v1147-version-sync-build.yml'
   pull_request:
     branches:
       - master
@@ -22,7 +17,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: agent/ips-v1147-settings-version-sync
-      - name: Patch version source and regression
+      - name: Patch cache key and regression
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -31,10 +26,7 @@ jobs:
 
           settings = game / 'settings-v130.js'
           text = settings.read_text()
-          old = "var VERSION='1.14.4';"
-          new = "var VERSION='1.14.7';"
-          assert text.count(old) == 1, 'settings VERSION target missing or ambiguous'
-          settings.write_text(text.replace(old, new))
+          assert "var VERSION='1.14.7';" in text, 'settings VERSION is not v1.14.7'
 
           index = game / 'index.html'
           text = index.read_text()
@@ -46,36 +38,25 @@ jobs:
           smoke = game / 'tools/smoke-v1147-core-coherency.mjs'
           text = smoke.read_text()
           old = "const guard=read('core-coherency-v1147.js');\n"
-          new = old + "const settings=read('settings-v130.js');\n"
-          assert text.count(old) == 1, 'smoke settings read anchor missing or ambiguous'
-          text = text.replace(old, new)
+          if "const settings=read('settings-v130.js');" not in text:
+              assert text.count(old) == 1, 'smoke settings read anchor missing or ambiguous'
+              text = text.replace(old, old + "const settings=read('settings-v130.js');\n")
           old = "assert(/<small> v1\\.14\\.7<\\/small>/.test(html),'visible shell version is not v1.14.7');\n"
-          new = old + "const shellVersion=(html.match(/<title>Idle Pachinko Shootout — v([^<]+)<\\/title>/)||[])[1];\nconst settingsVersion=(settings.match(/var VERSION='([^']+)'/)||[])[1];\nassert(shellVersion&&settingsVersion&&settingsVersion===shellVersion,`settings VERSION ${settingsVersion||'missing'} does not match shell ${shellVersion||'missing'}`);\nassert(html.includes(`settings-v130.js?v=${BUILD}`),'settings script does not use v1.14.7 cache key');\nassert(!html.includes('settings-v130.js?v=20260818-1144'),'stale settings cache key is still active');\n"
-          assert text.count(old) == 1, 'smoke version assertion anchor missing or ambiguous'
-          smoke.write_text(text.replace(old, new))
-
-          workflow = Path('.github/workflows/ips-v1147-core-coherency.yml')
-          text = workflow.read_text()
-          needle = "      - 'idle-pachinko-shootout/index.html'\n"
-          replacement = needle + "      - 'idle-pachinko-shootout/settings-v130.js'\n"
-          assert text.count(needle) == 2, 'workflow path anchor count changed'
-          text = text.replace(needle, replacement)
-          needle = "          node --check idle-pachinko-shootout/core-coherency-v1147.js\n"
-          replacement = needle + "          node --check idle-pachinko-shootout/settings-v130.js\n"
-          assert text.count(needle) == 1, 'workflow syntax anchor missing or ambiguous'
-          workflow.write_text(text.replace(needle, replacement))
+          if 'settingsVersion=(settings.match' not in text:
+              new = old + "const shellVersion=(html.match(/<title>Idle Pachinko Shootout — v([^<]+)<\\/title>/)||[])[1];\nconst settingsVersion=(settings.match(/var VERSION='([^']+)'/)||[])[1];\nassert(shellVersion&&settingsVersion&&settingsVersion===shellVersion,`settings VERSION ${settingsVersion||'missing'} does not match shell ${shellVersion||'missing'}`);\nassert(html.includes(`settings-v130.js?v=${BUILD}`),'settings script does not use v1.14.7 cache key');\nassert(!html.includes('settings-v130.js?v=20260818-1144'),'stale settings cache key is still active');\n"
+              assert text.count(old) == 1, 'smoke version assertion anchor missing or ambiguous'
+              text = text.replace(old, new)
+          smoke.write_text(text)
           PY
       - name: Verify fix
         run: |
           node --check idle-pachinko-shootout/settings-v130.js
           node idle-pachinko-shootout/tools/smoke-v1147-core-coherency.mjs
           git diff --check
-      - name: Remove temporary build workflow
-        run: rm .github/workflows/ips-v1147-version-sync-build.yml
-      - name: Commit patched files
+      - name: Commit non-workflow files
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add idle-pachinko-shootout/settings-v130.js idle-pachinko-shootout/index.html idle-pachinko-shootout/tools/smoke-v1147-core-coherency.mjs .github/workflows/ips-v1147-core-coherency.yml .github/workflows/ips-v1147-version-sync-build.yml
-          git commit -m 'Fix v1.14.7 settings version source'
+          git add idle-pachinko-shootout/index.html idle-pachinko-shootout/tools/smoke-v1147-core-coherency.mjs
+          git commit -m 'Sync v1.14.7 settings version and cache key'
           git push origin HEAD:agent/ips-v1147-settings-version-sync
