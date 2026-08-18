@@ -1,9 +1,9 @@
 name: Export current master ZIP
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/export-master-zip-20260818-current
+      - master
     paths:
       - '.github/workflows/export-current-master.yml'
 
