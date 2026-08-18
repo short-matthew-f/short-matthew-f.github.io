@@ -1,9 +1,9 @@
-name: IPS v1.13.3 runtime check
+name: IPS v1.14.0 runtime check
 
 on:
   push:
     branches:
-      - agent/ips-core-game-feel
+      - agent/ips-v114-dustwater-identity
     paths:
       - 'idle-pachinko-shootout/index.html'
       - 'idle-pachinko-shootout/engine-v130.js'
@@ -15,10 +15,14 @@ on:
       - 'idle-pachinko-shootout/progression-v132.js'
       - 'idle-pachinko-shootout/feel-v133.js'
       - 'idle-pachinko-shootout/feel-v133.css'
+      - 'idle-pachinko-shootout/dustwater-v1140.js'
+      - 'idle-pachinko-shootout/dustwater-v1140.css'
+      - 'idle-pachinko-shootout/dustwater-audio-v1140.js'
       - 'idle-pachinko-shootout/tools/smoke-v130.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v132-progression.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v133-feel.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v1140-identity.mjs'
       - '.github/workflows/ips-v130-check.yml'
   pull_request:
     branches:
@@ -34,10 +38,14 @@ on:
       - 'idle-pachinko-shootout/progression-v132.js'
       - 'idle-pachinko-shootout/feel-v133.js'
       - 'idle-pachinko-shootout/feel-v133.css'
+      - 'idle-pachinko-shootout/dustwater-v1140.js'
+      - 'idle-pachinko-shootout/dustwater-v1140.css'
+      - 'idle-pachinko-shootout/dustwater-audio-v1140.js'
       - 'idle-pachinko-shootout/tools/smoke-v130.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v132-progression.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v133-feel.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v1140-identity.mjs'
       - '.github/workflows/ips-v130-check.yml'
 
 permissions:
@@ -57,10 +65,13 @@ jobs:
           node --check idle-pachinko-shootout/onboarding-v131.js
           node --check idle-pachinko-shootout/progression-v132.js
           node --check idle-pachinko-shootout/feel-v133.js
+          node --check idle-pachinko-shootout/dustwater-v1140.js
+          node --check idle-pachinko-shootout/dustwater-audio-v1140.js
           node --check idle-pachinko-shootout/tools/smoke-v130.mjs
           node --check idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs
           node --check idle-pachinko-shootout/tools/smoke-v132-progression.mjs
           node --check idle-pachinko-shootout/tools/smoke-v133-feel.mjs
+          node --check idle-pachinko-shootout/tools/smoke-v1140-identity.mjs
       - name: Static engine architecture
         run: |
           ! grep -Eq "fetch\(['\"]engine-v|new Function\(" idle-pachinko-shootout/engine-v130.js
@@ -73,6 +84,9 @@ jobs:
           grep -q 'progression-v132.js' idle-pachinko-shootout/index.html
           grep -q 'feel-v133.js' idle-pachinko-shootout/index.html
           grep -q 'feel-v133.css' idle-pachinko-shootout/index.html
+          grep -q 'dustwater-v1140.js' idle-pachinko-shootout/index.html
+          grep -q 'dustwater-v1140.css' idle-pachinko-shootout/index.html
+          grep -q 'dustwater-audio-v1140.js' idle-pachinko-shootout/index.html
       - name: Legacy runtime layers are inactive
         run: |
           ! grep -Eq 'progression-v117.js|ui-v111.js|peg-v113.js|peg-v115.js|peg-v117.js|board-v121.js|engine-v121-loader.js|campaign-v10.js' idle-pachinko-shootout/index.html
@@ -83,6 +97,8 @@ jobs:
           ! grep -Eq "observe\([^\n]*sheetContent|observe\(content,\{childList:true,subtree:true\}" idle-pachinko-shootout/onboarding-v131.js
           ! grep -Eq "observe\([^\n]*sheetContent|observe\(content,\{childList:true,subtree:true\}" idle-pachinko-shootout/progression-v132.js
           ! grep -Eq "observe\([^\n]*sheetContent|observe\(content,\{childList:true,subtree:true\}" idle-pachinko-shootout/feel-v133.js
+          ! grep -Eq "observe\([^\n]*sheetContent|observe\(content,\{childList:true,subtree:true\}" idle-pachinko-shootout/dustwater-v1140.js
+          ! grep -Eq "observe\([^\n]*sheetContent|observe\(content,\{childList:true,subtree:true\}" idle-pachinko-shootout/dustwater-audio-v1140.js
       - name: Install smoke-test DOM
         run: npm install --no-save --no-package-lock jsdom@26
       - name: Board / peg persistence smoke test
@@ -93,5 +109,7 @@ jobs:
         run: node idle-pachinko-shootout/tools/smoke-v132-progression.mjs
       - name: Core game feel smoke test
         run: node idle-pachinko-shootout/tools/smoke-v133-feel.mjs
+      - name: Dustwater identity smoke test
+        run: node idle-pachinko-shootout/tools/smoke-v1140-identity.mjs
       - name: Diff sanity
         run: git diff --check
