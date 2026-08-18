@@ -1,3 +1,4 @@
+/* v1.11.7 — field loot chance/quality progression and rarity tables */
 (function(){
 'use strict';
 var KEY='ips-loot-v1',api=null,MAX_CHANCE=16,MAX_QUALITY=10;
