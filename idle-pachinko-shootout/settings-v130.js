@@ -3,12 +3,12 @@
 if(window.__ipsSettings130)return;
 window.__ipsSettings130=true;
 
-var VERSION='1.13.1';
+var VERSION='1.13.2';
 var ENGINE_KEY='ips-v7';
 var PEG_LEDGER_KEY='ips-peg-state-v2';
 var OLD_PEG_KEY='ips-peg-meta-v1';
 var PEG_TYPES=['fire','split','pierce','boom','chain'];
-var RESET_KEYS=['idle-pachinko-shootout-v01','idle-pachinko-shootout-v0.1','ips-v1','ips-v2','ips-v3','ips-v4','ips-v5','ips-v6','ips-v7','ips-v8','ips-v9','ips-v10','ips-idle-v1','ips-telemetry-v1','ips-campaign-v1','ips-contracts-v1','ips-combat-telemetry-v1','ips-blueprints-v1','ips-loot-v1','ips-peg-meta-v1','ips-peg-state-v2','ips-onboarding-v1'];
+var RESET_KEYS=['idle-pachinko-shootout-v01','idle-pachinko-shootout-v0.1','ips-v1','ips-v2','ips-v3','ips-v4','ips-v5','ips-v6','ips-v7','ips-v8','ips-v9','ips-v10','ips-idle-v1','ips-telemetry-v1','ips-campaign-v1','ips-contracts-v1','ips-combat-telemetry-v1','ips-economy-telemetry-v1','ips-first-session-v1','ips-blueprints-v1','ips-loot-v1','ips-peg-meta-v1','ips-peg-state-v2','ips-onboarding-v1'];
 
 function $(id){return document.getElementById(id);}
 function readJson(key){try{var r=localStorage.getItem(key);return r?JSON.parse(r):null;}catch(e){return null;}}
@@ -45,7 +45,7 @@ function migratePegLedger(){
 migratePegLedger();
 
 function resetInputState(){var input=$('resetConfirmInput'),button=$('confirmGameReset');if(input)input.value='';if(button){button.disabled=true;button.textContent='PERMANENTLY RESET GAME';}}
-function removeGameData(){var i,k,remove=[];for(i=0;i<RESET_KEYS.length;i++){try{localStorage.removeItem(RESET_KEYS[i]);}catch(e){}}try{for(i=0;i<localStorage.length;i++){k=localStorage.key(i)||'';if(/^ips-(v\d+|idle-|telemetry-|campaign-|contracts-|combat-telemetry-|blueprints-|loot-|peg-|onboarding-)/.test(k)||/^idle-pachinko-shootout/.test(k))remove.push(k);}for(i=0;i<remove.length;i++)localStorage.removeItem(remove[i]);}catch(e){}}
+function removeGameData(){var i,k,remove=[];for(i=0;i<RESET_KEYS.length;i++){try{localStorage.removeItem(RESET_KEYS[i]);}catch(e){}}try{for(i=0;i<localStorage.length;i++){k=localStorage.key(i)||'';if(/^ips-(v\d+|idle-|telemetry-|campaign-|contracts-|combat-telemetry-|economy-telemetry-|first-session-|blueprints-|loot-|peg-|onboarding-)/.test(k)||/^idle-pachinko-shootout/.test(k))remove.push(k);}for(i=0;i<remove.length;i++)localStorage.removeItem(remove[i]);}catch(e){}}
 function markVersion(){document.title='Idle Pachinko Shootout — v'+VERSION;var brand=document.querySelector('.brand small');if(brand)brand.textContent=' v'+VERSION;var meta=document.querySelector('#settingsModal .settings-meta');if(meta){var bs=meta.querySelectorAll('b');if(bs.length)bs[0].textContent='v'+VERSION;}}
 function bind(){
   markVersion();
