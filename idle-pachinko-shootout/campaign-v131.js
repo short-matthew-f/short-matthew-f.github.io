@@ -112,8 +112,9 @@ function enhanceTelemetry(){
 
 function finishIntro(m){var modal=$('tutorialModal');if(modal)modal.classList.add('hidden');m.tutorialDone=true;saveMeta(m);emit('introComplete',{skipped:false});}
 function tutorial(){
-  var m=meta(),modal=$('tutorialModal'),ret=$('returnModal');
+  var m=meta(),modal=$('tutorialModal'),ret=$('returnModal'),s=snapshot();
   if(!modal)return;
+  if(!m.tutorialDone&&(Number(s.highest||1)>1||Number(s.checkpoint||1)>1||hasGear(s))){m.tutorialDone=true;saveMeta(m);}
   if(m.tutorialDone){emit('introComplete',{restored:true});return;}
   if(ret&&!ret.classList.contains('hidden')){setTimeout(tutorial,800);return;}
   var steps=[
