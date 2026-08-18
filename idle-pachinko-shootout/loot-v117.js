@@ -1,1 +1,21 @@
-x
+(function(){
+'use strict';
+var KEY='ips-loot-v1',api=null,MAX_CHANCE=16,MAX_QUALITY=10;
+var QUALITY_TABLES=[[99,1,0,0,0],[95,4.5,.5,0,0],[89,9,2,0,0],[82,14,3.5,.5,0],[74,19,5.5,1.5,0],[65,24,8,2.5,.5],[55,29,11,4,1],[45,32,15,6,2],[35,34,20,8,3],[25,34,25,11,5],[18,31,30,14,7]];
+function read(){try{var r=localStorage.getItem(KEY),v=r?JSON.parse(r):{};return{chance:Math.max(0,Math.min(MAX_CHANCE,Number(v.chance||0))),quality:Math.max(0,Math.min(MAX_QUALITY,Number(v.quality||0)))};}catch(e){return{chance:0,quality:0};}}
+function write(v){try{localStorage.setItem(KEY,JSON.stringify(v));}catch(e){}}
+function snap(){return api&&api.snapshot?api.snapshot():{};}
+function heroCost(kind,rank){var base=kind==='chance'?120:170,growth=kind==='chance'?1.52:1.62;return Math.round(base*Math.pow(growth,rank));}
+function chancePct(rank){return Math.min(15,3+Number(rank||0)*.75);}
+function qualityLabel(rank){var t=QUALITY_TABLES[Math.max(0,Math.min(MAX_QUALITY,rank))];return 'C '+t[0]+'% · U '+t[1]+'% · R '+t[2]+'% · L '+t[3]+'% · M '+t[4]+'%';}
+function weightedPick(weights){var total=0,i,r;for(i=0;i<weights.length;i++)total+=weights[i];r=Math.random()*total;for(i=0;i<weights.length;i++){r-=weights[i];if(r<=0)return i;}return Math.max(0,weights.length-1);}
+function fieldQuality(){var q=read().quality,t=QUALITY_TABLES[q];return weightedPick(t);}
+function bossQuality(act){var q=read().quality,unique=Math.min(25,5+q*1.4+Math.max(0,Number(act||1)-1)*1.5);if(Math.random()*100<unique)return 5;var base=QUALITY_TABLES[q],boost=[0,base[0]*.12,base[1]*1.6+12,base[2]*2.2+7,base[3]*2.8+3];return Math.max(1,weightedPick(boost));}
+function chooseSlot(gear,boss){var slots=['gun','hat','duster','boots','charm'],weights=[],i;gear=gear||{};for(i=0;i<slots.length;i++)weights.push(gear[slots[i]]?1:(boss?2.4:2));return slots[weightedPick(weights)];}
+function itemLevel(wave){return Math.max(1,Math.floor((Math.max(1,Number(wave||1))-1)/10)+1);}
+window.__ipsLootSystem={ranks:read,chancePct:function(){return chancePct(read().chance);},rollFieldQuality:fieldQuality,rollBossQuality:bossQuality,chooseSlot:chooseSlot,itemLevel:itemLevel};
+function injectHeroCards(){var title=document.getElementById('sheetTitle'),content=document.getElementById('sheetContent');if(!title||!content||!/Gunslinger/i.test(title.textContent)||!api)return;var grid=content.querySelector('.upgrade-grid');if(!grid||grid.querySelector('[data-loot-upgrade]'))return;var r=read(),s=snap(),items=[{key:'chance',name:'Scavenger',desc:'Enemy loot chance '+chancePct(r.chance).toFixed(2)+'% → '+chancePct(Math.min(MAX_CHANCE,r.chance+1)).toFixed(2)+'%',rank:r.chance,max:MAX_CHANCE},{key:'quality',name:'Prospector’s Eye',desc:'Improves field loot rarity. '+qualityLabel(r.quality),rank:r.quality,max:MAX_QUALITY}],i,it,cost,card;for(i=0;i<items.length;i++){it=items[i];cost=heroCost(it.key,it.rank);card=document.createElement('article');card.className='upgrade-card loot-upgrade-card';card.innerHTML='<h3>'+it.name+'</h3><div class="rankline"><span>Rank '+it.rank+'/'+it.max+'</span><span>'+it.desc+'</span></div><button class="buy-btn" data-loot-upgrade="'+it.key+'" '+(it.rank>=it.max||Number(s.xp||0)<cost?'disabled':'')+'>'+(it.rank>=it.max?'MAX RANK':'✦ '+cost)+'</button>';grid.appendChild(card);}grid.querySelectorAll('[data-loot-upgrade]').forEach(function(btn){btn.onclick=function(){var kind=this.getAttribute('data-loot-upgrade'),m=read(),rank=m[kind],max=kind==='chance'?MAX_CHANCE:MAX_QUALITY,cost=heroCost(kind,rank),ss=snap();if(rank>=max||Number(ss.xp||0)<cost)return;api.grant(-cost,0);m[kind]=rank+1;write(m);api.openSheet('hero');};});}
+function maybeFieldLoot(detail){if(!api||!detail||detail.boss)return;var pct=chancePct(read().chance);if(Math.random()*100>=pct)return;setTimeout(function(){if(api&&api.triggerLoot)api.triggerLoot('enemy');},70);}
+function boot(){api=window.__ipsAPI;if(!api)return false;document.addEventListener('ips:enemyDeath',function(e){maybeFieldLoot(e.detail||{});});document.addEventListener('ips:menu',function(){setTimeout(injectHeroCards,30);});document.addEventListener('ips:upgrade',function(){setTimeout(injectHeroCards,30);});var content=document.getElementById('sheetContent');if(content)new MutationObserver(function(){setTimeout(injectHeroCards,10);}).observe(content,{childList:true,subtree:true});setTimeout(injectHeroCards,120);return true;}
+var tries=0,t=setInterval(function(){tries++;if(boot()||tries>140)clearInterval(t);},100);
+})();
