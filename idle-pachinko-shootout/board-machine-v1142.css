@@ -21,7 +21,7 @@
 
 /* Cylinder reads as a piece of revolver hardware while retaining the authoritative bullet queue. */
 .region-dustwater .launcher-cap{overflow:visible!important}
-.region-dustwater .launcher-cap .bullet-queue{position:relative;min-width:92px;min-height:22px;align-items:center;padding:4px 11px 3px;border:1px solid #090706;border-radius:11px;background:radial-gradient(ellipse at 50% 44%,#584532 0 20%,#261d16 48%,#0a0806 74%),linear-gradient(180deg,#5b4937,#17120e);box-shadow:inset 0 0 0 1px rgba(232,190,112,.15),inset 0 -4px 7px rgba(0,0,0,.65),0 2px 6px rgba(0,0,0,.66)}
+.region-dustwater .launcher-cap .bullet-queue{position:relative;width:max-content;min-width:92px;min-height:22px;margin:0 auto;align-items:center;padding:4px 11px 3px;border:1px solid #090706;border-radius:11px;background:radial-gradient(ellipse at 50% 44%,#584532 0 20%,#261d16 48%,#0a0806 74%),linear-gradient(180deg,#5b4937,#17120e);box-shadow:inset 0 0 0 1px rgba(232,190,112,.15),inset 0 -4px 7px rgba(0,0,0,.65),0 2px 6px rgba(0,0,0,.66)}
 .region-dustwater .launcher-cap .bullet-queue:before,.region-dustwater .launcher-cap .bullet-queue:after{content:"";position:absolute;top:50%;width:8px;height:8px;border-radius:50%;transform:translateY(-50%);background:radial-gradient(circle at 35% 30%,#dfbb70 0 14%,#75512e 34%,#21150e 66%,#080604 100%);box-shadow:inset 0 0 0 1px rgba(255,226,163,.12)}
 .region-dustwater .launcher-cap .bullet-queue:before{left:2px}.region-dustwater .launcher-cap .bullet-queue:after{right:2px}
 .region-dustwater .queue-bullet{width:9px!important;height:15px!important;border-radius:6px 6px 3px 3px!important;transform-origin:50% 65%;transition:opacity .12s ease,filter .12s ease,transform .12s ease}
