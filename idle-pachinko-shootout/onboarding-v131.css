@@ -1,0 +1,14 @@
+.dock button{position:relative}
+.dock button.ips-locked{opacity:.34;filter:grayscale(1);cursor:not-allowed}
+.dock button.ips-locked::after{content:'🔒';position:absolute;right:4px;top:3px;font-size:10px;line-height:1}
+.dock button.ips-new::after{content:'NEW';position:absolute;right:2px;top:2px;font-size:7px;line-height:1;padding:2px 3px;border-radius:7px;background:#f3c96b;color:#24160e;font-weight:900;letter-spacing:.04em}
+.dock button.ips-guided:not(.ips-locked){animation:ipsTabGuide 1.05s ease-in-out infinite alternate}
+@keyframes ipsTabGuide{from{transform:translateY(0);box-shadow:inset 0 0 0 1px rgba(244,202,111,.25)}to{transform:translateY(-2px);box-shadow:inset 0 0 0 2px rgba(244,202,111,.9),0 0 12px rgba(244,202,111,.28)}}
+.ips-tutorial-target{position:relative!important;z-index:3!important;outline:2px solid #f3c96b!important;outline-offset:3px;box-shadow:0 0 0 5px rgba(243,201,107,.13),0 0 18px rgba(243,201,107,.25)!important;animation:ipsTargetGuide .9s ease-in-out infinite alternate}
+@keyframes ipsTargetGuide{from{outline-offset:2px}to{outline-offset:5px}}
+.ips-tutorial-muted{opacity:.38!important;filter:grayscale(.75)}
+.ips-tutorial-note{display:flex;flex-direction:column;gap:3px;margin:0 0 10px;padding:9px 10px;border:1px solid rgba(243,201,107,.65);border-radius:9px;background:rgba(38,24,16,.96);font-size:11px;line-height:1.3;color:#e9dbc1}
+.ips-tutorial-note b{color:#f3c96b;font-size:10px;letter-spacing:.08em}
+.ips-gear-inspect{cursor:pointer}
+.loot-actions .ips-tutorial-target{outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.dock button.ips-guided:not(.ips-locked),.ips-tutorial-target{animation:none}}

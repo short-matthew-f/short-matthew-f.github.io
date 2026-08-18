@@ -1,15 +1,19 @@
-name: IPS v1.13 runtime check
+name: IPS v1.13.1 runtime check
 
 on:
   push:
     branches:
-      - idle-pachinko-v1.13-engine-cleanup
+      - agent/idle-pachinko-guided-onboarding
     paths:
       - 'idle-pachinko-shootout/index.html'
       - 'idle-pachinko-shootout/engine-v130.js'
       - 'idle-pachinko-shootout/runtime-v130.js'
       - 'idle-pachinko-shootout/settings-v130.js'
+      - 'idle-pachinko-shootout/campaign-v131.js'
+      - 'idle-pachinko-shootout/onboarding-v131.js'
+      - 'idle-pachinko-shootout/onboarding-v131.css'
       - 'idle-pachinko-shootout/tools/smoke-v130.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs'
       - '.github/workflows/ips-v130-check.yml'
   pull_request:
     branches:
@@ -19,7 +23,11 @@ on:
       - 'idle-pachinko-shootout/engine-v130.js'
       - 'idle-pachinko-shootout/runtime-v130.js'
       - 'idle-pachinko-shootout/settings-v130.js'
+      - 'idle-pachinko-shootout/campaign-v131.js'
+      - 'idle-pachinko-shootout/onboarding-v131.js'
+      - 'idle-pachinko-shootout/onboarding-v131.css'
       - 'idle-pachinko-shootout/tools/smoke-v130.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs'
       - '.github/workflows/ips-v130-check.yml'
 
 permissions:
@@ -35,22 +43,32 @@ jobs:
           node --check idle-pachinko-shootout/engine-v130.js
           node --check idle-pachinko-shootout/runtime-v130.js
           node --check idle-pachinko-shootout/settings-v130.js
+          node --check idle-pachinko-shootout/campaign-v131.js
+          node --check idle-pachinko-shootout/onboarding-v131.js
           node --check idle-pachinko-shootout/tools/smoke-v130.mjs
+          node --check idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs
       - name: Static engine architecture
         run: |
           ! grep -Eq "fetch\(['\"]engine-v|new Function\(" idle-pachinko-shootout/engine-v130.js
           grep -q 'engine-v130.js' idle-pachinko-shootout/index.html
           grep -q 'runtime-v130.js' idle-pachinko-shootout/index.html
           grep -q 'settings-v130.js' idle-pachinko-shootout/index.html
+          grep -q 'campaign-v131.js' idle-pachinko-shootout/index.html
+          grep -q 'onboarding-v131.js' idle-pachinko-shootout/index.html
+          grep -q 'onboarding-v131.css' idle-pachinko-shootout/index.html
       - name: Legacy runtime layers are inactive
         run: |
-          ! grep -Eq 'progression-v117.js|ui-v111.js|peg-v113.js|peg-v115.js|peg-v117.js|board-v121.js|engine-v121-loader.js' idle-pachinko-shootout/index.html
+          ! grep -Eq 'progression-v117.js|ui-v111.js|peg-v113.js|peg-v115.js|peg-v117.js|board-v121.js|engine-v121-loader.js|campaign-v10.js' idle-pachinko-shootout/index.html
       - name: No upgrade-sheet subtree observer
         run: |
           ! grep -Eq "observe\([^\n]*sheetContent|observe\(content,\{childList:true,subtree:true\}" idle-pachinko-shootout/runtime-v130.js
+          ! grep -Eq "observe\([^\n]*sheetContent|observe\(content,\{childList:true,subtree:true\}" idle-pachinko-shootout/campaign-v131.js
+          ! grep -Eq "observe\([^\n]*sheetContent|observe\(content,\{childList:true,subtree:true\}" idle-pachinko-shootout/onboarding-v131.js
       - name: Install smoke-test DOM
         run: npm install --no-save --no-package-lock jsdom@26
       - name: Board / peg persistence smoke test
         run: node idle-pachinko-shootout/tools/smoke-v130.mjs
+      - name: Guided onboarding / lifecycle smoke test
+        run: node idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs
       - name: Diff sanity
         run: git diff --check
