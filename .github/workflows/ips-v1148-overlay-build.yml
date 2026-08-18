@@ -31,8 +31,8 @@ jobs:
           start=text.index('function setupPegOverlay(){')
           end=text.index('\nfunction boot(){', start)
           text=text[:start]+"// Peg hardware is rendered exclusively by runtime-v130.js.\n"+text[end+1:]
-          old="setupPegOverlay();"
-          assert old not in text, 'legacy overlay invocation survived removal'
+          text=text.replace('setupPegOverlay();','')
+          assert 'setupPegOverlay' not in text, 'legacy overlay renderer survived removal'
           art.write_text(text)
 
           index=game/'index.html'
