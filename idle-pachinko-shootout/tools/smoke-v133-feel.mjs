@@ -15,9 +15,10 @@ window.HTMLElement.prototype.getBoundingClientRect=function(){return{left:10,top
 let save={xp:100,coins:200};
 window.__ipsAPI={snapshot(){return JSON.parse(JSON.stringify(save));}};
 
-// Runtime normally renders these. Add deterministic fixtures so the feel
-// controller can prove that event details land on the right presentation node.
+// Engine/runtime normally render these. Add deterministic fixtures so the feel
+// controller can prove that event details land on the same DOM contract.
 const wrap=document.querySelector('.board-wrap');
+document.getElementById('slotLabels').innerHTML=Array.from({length:9},(_,i)=>`<div class="slot-label">${i+1}</div>`).join('');
 const hardware=document.createElement('span');hardware.className='peg-hardware peg-fire';hardware.setAttribute('data-hardware-index','11');hardware.innerHTML='<i class="peg-face"></i>';wrap.appendChild(hardware);
 const enemy=document.createElement('div');enemy.className='enemy focused';enemy.setAttribute('data-enemy-id','e1');document.getElementById('enemyLane').appendChild(enemy);
 
