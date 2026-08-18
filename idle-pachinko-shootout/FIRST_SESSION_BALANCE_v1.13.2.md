@@ -22,14 +22,16 @@ This file records the intended opening economy so future tuning does not acciden
 
 ## Economy baseline
 
-The current authored Wave 1–10 reward formulas produce approximately:
+The current authored Wave 1–10 reward formulas produce:
 
 | Through wave | Gross XP | Gross coins |
 |---|---:|---:|
-| 5 | 100 | 293 |
-| 8 | 220 | 598 |
-| 9 | 269 | 719 |
-| 10 | 408 | 964 |
+| 5 | 101 | 293 |
+| 8 | 223 | 598 |
+| 9 | 272 | 719 |
+| 10 | 411 | 964 |
+
+These values use the engine's JavaScript `Math.round` behavior exactly; `.5` values round upward.
 
 Hero and Board tutorial subsidies are intended to make the first teaching purchases economy-neutral rather than consuming resources the player earned afterward.
 
