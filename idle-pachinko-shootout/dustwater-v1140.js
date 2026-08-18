@@ -33,10 +33,10 @@ function installHeroIdentity(){
   if(!q('.dw-hero-title',hero)){badge=document.createElement('div');badge.className='dw-hero-title';badge.innerHTML='<span>THE LAST LIGHT IN DUSTWATER</span>';hero.appendChild(badge);}
 }
 function decorateEnemy(el){
-  var nameEl=q('.enemy-name',el),name=(nameEl&&nameEl.textContent)||'',family=familyFromName(name),fig=q('.unit-figure',el),tag;
+  var nameEl=q('.enemy-name',el),name=(nameEl&&nameEl.textContent)||'',family=familyFromName(name),label=familyLabel(family),fig=q('.unit-figure',el),tag;
   el.classList.remove('dw-zombie','dw-ghoul','dw-ghost','dw-troll','dw-undertaker');el.classList.add('dw-enemy','dw-'+family);el.setAttribute('data-dw-family',family);
   if(fig&&!q('.dw-enemy-aura',fig)){tag=document.createElement('i');tag.className='dw-enemy-aura';fig.insertBefore(tag,fig.firstChild);}
-  tag=q('.dw-family-tag',el);if(!tag){tag=document.createElement('small');tag.className='dw-family-tag';el.appendChild(tag);}tag.textContent=familyLabel(family);
+  tag=q('.dw-family-tag',el);if(!tag){tag=document.createElement('small');tag.className='dw-family-tag';el.appendChild(tag);}if(tag.textContent!==label)tag.textContent=label;
   if(family==='undertaker'){el.classList.add('dw-boss');if(fig&&!q('.dw-undertaker-sigil',fig)){tag=document.createElement('i');tag.className='dw-undertaker-sigil';fig.appendChild(tag);}}
 }
 function refreshEnemies(){qa('#enemyLane .enemy').forEach(decorateEnemy);}
@@ -62,7 +62,7 @@ function boot(){
   document.addEventListener('ips:heroHit',onHeroHit);
   document.addEventListener('ips:reloadStart',onReload);
   document.addEventListener('ips:loot',function(e){onLoot(e.detail||{});});
-  var lane=$('enemyLane');if(lane&&window.MutationObserver)new MutationObserver(function(){if(isDustwater())refreshEnemies();}).observe(lane,{childList:true,subtree:true});
+  var lane=$('enemyLane');if(lane&&window.MutationObserver)new MutationObserver(function(){if(isDustwater())refreshEnemies();}).observe(lane,{childList:true});
   window.__ipsDustwaterIdentity={version:'1.14.0',refresh:refreshEnemies,region:function(){return regionForWave(currentWave);}};
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,30);});else setTimeout(boot,30);
