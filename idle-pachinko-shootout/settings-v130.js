@@ -49,8 +49,7 @@ function removeGameData(){var i,k,remove=[];for(i=0;i<RESET_KEYS.length;i++){try
 function markVersion(){document.title='Idle Pachinko Shootout — v'+VERSION;var brand=document.querySelector('.brand small');if(brand)brand.textContent=' v'+VERSION;var meta=document.querySelector('#settingsModal .settings-meta');if(meta){var bs=meta.querySelectorAll('b');if(bs.length)bs[0].textContent='v'+VERSION;}}
 function bind(){
   markVersion();
-  var settings=$('settingsButton'),closeSettings=$('closeSettings'),reset=$('resetGameButton'),cancel=$('cancelReset'),input=$('resetConfirmInput'),confirm=$('confirmGameReset'),settingsModal=$('settingsModal');
-  if(!cancel)cancel=$('cancelGameReset');
+  var settings=$('settingsButton'),closeSettings=$('closeSettings'),reset=$('resetGameButton'),cancel=$('cancelGameReset'),input=$('resetConfirmInput'),confirm=$('confirmGameReset'),settingsModal=$('settingsModal');
   if(settings)settings.onclick=function(){markVersion();open('settingsModal');};
   if(closeSettings)closeSettings.onclick=function(){close('settingsModal');};
   if(reset)reset.onclick=function(){resetInputState();open('resetConfirmModal');setTimeout(function(){if(input)input.focus();},60);};
