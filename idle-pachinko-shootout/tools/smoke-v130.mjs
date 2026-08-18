@@ -26,9 +26,11 @@ const ctx=new Proxy({
 window.HTMLCanvasElement.prototype.getContext=function(){return ctx;};
 
 // Seed a real dynamic pegMeta key. This is exactly the shape that the legacy
-// merger used to discard on reload.
+// merger used to discard on reload. boardLayout:2 keeps this persistence test
+// focused on dynamic-key survival; legacy layout relocation is covered by the
+// dedicated v1.14.6 migration smoke.
 window.localStorage.setItem('ips-v7',JSON.stringify({
-  coins:100000,xp:100000,fire:1,
+  coins:100000,xp:100000,fire:1,boardLayout:2,
   placements:{fire:[11],split:[],pierce:[],boom:[],chain:[]},
   pegMeta:{fire:{'11':{level:2,invested:500}},split:{},pierce:{},boom:{},chain:{}}
 }));
