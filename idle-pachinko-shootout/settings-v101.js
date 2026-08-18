@@ -5,6 +5,32 @@ function readJson(key){try{var r=localStorage.getItem(key);return r?JSON.parse(r
 function writeJson(key,value){try{localStorage.setItem(key,JSON.stringify(value));}catch(e){}}
 function hydratePegShadow(){var engine=readJson(ENGINE_KEY),shadow=readJson(PEG_SHADOW_KEY);if(!engine||!shadow||!shadow.pegMeta)return;engine.pegMeta=shadow.pegMeta;writeJson(ENGINE_KEY,engine);}
 hydratePegShadow();
+var bootRedirected=false;
+function installBootRedirect(){
+  function redirect(){
+    if(bootRedirected||window.__ipsBooted)return;
+    var old=document.querySelector('script[src^="engine-v117-loader.js"]'),s;
+    if(!old||!old.parentNode)return;
+    bootRedirected=true;
+    s=document.createElement('script');
+    s.src='engine-v119-loader.js?v=20260818-119';
+    s.defer=true;
+    old.parentNode.insertBefore(s,old);
+    old.parentNode.removeChild(old);
+  }
+  var mo=new MutationObserver(function(){redirect();if(bootRedirected)mo.disconnect();});
+  mo.observe(document.documentElement,{childList:true,subtree:true});
+  redirect();
+  setTimeout(function(){
+    if(!window.__ipsBooted&&!bootRedirected){
+      var s=document.createElement('script');
+      bootRedirected=true;
+      s.src='engine-v119-loader.js?v=20260818-119-fallback';
+      document.head.appendChild(s);
+    }
+  },1200);
+}
+installBootRedirect();
 function savePegShadow(){if(!pegApi||!pegApi.snapshot)return;var s=pegApi.snapshot();if(s&&s.pegMeta)writeJson(PEG_SHADOW_KEY,{pegMeta:s.pegMeta,updatedAt:Date.now()});}
 function bindPegPersistence(){pegApi=window.__ipsAPI;if(!pegApi||!pegApi.snapshot)return false;savePegShadow();document.addEventListener('ips:pegUpgrade',savePegShadow);document.addEventListener('ips:pegMove',savePegShadow);document.addEventListener('ips:pegSell',savePegShadow);document.addEventListener('ips:pegPlace',savePegShadow);document.addEventListener('ips:upgrade',function(e){if(e&&e.detail&&e.detail.kind==='board')setTimeout(savePegShadow,0);});window.addEventListener('pagehide',savePegShadow);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')savePegShadow();});return true;}
 var persistTries=0,persistTimer=setInterval(function(){persistTries++;if(bindPegPersistence()||persistTries>160)clearInterval(persistTimer);},100);
