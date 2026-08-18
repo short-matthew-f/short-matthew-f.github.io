@@ -1,4 +1,4 @@
-/* v1.10 — native-resolution pixel combat sprites */
+/* v1.10.1 — native-resolution pixel combat sprites */
 .hero-art,.unit-figure{position:relative;overflow:visible!important}
 .hero-art canvas.sprite-v110,.unit-figure canvas.sprite-v110{
   position:absolute;
@@ -19,6 +19,8 @@
 .sprite-v110-ready>svg,.sprite-v110-ready>canvas[data-painted]{display:none!important}
 .hero-art canvas.sprite-v110{width:64px!important;height:80px!important;bottom:2px}
 .enemy .unit-figure canvas.sprite-v110{width:64px!important;height:80px!important;bottom:0}
+/* Ghoul source frames face screen-right; flip only their presentation so rush movement points toward the hero. */
+.enemy[data-sprite-key="ghoul"] .unit-figure canvas.sprite-v110{transform:translateX(-50%) scaleX(-1)}
 .enemy[data-sprite-key="ghost"] .unit-figure canvas.sprite-v110{bottom:5px}
 .enemy[data-sprite-key="troll"] .unit-figure canvas.sprite-v110{width:80px!important;height:96px!important;bottom:-1px}
 /* Keep generated pixels crisp; communicate game state with hard-edged outer effects instead of softening the art. */
