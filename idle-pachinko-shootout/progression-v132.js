@@ -25,6 +25,7 @@ function gearCount(s){var g=(s&&s.gear)||{},n=0,k;for(k in g)if(g[k])n++;return 
 function compactSnapshot(){var s=snap();return{xp:Math.floor(Number(s.xp||0)),coins:Math.floor(Number(s.coins||0)),highest:Number(s.highest||1),checkpoint:Number(s.checkpoint||1),power:Number(s.power||0),slot:Number(s.slot||0),firePeg:Number(s.fire||0),fireAmmo:Number((s.ammoUnlock&&s.ammoUnlock.fire)||0),gear:gearCount(s)};}
 function record(type,detail){var e=economy(),shot=compactSnapshot();e.events.push({type:type,at:now(),elapsedMs:elapsed(e.startedAt),wave:Number((detail&&detail.wave)||shot.highest||1),xp:shot.xp,coins:shot.coins,detail:detail||{}});if(type==='waveClear')e.waves.push({wave:Number((detail&&detail.wave)||0),at:now(),elapsedMs:elapsed(e.startedAt),xp:shot.xp,coins:shot.coins,checkpoint:shot.checkpoint,gear:shot.gear});saveEconomy(e);}
 function milestone(name,detail){var e=economy();if(e.milestones[name])return;e.milestones[name]={at:now(),elapsedMs:elapsed(e.startedAt),snapshot:compactSnapshot(),detail:detail||{}};saveEconomy(e);}
+function attachInitialRun(){var e=economy();if(e.runs>0)return;e.runs=1;e.events.push({type:'runAttach',at:now(),elapsedMs:elapsed(e.startedAt),wave:compactSnapshot().highest,xp:compactSnapshot().xp,coins:compactSnapshot().coins,detail:{initial:true}});saveEconomy(e);}
 function toast(title,text){var box=$('campaignToast');if(!box)return;box.innerHTML='<b>'+title+'</b><span>'+text+'</span>';box.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){box.classList.remove('show');},3600);}
 function boardTab(){return document.querySelector('.dock [data-sheet="board"]');}
 function pulseBoard(){var b=boardTab();if(!b)return;b.classList.add('ips-guided','ips-new');}
@@ -73,10 +74,10 @@ function bind(){
   document.addEventListener('ips:upgrade',function(e){record('upgrade',e.detail||{});workshopGoal();});
   document.addEventListener('ips:contractClaim',function(e){record('contractClaim',e.detail||{});milestone('firstBountyClaim',e.detail||{});workshopGoal();});
   document.addEventListener('ips:lootChoice',function(e){record('lootChoice',e.detail||{});if((e.detail||{}).equip)milestone('firstGearEquipped',e.detail||{});});
-  document.addEventListener('ips:loot',function(e){var d=e.detail||{};record('loot',d);if(d.source==='boss')milestone('firstBossLoot',{wave:compactSnapshot().highest});});
+  document.addEventListener('ips:loot',function(e){var d=e.detail||{},shot=compactSnapshot();record('loot',d);if(d.source==='boss')milestone('firstBossLoot',{wave:Math.max(1,shot.highest-1)});});
   document.addEventListener('ips:onboardingComplete',function(e){var d=e.detail||{};record('onboardingComplete',d);if(d.tab)milestone('lesson_'+d.tab,d);});
   document.addEventListener('ips:menu',function(e){if((e.detail||{}).name==='board')clearBoardPulse();});
 }
-function boot(){api=window.__ipsAPI;if(!api||!api.snapshot||!api.grant)return false;bind();enhanceTelemetry();workshopGoal();window.__ipsEconomyTelemetry={snapshot:function(){return JSON.parse(JSON.stringify(economy()));},targets:{firstDeath:FIRST_DEATH,tremor:TREMOR_GOAL}};return true;}
+function boot(){api=window.__ipsAPI;if(!api||!api.snapshot||!api.grant)return false;attachInitialRun();bind();enhanceTelemetry();workshopGoal();window.__ipsEconomyTelemetry={snapshot:function(){return JSON.parse(JSON.stringify(economy()));},targets:{firstDeath:FIRST_DEATH,tremor:TREMOR_GOAL}};return true;}
 var tries=0,timer=setInterval(function(){tries++;if(boot()||tries>120)clearInterval(timer);},50);
 })();
