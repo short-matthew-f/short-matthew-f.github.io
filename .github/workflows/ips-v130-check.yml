@@ -1,9 +1,9 @@
-name: IPS v1.14.3 runtime check
+name: IPS v1.14.4 runtime check
 
 on:
   push:
     branches:
-      - agent/ips-v1143-pin-flicker
+      - agent/ips-v1144-crossbar-stability
     paths:
       - 'idle-pachinko-shootout/index.html'
       - 'idle-pachinko-shootout/engine-v130.js'
@@ -21,6 +21,7 @@ on:
       - 'idle-pachinko-shootout/mobile-sheet-v1141.css'
       - 'idle-pachinko-shootout/board-machine-v1142.js'
       - 'idle-pachinko-shootout/board-machine-v1142.css'
+      - 'idle-pachinko-shootout/launcher-stability-v1144.css'
       - 'idle-pachinko-shootout/tools/smoke-v130.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v132-progression.mjs'
@@ -29,6 +30,7 @@ on:
       - 'idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1143-pin-flicker.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v1144-crossbar-stability.mjs'
       - '.github/workflows/ips-v130-check.yml'
   pull_request:
     branches:
@@ -50,6 +52,7 @@ on:
       - 'idle-pachinko-shootout/mobile-sheet-v1141.css'
       - 'idle-pachinko-shootout/board-machine-v1142.js'
       - 'idle-pachinko-shootout/board-machine-v1142.css'
+      - 'idle-pachinko-shootout/launcher-stability-v1144.css'
       - 'idle-pachinko-shootout/tools/smoke-v130.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v132-progression.mjs'
@@ -58,6 +61,7 @@ on:
       - 'idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1143-pin-flicker.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v1144-crossbar-stability.mjs'
       - '.github/workflows/ips-v130-check.yml'
 
 permissions:
@@ -88,6 +92,7 @@ jobs:
           node --check idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs
           node --check idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs
           node --check idle-pachinko-shootout/tools/smoke-v1143-pin-flicker.mjs
+          node --check idle-pachinko-shootout/tools/smoke-v1144-crossbar-stability.mjs
       - name: Static engine architecture
         run: |
           ! grep -Eq "fetch\(['\"]engine-v|new Function\(" idle-pachinko-shootout/engine-v130.js
@@ -106,6 +111,7 @@ jobs:
           grep -q 'mobile-sheet-v1141.css' idle-pachinko-shootout/index.html
           grep -q 'board-machine-v1142.js' idle-pachinko-shootout/index.html
           grep -q 'board-machine-v1142.css' idle-pachinko-shootout/index.html
+          grep -q 'launcher-stability-v1144.css' idle-pachinko-shootout/index.html
       - name: Legacy runtime layers are inactive
         run: |
           ! grep -Eq 'progression-v117.js|ui-v111.js|peg-v113.js|peg-v115.js|peg-v117.js|board-v121.js|engine-v121-loader.js|campaign-v10.js' idle-pachinko-shootout/index.html
@@ -137,5 +143,7 @@ jobs:
         run: node idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs
       - name: Firing Pin flicker smoke test
         run: node idle-pachinko-shootout/tools/smoke-v1143-pin-flicker.mjs
+      - name: Cylinder crossbar stability smoke test
+        run: node idle-pachinko-shootout/tools/smoke-v1144-crossbar-stability.mjs
       - name: Diff sanity
         run: git diff --check
