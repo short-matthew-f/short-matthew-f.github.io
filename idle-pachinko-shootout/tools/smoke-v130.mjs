@@ -4,6 +4,7 @@ import { JSDOM } from 'jsdom';
 
 const GAME=path.resolve('idle-pachinko-shootout');
 const html=fs.readFileSync(path.join(GAME,'index.html'),'utf8');
+const pegCss=fs.readFileSync(path.join(GAME,'peg-v113.css'),'utf8');
 const dom=new JSDOM(html,{url:'https://ips.test/',pretendToBeVisual:true,runScripts:'outside-only'});
 const {window}=dom;
 const {document}=window;
@@ -77,7 +78,9 @@ observer.disconnect();
 snap=window.__ipsAPI.snapshot();
 assert(Number(snap.slot)===4,'Board upgrades did not complete normally');
 assert(mutations<180,`runaway sheet mutations detected: ${mutations}`);
-assert(!content.querySelector('[data-place]:not([style*="display"])'),'legacy move/place control became visible');
+// JSDOM does not apply external stylesheets in this harness, so assert the
+// legacy place/move control remains hidden by the active board-workshop CSS.
+assert(/\.sheet-content\s+\[data-place\]\s*\{\s*display:none!important\s*\}/.test(pegCss),'legacy move/place control is not hidden by active CSS');
 
 console.log('v1.13 smoke PASS');
 console.log(`sheet mutations across open + 4 upgrades: ${mutations}`);
