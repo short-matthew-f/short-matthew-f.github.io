@@ -7,6 +7,7 @@ const html=fs.readFileSync(path.join(GAME,'index.html'),'utf8');
 function assert(ok,message){if(!ok)throw new Error(message);}
 
 assert(/\.sheet\s*\{[\s\S]*position:fixed!important/.test(css),'upgrade sheet must be viewport-fixed');
+assert(/z-index:30/.test(css),'sheet must remain below modal reward/death flows');
 assert(/left:50%!important/.test(css)&&/width:min\(100vw,460px\)!important/.test(css),'sheet must remain centered and capped on desktop');
 assert(/transform:translate\(-50%,102%\)!important/.test(css),'closed sheet must preserve centered slide-down transform');
 assert(/\.sheet\.open\{transform:translate\(-50%,0\)!important\}/.test(css),'open sheet must resolve to viewport bottom');
