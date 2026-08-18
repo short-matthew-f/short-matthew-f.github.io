@@ -1,9 +1,9 @@
-name: IPS v1.14.4 runtime check
+name: IPS v1.14.6 runtime check
 
 on:
   push:
     branches:
-      - agent/ips-v1144-crossbar-stability
+      - master
     paths:
       - 'idle-pachinko-shootout/index.html'
       - 'idle-pachinko-shootout/engine-v130.js'
@@ -22,6 +22,8 @@ on:
       - 'idle-pachinko-shootout/board-machine-v1142.js'
       - 'idle-pachinko-shootout/board-machine-v1142.css'
       - 'idle-pachinko-shootout/launcher-stability-v1144.css'
+      - 'idle-pachinko-shootout/board-geometry-v1146.css'
+      - 'idle-pachinko-shootout/tools/flatten-engine.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v130.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v132-progression.mjs'
@@ -31,6 +33,7 @@ on:
       - 'idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1143-pin-flicker.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1144-crossbar-stability.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v1146-board-geometry.mjs'
       - '.github/workflows/ips-v130-check.yml'
   pull_request:
     branches:
@@ -53,6 +56,8 @@ on:
       - 'idle-pachinko-shootout/board-machine-v1142.js'
       - 'idle-pachinko-shootout/board-machine-v1142.css'
       - 'idle-pachinko-shootout/launcher-stability-v1144.css'
+      - 'idle-pachinko-shootout/board-geometry-v1146.css'
+      - 'idle-pachinko-shootout/tools/flatten-engine.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v130.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v132-progression.mjs'
@@ -62,6 +67,7 @@ on:
       - 'idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1143-pin-flicker.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1144-crossbar-stability.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v1146-board-geometry.mjs'
       - '.github/workflows/ips-v130-check.yml'
 
 permissions:
@@ -84,6 +90,7 @@ jobs:
           node --check idle-pachinko-shootout/dustwater-v1140.js
           node --check idle-pachinko-shootout/dustwater-audio-v1140.js
           node --check idle-pachinko-shootout/board-machine-v1142.js
+          node --check idle-pachinko-shootout/tools/flatten-engine.mjs
           node --check idle-pachinko-shootout/tools/smoke-v130.mjs
           node --check idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs
           node --check idle-pachinko-shootout/tools/smoke-v132-progression.mjs
@@ -93,6 +100,7 @@ jobs:
           node --check idle-pachinko-shootout/tools/smoke-v1142-board-machine.mjs
           node --check idle-pachinko-shootout/tools/smoke-v1143-pin-flicker.mjs
           node --check idle-pachinko-shootout/tools/smoke-v1144-crossbar-stability.mjs
+          node --check idle-pachinko-shootout/tools/smoke-v1146-board-geometry.mjs
       - name: Static engine architecture
         run: |
           ! grep -Eq "fetch\(['\"]engine-v|new Function\(" idle-pachinko-shootout/engine-v130.js
@@ -112,6 +120,12 @@ jobs:
           grep -q 'board-machine-v1142.js' idle-pachinko-shootout/index.html
           grep -q 'board-machine-v1142.css' idle-pachinko-shootout/index.html
           grep -q 'launcher-stability-v1144.css' idle-pachinko-shootout/index.html
+          grep -q 'board-geometry-v1146.css' idle-pachinko-shootout/index.html
+      - name: Flattened engine reproducibility
+        run: |
+          cp idle-pachinko-shootout/engine-v130.js /tmp/engine-v130.js
+          node idle-pachinko-shootout/tools/flatten-engine.mjs
+          cmp /tmp/engine-v130.js idle-pachinko-shootout/engine-v130.js
       - name: Legacy runtime layers are inactive
         run: |
           ! grep -Eq 'progression-v117.js|ui-v111.js|peg-v113.js|peg-v115.js|peg-v117.js|board-v121.js|engine-v121-loader.js|campaign-v10.js' idle-pachinko-shootout/index.html
@@ -145,5 +159,7 @@ jobs:
         run: node idle-pachinko-shootout/tools/smoke-v1143-pin-flicker.mjs
       - name: Cylinder crossbar stability smoke test
         run: node idle-pachinko-shootout/tools/smoke-v1144-crossbar-stability.mjs
+      - name: Six-row board geometry / save migration smoke test
+        run: node idle-pachinko-shootout/tools/smoke-v1146-board-geometry.mjs
       - name: Diff sanity
         run: git diff --check

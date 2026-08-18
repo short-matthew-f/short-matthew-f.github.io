@@ -1,0 +1,22 @@
+/* Idle Pachinko Shootout v1.14.6 — six-row peg field / launcher band.
+   The physics canvas keeps its 472-unit coordinate system and existing catch
+   pockets. Removing the top two peg rows frees 88 units above the surviving
+   field; this stylesheet centers the cylinder inside that new hardware band
+   without consuming the space reserved for future ability controls. */
+.region-dustwater .launcher-cap{
+  top:42px!important;
+  min-width:180px;
+}
+.region-dustwater .launcher-cap .bullet-queue{
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+/* The machine bore begins below the launcher band instead of visually running
+   through the cylinder. The peg field itself begins at canvas y=158. */
+.region-dustwater .board-machine-v1142 .bm-bore{
+  top:132px;
+}
+@media(max-height:720px){
+  .region-dustwater .launcher-cap{top:30px!important;min-width:164px}
+  .region-dustwater .board-machine-v1142 .bm-bore{top:112px}
+}

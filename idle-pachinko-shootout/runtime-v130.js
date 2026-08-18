@@ -40,7 +40,7 @@ function clone(v){return JSON.parse(JSON.stringify(v||{}));}
 function snap(){return api&&api.snapshot?api.snapshot():{};}
 function readJson(key){try{var r=localStorage.getItem(key);return r?JSON.parse(r):null;}catch(e){return null;}}
 function writeJson(key,value){try{localStorage.setItem(key,JSON.stringify(value));}catch(e){}}
-function buildPositions(){var out=[],r,c,n,g=(393-56)/8;for(r=0;r<8;r++){n=r%2?8:9;for(c=0;c<n;c++)out.push({x:28+c*g+(r%2?g/2:0),y:70+r*44});}return out;}
+function buildPositions(){var out=[],r,c,n,g=(393-56)/8;for(r=0;r<6;r++){n=r%2?8:9;for(c=0;c<n;c++)out.push({x:28+c*g+(r%2?g/2:0),y:158+r*44});}return out;}
 function emit(name,detail){try{document.dispatchEvent(new CustomEvent('ips:'+name,{detail:detail||{}}));}catch(e){}}
 
 /* ---------- rendered board hardware ---------- */
