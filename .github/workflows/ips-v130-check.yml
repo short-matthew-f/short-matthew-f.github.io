@@ -1,0 +1,49 @@
+name: IPS v1.13 runtime check
+
+on:
+  push:
+    branches:
+      - idle-pachinko-v1.13-engine-cleanup
+    paths:
+      - 'idle-pachinko-shootout/index.html'
+      - 'idle-pachinko-shootout/engine-v130.js'
+      - 'idle-pachinko-shootout/runtime-v130.js'
+      - 'idle-pachinko-shootout/settings-v130.js'
+      - '.github/workflows/ips-v130-check.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'idle-pachinko-shootout/index.html'
+      - 'idle-pachinko-shootout/engine-v130.js'
+      - 'idle-pachinko-shootout/runtime-v130.js'
+      - 'idle-pachinko-shootout/settings-v130.js'
+      - '.github/workflows/ips-v130-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: JavaScript syntax
+        run: |
+          node --check idle-pachinko-shootout/engine-v130.js
+          node --check idle-pachinko-shootout/runtime-v130.js
+          node --check idle-pachinko-shootout/settings-v130.js
+      - name: Static engine architecture
+        run: |
+          ! grep -Eq "fetch\(['\"]engine-v|new Function\(" idle-pachinko-shootout/engine-v130.js
+          grep -q 'engine-v130.js' idle-pachinko-shootout/index.html
+          grep -q 'runtime-v130.js' idle-pachinko-shootout/index.html
+          grep -q 'settings-v130.js' idle-pachinko-shootout/index.html
+      - name: Legacy runtime layers are inactive
+        run: |
+          ! grep -Eq 'progression-v117.js|ui-v111.js|peg-v113.js|peg-v115.js|peg-v117.js|board-v121.js|engine-v121-loader.js' idle-pachinko-shootout/index.html
+      - name: No upgrade-sheet subtree observer
+        run: |
+          ! grep -Eq "observe\([^\n]*sheetContent|observe\(content,\{childList:true,subtree:true\}" idle-pachinko-shootout/runtime-v130.js
+      - name: Diff sanity
+        run: git diff --check
