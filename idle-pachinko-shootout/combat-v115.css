@@ -1,0 +1,27 @@
+/* v1.11.5 — crisp pixel combat feedback */
+.enemy.focused:before{display:none!important}
+.enemy .unit-figure{position:relative}
+.enemy.focused .unit-figure:before{content:"";position:absolute;left:50%;bottom:-3px;width:72px;height:86px;transform:translateX(-50%);pointer-events:none;z-index:8;background:linear-gradient(#f4c85b,#f4c85b) left top/13px 2px no-repeat,linear-gradient(#f4c85b,#f4c85b) left top/2px 13px no-repeat,linear-gradient(#f4c85b,#f4c85b) right top/13px 2px no-repeat,linear-gradient(#f4c85b,#f4c85b) right top/2px 13px no-repeat,linear-gradient(#f4c85b,#f4c85b) left bottom/13px 2px no-repeat,linear-gradient(#f4c85b,#f4c85b) left bottom/2px 13px no-repeat,linear-gradient(#f4c85b,#f4c85b) right bottom/13px 2px no-repeat,linear-gradient(#f4c85b,#f4c85b) right bottom/2px 13px no-repeat;filter:drop-shadow(1px 1px 0 #4f2a0c);animation:pixelTargetPulse .8s steps(2,end) infinite}
+.enemy.focused .unit-figure:after{content:"◆";position:absolute;left:50%;top:-10px;transform:translateX(-50%);z-index:9;color:#ffd667;font-size:9px;line-height:1;text-shadow:1px 1px 0 #4c280c;pointer-events:none}
+.enemy[data-sprite-key="troll"].focused .unit-figure:before{width:88px;height:100px;bottom:-5px}
+.enemy[data-sprite-key="ghost"].focused .unit-figure:before{bottom:2px}
+.enemy[data-sprite-key="ghoul"] .unit-figure{animation-duration:1.15s!important}
+.enemy[data-sprite-key="zombie"] .unit-figure{animation-duration:2.25s!important}
+.enemy[data-sprite-key="ghost"] .unit-figure{animation-duration:1.7s!important}
+.enemy[data-sprite-key="troll"] .unit-figure{animation-duration:2.7s!important}
+.enemy.sprite-moving[data-sprite-key="ghoul"] .unit-figure{filter:drop-shadow(-2px 1px 0 rgba(78,36,18,.55))}
+.enemy.sprite-moving[data-sprite-key="troll"] .unit-figure{transform-origin:50% 100%}
+.enemy.sprite-hurt .unit-figure{animation:pixelHit115 .16s steps(2,end)!important}
+.enemy.sprite-attack .unit-figure{animation:pixelAttack115 .18s steps(2,end)!important}
+.shot-tracer{height:2px!important;border-radius:0!important;box-shadow:2px 0 0 rgba(255,224,130,.8),4px 0 0 rgba(129,73,23,.45)!important;background:linear-gradient(90deg,#fff4b5 0 24%,#eaa63e 25% 72%,transparent 73%)!important;filter:none!important}
+.shot-tracer.crit{height:3px!important;box-shadow:2px 1px 0 #fff0a5,4px -1px 0 #e8a636!important}
+.shot-tracer.fire{background:linear-gradient(90deg,#fff0a2 0 20%,#ff8a31 21% 58%,#be391a 59% 78%,transparent 79%)!important}
+.shot-tracer.boom{background:linear-gradient(90deg,#fff1a0 0 18%,#ff6941 19% 55%,#8e2316 56% 80%,transparent 81%)!important}
+.shot-tracer.pierce{background:linear-gradient(90deg,#eaffff 0 24%,#76d9e8 25% 72%,transparent 73%)!important}
+.shot-tracer.chain{background:linear-gradient(90deg,#f5edff 0 20%,#b77cff 21% 66%,#7041b9 67% 80%,transparent 81%)!important}
+.muzzle-flash{filter:none!important;border-radius:0!important;box-shadow:2px 0 0 #e48b27,-1px 1px 0 #fff1a0!important}
+.damage-number{text-shadow:1px 1px 0 #130a05!important;filter:none!important}.damage-number.crit{filter:none!important;text-shadow:1px 1px 0 #6b3b0d,2px 2px 0 #130a05!important}
+@keyframes pixelTargetPulse{0%,100%{opacity:.72}50%{opacity:1}}
+@keyframes pixelHit115{0%,100%{transform:translateX(0)}40%{transform:translateX(4px);filter:brightness(1.65)}70%{transform:translateX(-2px)}}
+@keyframes pixelAttack115{0%,100%{transform:translateX(0)}45%{transform:translateX(-3px)}}
+@media(prefers-reduced-motion:reduce){.enemy.focused .unit-figure:before,.enemy.sprite-hurt .unit-figure,.enemy.sprite-attack .unit-figure{animation:none!important}}
