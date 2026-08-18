@@ -11,9 +11,15 @@ const html=read('index.html');
 const engine=read('engine-v130.js');
 const runtime=read('runtime-v130.js');
 const guard=read('core-coherency-v1147.js');
+const settings=read('settings-v130.js');
 
 assert(/Idle Pachinko Shootout — v1\.14\.7/.test(html),'shell title is not v1.14.7');
 assert(/<small> v1\.14\.7<\/small>/.test(html),'visible shell version is not v1.14.7');
+const shellVersion=(html.match(/<title>Idle Pachinko Shootout — v([^<]+)<\/title>/)||[])[1];
+const settingsVersion=(settings.match(/var VERSION='([^']+)'/)||[])[1];
+assert(shellVersion&&settingsVersion&&settingsVersion===shellVersion,`settings VERSION ${settingsVersion||'missing'} does not match shell ${shellVersion||'missing'}`);
+assert(html.includes(`settings-v130.js?v=${BUILD}`),'settings script does not use v1.14.7 cache key');
+assert(!html.includes('settings-v130.js?v=20260818-1144'),'stale settings cache key is still active');
 assert(html.includes('http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"'),'document cache-control guard missing');
 assert(html.includes(`engine-v130.js?v=${BUILD}`),'engine does not use v1.14.7 core cache key');
 assert(html.includes(`runtime-v130.js?v=${BUILD}`),'runtime does not use v1.14.7 core cache key');
