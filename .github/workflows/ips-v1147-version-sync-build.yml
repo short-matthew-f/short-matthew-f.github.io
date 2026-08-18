@@ -6,6 +6,11 @@ on:
       - agent/ips-v1147-settings-version-sync
     paths:
       - '.github/workflows/ips-v1147-version-sync-build.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/ips-v1147-version-sync-build.yml'
 
 permissions:
   contents: write
