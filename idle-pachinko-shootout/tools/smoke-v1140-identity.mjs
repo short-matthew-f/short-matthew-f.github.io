@@ -48,6 +48,8 @@ assert(!document.getElementById('app').classList.contains('region-dustwater'),'D
 assert(/\.dw-undertaker \.unit-figure \.undertaker-v15\{display:block!important/.test(css),'Undertaker vector fallback must remain visible');
 assert(/prefers-reduced-motion:reduce/.test(css),'Dustwater reduced-motion rules missing');
 assert(/DUSTWATER ARSENAL/.test(js),'Board identity plate copy drifted');
+assert(/\.observe\(lane,\{childList:true\}\)/.test(js),'enemy observer must stay lane-child-only');
+assert(!/\.observe\(lane,\{childList:true,subtree:true\}\)/.test(js),'enemy observer must not self-trigger through decorated descendants');
 assert(/window\.__ipsAudioCore/.test(audio),'Dustwater audio must share the existing audio core');
 assert(/regionForWave\(currentWave\)===1/.test(audio),'Dustwater audio must be Region-1 scoped');
 assert(/function bossArrival\(\)/.test(audio)&&/bell\(0\);bell\(\.46\);bell\(\.92\)/.test(audio),'Undertaker three-bell entrance signature missing');
