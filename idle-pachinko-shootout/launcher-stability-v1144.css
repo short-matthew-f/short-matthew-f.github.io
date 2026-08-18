@@ -1,12 +1,22 @@
-/* v1.14.4 — stabilize the Dustwater cylinder crossbar on mobile Safari.
-   The automatic-fire feel layers intentionally add transient classes to the
-   launcher and bullet queue. Those classes previously animated transform and
-   box-shadow on the entire crossbar, which reads as a hard flicker/jump on
-   iPhone. Keep the machine shell fixed; let ammo state and sound carry cadence. */
+/* v1.14.5 — stable launcher anchor for Dustwater on mobile Safari.
+   The launcher must stay centered even when older presentation classes touch
+   transform. Use the independent translate property for permanent centering,
+   then neutralize transient transform animations without removing the anchor. */
+.region-dustwater .launcher-cap{
+  left:50%!important;
+  translate:-50% 0!important;
+  transform:none!important;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
 .region-dustwater .launcher-cap.feel-launch{
   animation:none!important;
   transform:none!important;
   box-shadow:inset 0 1px rgba(243,203,128,.12),inset 0 -4px 8px rgba(0,0,0,.55),0 5px 15px rgba(0,0,0,.55)!important;
+}
+.region-dustwater .launcher-cap .bullet-queue{
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
 }
 .region-dustwater .launcher-cap .bullet-queue.feel-queue-kick,
 .region-dustwater .launcher-cap.dw-cylinder-turn .bullet-queue,
@@ -16,14 +26,7 @@
 }
 .region-dustwater .feel-launch-ring{display:none!important}
 
-/* Do not promote the whole crossbar to a transient composited transform layer. */
-.region-dustwater .launcher-cap,
-.region-dustwater .launcher-cap .bullet-queue{
-  backface-visibility:hidden;
-  -webkit-backface-visibility:hidden;
-}
-
 @media(prefers-reduced-motion:reduce){
-  .region-dustwater .launcher-cap,
+  .region-dustwater .launcher-cap{animation:none!important;transform:none!important;translate:-50% 0!important}
   .region-dustwater .launcher-cap .bullet-queue{animation:none!important;transform:none!important}
 }
