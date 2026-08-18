@@ -48,10 +48,11 @@ function safeOpen(tab,delay){pendingOpen=tab;setTimeout(function tryOpen(){if(!p
 function unlock(tab,message,autoOpen){if(state.unlocked[tab]){if(autoOpen&&!state.completed[tab])safeOpen(tab,250);return;}state.unlocked[tab]=true;state.opened[tab]=false;save();toast((tab==='hero'?'GUNSLINGER':tab.toUpperCase())+' UNLOCKED',message||'A new frontier system is ready.');emit('onboardingUnlock',{tab:tab});if(autoOpen)safeOpen(tab,650);}
 function complete(tab,message){if(state.completed[tab])return;state.completed[tab]=true;save();if(message)toast('LESSON COMPLETE',message);emit('onboardingComplete',{tab:tab});}
 function grantOnce(key,targetXp,targetCoins,label){
-  if(state.grants[key])return;
+  if(state.grants[key])return false;
   var s=snap(),xp=Math.max(0,Number(targetXp||0)-Number(s.xp||0)),coins=Math.max(0,Number(targetCoins||0)-Number(s.coins||0));
   state.grants[key]={xp:xp,coins:coins,at:Date.now()};write(KEY,state);
-  if((xp||coins)&&api&&api.grant)api.grant(xp,coins,label||'TRAIL LESSON');
+  if((xp||coins)&&api&&api.grant){api.grant(xp,coins,label||'TRAIL LESSON');return true;}
+  return false;
 }
 function clearDecorations(){qa('.ips-tutorial-target').forEach(function(el){el.classList.remove('ips-tutorial-target');});qa('.ips-tutorial-muted').forEach(function(el){el.classList.remove('ips-tutorial-muted');if(el.hasAttribute('data-ips-was-disabled')){el.disabled=el.getAttribute('data-ips-was-disabled')==='1';el.removeAttribute('data-ips-was-disabled');}});qa('.ips-tutorial-note').forEach(function(el){el.remove();});var sell=$('sellNew');if(sell&&sell.hasAttribute('data-ips-was-disabled')){sell.disabled=sell.getAttribute('data-ips-was-disabled')==='1';sell.removeAttribute('data-ips-was-disabled');}}
 function note(target,title,text){if(!target)return;var card=target.closest('article')||target.parentNode,n=document.createElement('div');target.classList.add('ips-tutorial-target');n.className='ips-tutorial-note';n.innerHTML='<b>'+title+'</b><span>'+text+'</span>';if(card)card.insertBefore(n,card.firstChild);}
@@ -64,19 +65,19 @@ function decorate(tab){
   var content=$('sheetContent'),target,s=snap(),card;
   if(!content)return;
   if(tab==='hero'){
-    grantOnce('heroXp',40,0,'FIRST GUNSLINGER LESSON');
+    if(grantOnce('heroXp',40,0,'FIRST GUNSLINGER LESSON')){api.openSheet('hero');return;}
     target=q('[data-hero="power"]',content);muteOthers('[data-hero]',target);note(target,'START HERE','Buy High Caliber. XP permanently strengthens the Gunslinger.');
   }else if(tab==='board'){
-    grantOnce('boardCoins',0,50,'FIRST BOARD LESSON');
+    if(grantOnce('boardCoins',0,50,'FIRST BOARD LESSON')){api.openSheet('board');return;}
     target=q('[data-board="slot"]',content);muteOthers('[data-board]',target);note(target,'TUNE THE MACHINE','Buy Sharpen Slots. Bounty Coins improve the board that creates every shot.');
   }else if(tab==='gear'){
     card=q('.gear-slot:not(.empty)',content);if(card){card.classList.add('ips-tutorial-target','ips-gear-inspect');card.setAttribute('role','button');card.setAttribute('tabindex','0');note(card,'YOUR FIRST GEAR','Tap this item once. Gear stays with you between runs and shapes your build.');var inspect=function(){complete('gear','Gear is now available whenever you want to inspect your build.');clearDecorations();};card.onclick=inspect;card.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();inspect();}};}
   }else if(tab==='ammo'){
     if(!blueprintBought()){
-      state.ammoPhase='research';grantOnce('ammoResearch',0,250,'FIRST BLUEPRINT LESSON');
+      state.ammoPhase='research';if(grantOnce('ammoResearch',0,250,'FIRST BLUEPRINT LESSON')){api.openSheet('ammo');return;}
       target=q('[data-blueprint-buy="fire"]',content);note(target,'RESEARCH FIRST','Research Incendiary Works. Blueprints reveal new build tools before you buy the actual hardware or rounds.');
     }else if(!((s.ammoUnlock||{}).fire)){
-      state.ammoPhase='purchase';grantOnce('ammoPurchase',0,150,'FIRST AMMO LESSON');
+      state.ammoPhase='purchase';if(grantOnce('ammoPurchase',0,150,'FIRST AMMO LESSON')){api.openSheet('ammo');return;}
       target=q('[data-ammo-unlock="fire"]',content);note(target,'LOAD SOMETHING NEW','Unlock your first Incendiary round. Its property enters the board before any peg modifies it.');
     }else{state.ammoPhase='done';complete('ammo','Special ammunition is unlocked. Watch the cylinder and ball color to see it enter play.');}
     write(KEY,state);
@@ -115,7 +116,6 @@ function bind(){
   document.addEventListener('ips:contractClaim',function(){if(!state.completed.bounties)complete('bounties','Bounties turn normal play into extra progression rewards.');});
   document.addEventListener('ips:bountiesRendered',function(){if(!state.completed.bounties)decorate('bounties');});
   guardDeathShortcut('deathBoard','board');guardDeathShortcut('deathAmmo','ammo');
-  var content=$('sheetContent');if(content)content.addEventListener('click',function(e){var buy=e.target&&e.target.closest?e.target.closest('[data-blueprint-buy="fire"]'):null;if(!buy||state.completed.ammo)return;setTimeout(function(){if(blueprintBought()){state.ammoPhase='purchase';write(KEY,state);if(api&&api.openSheet)api.openSheet('ammo');}},30);});
 }
 function boot(){
   api=window.__ipsAPI;if(!api||!api.snapshot)return false;
