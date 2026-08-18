@@ -3,14 +3,15 @@
 var VERSION='1.12.1';
 function fail(msg){var b=document.getElementById('bootError');if(b){b.className='boot-error';b.textContent='Game v'+VERSION+' startup error: '+msg;}throw new Error(msg);}
 function repair(src){
-  var marker="src=replaceFunction(src,'gearCard'",start=src.indexOf(marker),end,extraMarker="var EXTRA=`\n",pegLoop,injected;
+  var marker="src=replaceFunction(src,'gearCard'",start=src.indexOf(marker),end,anchor,pegLoop,injected;
   if(start<0)fail('repair target missing: gearCard patch');
   end=src.indexOf('\n',start);
   if(end<0)end=src.length;
   src=src.slice(0,start)+src.slice(Math.min(src.length,end+1));
   pegLoop="for(i=0;i<P.length;i++){p=P[i];c=colors[p.t];X.beginPath();X.arc(p.x,p.y,p.t==='n'?5.3:(p.t==='pin'?8.3:7.2),0,Math.PI*2);X.fillStyle=c;X.shadowBlur=p.t==='n'?0:(p.t==='pin'?3:14);X.shadowColor=c;X.fill();X.shadowBlur=0;X.strokeStyle='#362116';X.lineWidth=1.5;X.stroke();if(p.t!=='n'){X.fillStyle='#20120d';X.font='bold 7px sans-serif';X.textAlign='center';X.textBaseline='middle';X.fillText(glyph[p.t],p.x,p.y+.5);}}";
   injected="  src=src.replace("+JSON.stringify(pegLoop)+",'');\n";
-  if(src.indexOf(extraMarker)>=0)src=src.replace(extraMarker,extraMarker+injected);
+  anchor="  src=mustReplace(src,\"X.shadowBlur=p.t==='n'?0:14;\",\"X.shadowBlur=p.t==='n'?0:(p.t==='pin'?3:14);\",'firing pin glow');\n";
+  if(src.indexOf(anchor)>=0)src=src.replace(anchor,anchor+injected);
   src=src.replace("var VERSION='1.11.7';","var VERSION='1.12.1';");
   src=src.replace(/engine-v117-bootstrap\.js/g,'engine-v121-bootstrap.js');
   return src;
