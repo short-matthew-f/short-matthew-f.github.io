@@ -1,9 +1,9 @@
-name: IPS v1.14.0 runtime check
+name: IPS v1.14.1 runtime check
 
 on:
   push:
     branches:
-      - agent/ips-v114-dustwater-identity
+      - agent/ips-v1141-mobile-sheet
     paths:
       - 'idle-pachinko-shootout/index.html'
       - 'idle-pachinko-shootout/engine-v130.js'
@@ -18,11 +18,13 @@ on:
       - 'idle-pachinko-shootout/dustwater-v1140.js'
       - 'idle-pachinko-shootout/dustwater-v1140.css'
       - 'idle-pachinko-shootout/dustwater-audio-v1140.js'
+      - 'idle-pachinko-shootout/mobile-sheet-v1141.css'
       - 'idle-pachinko-shootout/tools/smoke-v130.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v132-progression.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v133-feel.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1140-identity.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs'
       - '.github/workflows/ips-v130-check.yml'
   pull_request:
     branches:
@@ -41,11 +43,13 @@ on:
       - 'idle-pachinko-shootout/dustwater-v1140.js'
       - 'idle-pachinko-shootout/dustwater-v1140.css'
       - 'idle-pachinko-shootout/dustwater-audio-v1140.js'
+      - 'idle-pachinko-shootout/mobile-sheet-v1141.css'
       - 'idle-pachinko-shootout/tools/smoke-v130.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v131-onboarding.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v132-progression.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v133-feel.mjs'
       - 'idle-pachinko-shootout/tools/smoke-v1140-identity.mjs'
+      - 'idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs'
       - '.github/workflows/ips-v130-check.yml'
 
 permissions:
@@ -72,6 +76,7 @@ jobs:
           node --check idle-pachinko-shootout/tools/smoke-v132-progression.mjs
           node --check idle-pachinko-shootout/tools/smoke-v133-feel.mjs
           node --check idle-pachinko-shootout/tools/smoke-v1140-identity.mjs
+          node --check idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs
       - name: Static engine architecture
         run: |
           ! grep -Eq "fetch\(['\"]engine-v|new Function\(" idle-pachinko-shootout/engine-v130.js
@@ -87,6 +92,7 @@ jobs:
           grep -q 'dustwater-v1140.js' idle-pachinko-shootout/index.html
           grep -q 'dustwater-v1140.css' idle-pachinko-shootout/index.html
           grep -q 'dustwater-audio-v1140.js' idle-pachinko-shootout/index.html
+          grep -q 'mobile-sheet-v1141.css' idle-pachinko-shootout/index.html
       - name: Legacy runtime layers are inactive
         run: |
           ! grep -Eq 'progression-v117.js|ui-v111.js|peg-v113.js|peg-v115.js|peg-v117.js|board-v121.js|engine-v121-loader.js|campaign-v10.js' idle-pachinko-shootout/index.html
@@ -111,5 +117,7 @@ jobs:
         run: node idle-pachinko-shootout/tools/smoke-v133-feel.mjs
       - name: Dustwater identity smoke test
         run: node idle-pachinko-shootout/tools/smoke-v1140-identity.mjs
+      - name: Mobile sheet viewport smoke test
+        run: node idle-pachinko-shootout/tools/smoke-v1141-mobile-sheet.mjs
       - name: Diff sanity
         run: git diff --check
