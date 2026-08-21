@@ -1,0 +1,9 @@
+{
+  "name":"Lane Warden — R-01 Twin Toll Harness",
+  "short_name":"LW R-01",
+  "start_url":"./",
+  "display":"standalone",
+  "orientation":"landscape",
+  "background_color":"#0b1217",
+  "theme_color":"#0d151b"
+}
