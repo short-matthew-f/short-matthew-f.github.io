@@ -46,3 +46,6 @@ A deterministic reference policy currently produces useful **spread**, not equal
 - Thin pressure cannot break either Guard within a 10-minute probe.
 
 That is sufficient to justify a human decision-quality pass. It is **not** sufficient to call R01-B balanced. In particular, deterministic wins remain shorter than the 5–10 minute ordinary-battle target.
+
+## v0.2.2 note
+No combat, cadence, economy, or fixture value changed in v0.2.2. This build isolates decision legibility after human evidence showed the battlefield was usable but Guard replacement was unclear and a Siege + delay loss ended with 171g unspent.
