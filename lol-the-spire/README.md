@@ -8,10 +8,11 @@ Each deployed build gets a new immutable subfolder under `lol-the-spire/` rather
 
 Current build:
 
-- `lane-warden-m0-v0.1.3/` — Lane Warden M0 formal Test 0a readiness harness for `LW-0A-001`, using the frozen v0.1.1 battlefield core with schema-3 evidence and a locked 20-minute Stress segment.
+- `lane-warden-m0-v0.1.4/` — Lane Warden M0 formal Test 0a follow-up for `LW-0A-002`, using the frozen v0.1.1 battlefield core with schema-4 evidence, orphan-aware pointer-cancel classification, run-relative setup counters, and enforced timed interaction minimums.
 
 Prior builds:
 
+- `lane-warden-m0-v0.1.3/` — `LW-0A-001`; formal result **FAILED** on the preregistered pointer-cancel acceptance criterion. Declared performance, stability, channel, HUD and audio criteria passed.
 - `lane-warden-m0-v0.1.2/` — persistent exploratory instrumentation over the immutable v0.1.1 battlefield core.
 - `lane-warden-m0-v0.1.1/` — first real-device exploratory Web/PWA channel spike.
 
