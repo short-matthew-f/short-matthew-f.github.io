@@ -1,0 +1,11 @@
+{
+  "name": "Lane Warden M0 Input Regression",
+  "short_name": "Lane Warden",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#111820",
+  "theme_color": "#111820",
+  "icons": [{"src":"../lane-warden-m0-v0.1.1/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}

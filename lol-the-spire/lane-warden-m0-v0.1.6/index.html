@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#111820" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Lane Warden — M0 Input Remediation Regression 0.1.6</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="../lane-warden-m0-v0.1.1/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../lane-warden-m0-v0.1.2/styles.css" />
+  <style>
+    .regression-panel{display:grid;gap:.7rem}.regression-status{padding:.65rem .8rem;border-radius:10px;background:rgba(255,255,255,.055);line-height:1.35}.regression-status.pass{color:#9ee3b8}.coverage-mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem .65rem;font-size:.82rem}.coverage-mini span.done{color:#9ee3b8}.coverage-mini b{display:inline-block;width:1.2rem}.timer{font:700 1.1rem ui-monospace,SFMono-Regular,Menlo,monospace}.formal-note{font-size:.78rem;opacity:.72;line-height:1.4}.manual-checks label{display:block;margin:.3rem 0}
+  </style>
+</head>
+<body>
+  <main id="app" aria-label="Lane Warden M0 battlefield harness">
+    <canvas id="battlefield" aria-label="Live Lane Warden battlefield"></canvas>
+
+    <header class="topbar glass">
+      <div>
+        <strong>LANE WARDEN</strong>
+        <span class="build">M0 · Input remediation regression · build 0.1.6</span>
+      </div>
+      <div class="top-actions">
+        <button id="audioButton" class="quiet-button" type="button">Enable sound</button>
+        <button id="recenterButton" class="icon-button" type="button" aria-label="Recenter on Commander">◎</button>
+      </div>
+    </header>
+
+    <section id="diagnostics" class="diagnostics glass" aria-live="polite">
+      <span id="fps">-- fps</span>
+      <span id="visibleActors">-- visible</span>
+      <span id="totalActors">-- total</span>
+      <span id="memory">memory n/a</span>
+    </section>
+
+    <aside class="lab-wrap">
+      <details class="lab glass" open>
+        <summary>Lab</summary>
+        <div class="lab-content regression-panel">
+          <div class="label">LW-0A-003 · declared input regression</div>
+          <div class="formal-note">iPhone 15 Pro · iOS 26.6 · installed PWA · Stress 180 + projectiles · 3 minutes. Raw iOS pointercancel is telemetry; cancellation fails only if it causes an order, retains capture, or input does not recover.</div>
+
+          <div class="label">Before start</div>
+          <div class="manual-checks">
+            <label><input id="hudClear" type="checkbox" /> HUD/safe areas visibly clear</label>
+            <label><input id="inputClean" type="checkbox" /> Ordinary pan/pinch/tap input feels clean</label>
+            <label><input id="audioHeard" type="checkbox" /> Test tone was audible</label>
+          </div>
+
+          <div id="regressionStatus" class="regression-status">Enable sound, confirm the three checks, stay landscape, then begin.</div>
+          <div><span class="timer" id="regressionTimer">3:00</span> · <span id="cancelStatus">No raw pointercancel observed — acceptable</span></div>
+          <div id="activityStatus">Not started</div>
+
+          <div class="coverage-mini" aria-label="LW-0A-003 coverage">
+            <span data-regression-coverage="stress"><b>○</b>Stress</span>
+            <span data-regression-coverage="pans"><b>○</b>12 pans</span>
+            <span data-regression-coverage="pinches"><b>○</b>6 pinches</span>
+            <span data-regression-coverage="commanderOrders"><b>○</b>3 moves</span>
+            <span data-regression-coverage="recenter"><b>○</b>Recenter</span>
+            <span data-regression-coverage="north"><b>○</b>North jump</span>
+            <span data-regression-coverage="mid"><b>○</b>Mid jump</span>
+            <span data-regression-coverage="south"><b>○</b>South jump</span>
+            <span data-regression-coverage="cancelSafety"><b>○</b>Cancel-safe</span>
+            <span data-regression-coverage="noContextLoss"><b>○</b>No context loss</span>
+            <span data-regression-coverage="lifecycleClean"><b>○</b>Foreground/landscape</span>
+          </div>
+
+          <div class="button-row evidence-row">
+            <button id="beginRegression" type="button">Begin 3m Input</button>
+            <button id="exportRegression" type="button" disabled>Export LW-0A-003</button>
+          </div>
+
+          <div class="label evidence-label">Crowd preset</div>
+          <div class="button-row">
+            <button data-preset="sparse" type="button">Sparse</button>
+            <button data-preset="target" class="active" type="button">Target</button>
+            <button data-preset="stress" type="button">Stress</button>
+          </div>
+          <label class="toggle"><input id="pauseToggle" type="checkbox" /> Pause simulation</label>
+          <label class="toggle"><input id="projectileToggle" type="checkbox" checked /> Projectiles</label>
+
+          <button id="resetEvidence" type="button" hidden aria-hidden="true">Reset core evidence</button>
+          <button id="exportEvidence" type="button" hidden aria-hidden="true">Export core evidence</button>
+          <div class="hint">During the timed segment: ordinary pans, pinches, deliberate short-tap Commander moves, one recenter, and each lane jump. Keep interacting if a cancel occurs so recovery can be observed. Do not rotate or background the PWA until export.</div>
+        </div>
+      </details>
+    </aside>
+
+    <nav id="laneStrip" class="lane-strip glass" aria-label="Global lane strip">
+      <button class="lane" type="button" data-lane="0" aria-label="Jump camera to North lane">
+        <span class="lane-name">NORTH</span><span class="front-track"><span class="front-fill" style="width:68%"></span><i class="commander-marker">◆</i></span><span class="lane-state"><b class="bastion good">B</b><b class="guard critical">G</b><em>ADV</em></span>
+      </button>
+      <button class="lane" type="button" data-lane="1" aria-label="Jump camera to Middle lane">
+        <span class="lane-name">MID</span><span class="front-track"><span class="front-fill" style="width:50%"></span><i class="commander-marker active">◆</i></span><span class="lane-state"><b class="bastion good">B</b><b class="guard good">G</b><em>HOLD</em></span>
+      </button>
+      <button class="lane" type="button" data-lane="2" aria-label="Jump camera to South lane">
+        <span class="lane-name">SOUTH</span><span class="front-track"><span class="front-fill losing" style="width:31%"></span><i class="rival-marker">◇</i></span><span class="lane-state"><b class="bastion critical">B</b><b class="guard good">G</b><em>FALL</em></span>
+      </button>
+    </nav>
+
+    <div id="tapGhost" class="tap-ghost" aria-hidden="true"></div>
+    <section id="rotateInterstitial" class="rotate-interstitial" hidden><div class="rotate-card"><div class="phone-icon">▯</div><h1>Rotate to landscape</h1><p>Lane Warden’s battlefield is designed for landscape play.</p></div></section>
+    <section id="fatal" class="fatal" hidden><h1>WebGL 2 unavailable</h1><p>This device/channel cannot run the M0 battlefield renderer.</p></section>
+  </main>
+
+  <script src="./cancel-remediation.js"></script>
+  <script src="../lane-warden-m0-v0.1.1/main.js"></script>
+  <script src="./regression.js"></script>
+</body>
+</html>

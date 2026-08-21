@@ -1,0 +1,19 @@
+{
+  "build": "M0-0.1.6",
+  "coreBuild": "M0-0.1.1",
+  "designBaseline": "1.7",
+  "declarationId": "LW-0A-003",
+  "purpose": "Targeted cancellation-safety regression after DIAG-PC-001",
+  "formalTest": true,
+  "durationMs": 180000,
+  "stressActors": 180,
+  "projectiles": true,
+  "effectiveDprCap": 2,
+  "remediation": "Pre-core pointercancel wrapper preserves v0.1.1 cleanup while making cancelled gestures ineligible to commit tap orders.",
+  "acceptance": "Raw pointercancel is telemetry; fail only on Commander order from cancel, retained pointer capture after cleanup, unrecovered subsequent input, lifecycle interruption, or WebGL context loss.",
+  "retainedEvidence": "LW-0A-001 supplies unchanged renderer/simulation 20-minute channel performance and stability evidence.",
+  "superseded": "LW-0A-002 superseded before execution",
+  "device": "iPhone 15 Pro",
+  "os": "iOS 26.6",
+  "channel": "installed standalone PWA"
+}
