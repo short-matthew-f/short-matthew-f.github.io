@@ -1,0 +1,12 @@
+{
+  "build": "M0-0.1.5",
+  "coreBuild": "M0-0.1.1",
+  "designBaseline": "1.7",
+  "purpose": "Short pointer-cancel diagnostic after v0.1.4 sanity setup captured an active tracked cancellation",
+  "diagnosticId": "DIAG-PC-001",
+  "formalTest": false,
+  "formalDeclarationStatus": "LW-0A-002 remains unexecuted; do not use this build for formal acceptance",
+  "captures": ["pointer lifecycle trace", "got/lost pointer capture", "gesture duration/travel", "core counter deltas", "250ms post-cancel recovery snapshot"],
+  "declaredDevice": "iPhone 15 Pro",
+  "declaredOS": "iOS 26.6"
+}
