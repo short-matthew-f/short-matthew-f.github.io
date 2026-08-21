@@ -1,35 +1,33 @@
-# Lane Warden — M0 v0.2.1
+# Lane Warden — M0 v0.2.2
 
-First corrected R-01 human decision-test build after the v0.2.0 gameplay-harness playtests.
+Decision-legibility isolation build for corrected `R-01 — Twin Toll` using frozen `R01-B` tuning.
+
+## What is intentionally unchanged
+
+- The gameplay runtime (`main.js`) is byte-identical to v0.2.1.
+- R01-B combat, cadence, economy, enemy fixture, Guard, Bastion, Core, and Gate values are unchanged.
+- The successful tap-through battlefield behavior is retained.
 
 ## What changed
 
-- Corrected Twin Toll's enemy script: fast balanced North, delayed slower siege South.
-- Browser and deterministic simulator share `config.js` for fixture/tuning identity.
-- R01-B repairs the Bastion→Core sacrifice clock and raises the Guard replacement threshold.
-- R01-B gives Siege Ram enough survivability/structure identity to make Siege + delay mechanically possible in the reference probe.
-- Gold is scarcer; Push and Overdrive share a 20s cooldown; Push cannot duplicate full lane composition.
-- HUD information is tap-through; action/Lab panels start collapsed and close on battlefield taps.
-- Gameplay evidence now includes 10s snapshots, kill/intervention breakdowns, Guard-break times, exact fixture script, and a three-question human debrief.
+The isolated `DL-001` decision layer makes the existing state more explicit without adding battlefield hitboxes:
+
+- Guard pressure reads `DMG > REGEN`, `DMG ≈ REGEN`, or `REGEN > DMG`.
+- A 60g intervention becoming usable is visible without opening Actions.
+- A compact tap-through `FORK OPEN` cue appears only when a Guard is actually losing while a Bastion/Core sacrifice clock is worsening.
+- The objective line mirrors the same decision state.
+
+## Why this build exists
+
+v0.2.1 human evidence found:
+
+- battlefield interaction was easy to use;
+- Thin pressure could not breach either Guard through 462.7s even after 300g of interventions;
+- Balanced won at 210s, but the player reported Guard replacement as unclear and did not experience the intended sacrifice story;
+- Siege + delay lost at 217.2s with 171g unspent and no Push/Overdrive.
+
+That evidence does not justify another numerical tuning pass yet. v0.2.2 asks whether clearer information changes the human decision story while the simulation is held fixed.
 
 ## Evidence status
 
-This is **exploratory human-test tuning**. The deterministic probe is a regression/possibility check, not formal strategy acceptance. Ordinary battle duration still needs work after the decision thesis is confirmed in human play.
-
-The included R01-A Playtest 02 evidence remains preserved as implementation/UX evidence but is excluded from canonical R-01 strategy balance claims because v0.2.0 used the wrong enemy fixture.
-
-## Run locally
-
-Serve this directory over HTTP/HTTPS and open `index.html`. For PWA behavior, use HTTPS or localhost.
-
-## Checks
-
-```bash
-node --check config.js
-node --check rules.js
-node --check main.js
-node --check sim-core.js
-node tests/smoke.js
-node tests/fixture-smoke.js
-node tests/sim-regression.js
-```
+This remains an **exploratory human test**, not shipping balance or formal strategy acceptance. After this legibility-isolated Siege + delay run, R01-B can be judged more fairly.
