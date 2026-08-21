@@ -1,0 +1,14 @@
+{
+  "build": "M0-0.1.3",
+  "coreBuild": "M0-0.1.1",
+  "designBaseline": "1.7",
+  "purpose": "Formal Test 0a readiness",
+  "declarationId": "LW-0A-001",
+  "declaredDeviceFloor": "iPhone 15 Pro",
+  "declaredOSFloor": "iOS 26.6",
+  "channel": "installed standalone PWA",
+  "formalStressMs": 1200000,
+  "stressTotalActors": 180,
+  "projectiles": true,
+  "effectiveRenderDpr": 2
+}
