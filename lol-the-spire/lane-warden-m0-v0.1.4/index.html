@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#111820" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Lane Warden — M0 Test 0a Harness 0.1.4</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="../lane-warden-m0-v0.1.1/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../lane-warden-m0-v0.1.2/styles.css" />
+  <style>#beginFormalStress{font-weight:800}#beginFormalStress:disabled,[data-preset]:disabled,#projectileToggle:disabled{opacity:.45;cursor:not-allowed}.coverage-grid span.na{opacity:.58}#formalStressStatus.active{border-color:rgba(215,184,94,.75)}#formalStressStatus.complete{border-color:rgba(112,196,128,.8)}#formalStressStatus.failed{border-color:rgba(232,112,112,.8)}</style>
+</head>
+<body>
+  <main id="app" aria-label="Lane Warden M0 battlefield harness">
+    <canvas id="battlefield" aria-label="Live Lane Warden battlefield"></canvas>
+
+    <header class="topbar glass">
+      <div>
+        <strong>LANE WARDEN</strong>
+        <span class="build">M0 · Formal Test 0a Readiness · build 0.1.4</span>
+      </div>
+      <div class="top-actions">
+        <button id="audioButton" class="quiet-button" type="button">Enable sound</button>
+        <button id="recenterButton" class="icon-button" type="button" aria-label="Recenter on Commander">◎</button>
+      </div>
+    </header>
+
+    <section id="diagnostics" class="diagnostics glass" aria-live="polite">
+      <span id="fps">-- fps</span>
+      <span id="visibleActors">-- visible</span>
+      <span id="totalActors">-- total</span>
+      <span id="memory">memory n/a</span>
+    </section>
+
+    <aside class="lab-wrap">
+      <details class="lab glass">
+        <summary>Lab</summary>
+        <div class="lab-content">
+          <div class="label">Run setup</div>
+          <label class="field-label">Mode
+            <select id="testMode">
+              <option value="formal-candidate" selected>Formal candidate</option>
+              <option value="exploratory">Exploratory</option>
+            </select>
+          </label>
+          <label class="field-label">Device model
+            <input id="deviceModel" type="text" inputmode="text" autocomplete="off" value="iPhone 15 Pro" />
+          </label>
+          <label class="field-label">Declared OS
+            <input id="declaredOS" type="text" inputmode="text" autocomplete="off" value="iOS 26.6" />
+          </label>
+          <label class="field-label">Declaration ID
+            <input id="declarationId" type="text" inputmode="text" autocomplete="off" value="LW-0A-002" />
+          </label>
+          <label class="field-label">Notes
+            <input id="operatorNotes" type="text" inputmode="text" autocomplete="off" placeholder="optional" />
+          </label>
+          <div id="setupError" class="setup-error" aria-live="polite"></div>
+          <div id="runStatus" class="run-status">0a-exploratory</div>
+
+          <div class="label evidence-label">Crowd preset</div>
+          <div class="button-row">
+            <button data-preset="sparse" type="button">Sparse</button>
+            <button data-preset="target" class="active" type="button">Target</button>
+            <button data-preset="stress" type="button">Stress</button>
+          </div>
+
+          <div class="label evidence-label">Required coverage</div>
+          <div class="coverage-grid" aria-label="Test 0a coverage checklist">
+            <span data-coverage="stressSelected"><b class="check-mark">○</b> Stress</span>
+            <span data-coverage="audioUnlockAttempted"><b class="check-mark">○</b> Audio try</span>
+            <span data-coverage="audioUnlocked"><b class="check-mark">○</b> Audio works</span>
+            <span data-coverage="panExercised"><b class="check-mark">○</b> Pan</span>
+            <span data-coverage="pinchExercised"><b class="check-mark">○</b> Pinch</span>
+            <span data-coverage="commanderOrderExercised"><b class="check-mark">○</b> Move order</span>
+            <span data-coverage="recenterExercised"><b class="check-mark">○</b> Recenter</span>
+            <span data-coverage="northLaneJump"><b class="check-mark">○</b> North jump</span>
+            <span data-coverage="midLaneJump"><b class="check-mark">○</b> Mid jump</span>
+            <span data-coverage="southLaneJump"><b class="check-mark">○</b> South jump</span>
+            <span data-coverage="portraitObserved"><b class="check-mark">○</b> Rotate</span>
+            <span data-coverage="lifecycleCycleObserved"><b class="check-mark">○</b> Background</span>
+            <span data-coverage="standalone"><b class="check-mark">○</b> PWA</span>
+            <span data-coverage="deviceModelDeclared"><b class="check-mark">○</b> Device named</span>
+            <span data-coverage="osDeclared"><b class="check-mark">○</b> OS named</span>
+            <span data-coverage="declarationIdPresent"><b class="check-mark">○</b> Declaration</span>
+            <span data-coverage="formalStressComplete"><b class="check-mark">○</b> 20m Stress</span>
+            <span data-coverage="hudClearConfirmed"><b class="check-mark">○</b> HUD clear</span>
+            <span data-coverage="noAccidentalOrdersConfirmed"><b class="check-mark">○</b> Input clean</span>
+            <span data-coverage="audioHeardConfirmed"><b class="check-mark">○</b> Sound heard</span>
+          </div>
+          <div class="manual-checks">
+            <label><input type="checkbox" data-manual-check="hudClear" /> HUD/safe areas visibly clear</label>
+            <label><input type="checkbox" data-manual-check="noAccidentalOrders" /> No accidental move orders observed</label>
+            <label><input type="checkbox" data-manual-check="audioHeard" /> Test tone was audible</label>
+          </div>
+
+          <div class="label evidence-label">Formal stress segment</div>
+          <div class="button-row evidence-row">
+            <button id="beginFormalStress" type="button">Begin 20m Stress</button>
+          </div>
+          <div id="formalStressStatus" class="run-status">Not started · Stress + projectiles will lock</div>
+          <div class="hint">Timed segment also requires: 3 pans · 3 pinches · 3 deliberate Commander moves · 1 recenter · North/Mid/South jump once each. Genuine active-interaction pointer cancels interrupt the attempt; orphaned browser cancels are recorded but do not.</div>
+
+          <div class="label evidence-label">Evidence</div>
+          <div class="button-row evidence-row">
+            <button id="resetEvidence" type="button">Start declared run</button>
+            <button id="exportEvidence" type="button">Finish + export</button>
+          </div>
+          <label class="toggle"><input id="pauseToggle" type="checkbox" /> Pause simulation</label>
+          <label class="toggle"><input id="projectileToggle" type="checkbox" checked /> Projectiles</label>
+          <div class="hint">Drag to pan · pinch to zoom · short tap moves Commander. Telemetry checkpoints persist automatically every 2 seconds. For formal evidence: Start declared run → complete setup coverage → Begin 20m Stress → export when complete.</div>
+        </div>
+      </details>
+    </aside>
+
+    <nav id="laneStrip" class="lane-strip glass" aria-label="Global lane strip">
+      <button class="lane" type="button" data-lane="0" aria-label="Jump camera to North lane">
+        <span class="lane-name">NORTH</span>
+        <span class="front-track"><span class="front-fill" style="width:68%"></span><i class="commander-marker">◆</i></span>
+        <span class="lane-state"><b class="bastion good">B</b><b class="guard critical">G</b><em>ADV</em></span>
+      </button>
+      <button class="lane" type="button" data-lane="1" aria-label="Jump camera to Middle lane">
+        <span class="lane-name">MID</span>
+        <span class="front-track"><span class="front-fill" style="width:50%"></span><i class="commander-marker active">◆</i></span>
+        <span class="lane-state"><b class="bastion good">B</b><b class="guard good">G</b><em>HOLD</em></span>
+      </button>
+      <button class="lane" type="button" data-lane="2" aria-label="Jump camera to South lane">
+        <span class="lane-name">SOUTH</span>
+        <span class="front-track"><span class="front-fill losing" style="width:31%"></span><i class="rival-marker">◇</i></span>
+        <span class="lane-state"><b class="bastion critical">B</b><b class="guard good">G</b><em>FALL</em></span>
+      </button>
+    </nav>
+
+    <div id="tapGhost" class="tap-ghost" aria-hidden="true"></div>
+
+    <section id="rotateInterstitial" class="rotate-interstitial" hidden>
+      <div class="rotate-card">
+        <div class="phone-icon">▯</div>
+        <h1>Rotate to landscape</h1>
+        <p>Lane Warden’s battlefield is designed for landscape play.</p>
+      </div>
+    </section>
+
+    <section id="fatal" class="fatal" hidden>
+      <h1>WebGL 2 unavailable</h1>
+      <p>This device/channel cannot run the M0 battlefield renderer.</p>
+    </section>
+  </main>
+  <script src="../lane-warden-m0-v0.1.1/main.js"></script>
+  <script src="./instrumentation.js"></script>
+</body>
+</html>

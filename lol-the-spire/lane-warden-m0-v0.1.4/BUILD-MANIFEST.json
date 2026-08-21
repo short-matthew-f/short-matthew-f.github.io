@@ -1,0 +1,25 @@
+{
+  "build": "M0-0.1.4",
+  "coreBuild": "M0-0.1.1",
+  "designBaseline": "1.7",
+  "purpose": "Formal Test 0a follow-up after LW-0A-001 input-classification failure",
+  "declarationId": "LW-0A-002",
+  "declaredDeviceFloor": "iPhone 15 Pro",
+  "declaredOSFloor": "iOS 26.6",
+  "channel": "installed standalone PWA",
+  "formalStressMs": 1200000,
+  "stressTotalActors": 180,
+  "projectiles": true,
+  "effectiveRenderDpr": 2,
+  "pointerCancelClassifier": ["lifecycle-adjacent", "orphaned", "interaction-cancel"],
+  "formalActivityMinimums": {
+    "pans": 3,
+    "pinches": 3,
+    "commanderOrders": 3,
+    "recenters": 1,
+    "northLaneJumps": 1,
+    "midLaneJumps": 1,
+    "southLaneJumps": 1
+  },
+  "priorFormalResult": "LW-0A-001 FAILED — pointer-cancel acceptance criterion"
+}
