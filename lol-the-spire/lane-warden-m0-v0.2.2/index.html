@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0d151b" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Lane Warden — R-01 Twin Toll R01-B</title>
+  <title>Lane Warden — R-01 Twin Toll R01-B Decision Legibility</title>
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
@@ -15,7 +15,7 @@
   <canvas id="battlefield" aria-label="Lane Warden battlefield"></canvas>
 
   <header class="topbar hud-info panel">
-    <div class="brand"><strong>LANE WARDEN</strong><span>M0.4 · R01-B · 0.2.1</span></div>
+    <div class="brand"><strong>LANE WARDEN</strong><span>M0.4 · R01-B · 0.2.2</span></div>
     <div class="topstats">
       <span id="timer">DEPLOY</span>
       <span id="gold">60g</span>
@@ -30,9 +30,13 @@
     <div class="objective-meter"><span>CORE</span><b id="coreState">SECURE</b><meter id="coreMeter" min="0" max="1" value="1"></meter></div>
   </section>
 
+  <section id="decisionCue" class="decision-cue hud-info panel" hidden aria-live="polite">
+    <b id="decisionCueTitle">INTERVENTION READY</b><span id="decisionCueDetail">Choose where the next 60g matters.</span>
+  </section>
+
   <section id="battleHud" class="action-dock" hidden>
     <button id="actionsToggle" class="dock-toggle panel hud-control" type="button" aria-expanded="false" aria-controls="actionDrawer">
-      <b>ACTIONS</b><span id="actionsSummary">WP READY · 60g</span>
+      <b id="actionsLabel">ACTIONS</b><span id="actionsSummary">WP READY · 60g</span>
     </button>
     <div id="actionDrawer" class="action-drawer panel" hidden>
       <button id="rallyButton" type="button"><b>RALLY</b><span id="rallyStatus">ready</span></button>
@@ -97,7 +101,7 @@
       <div class="debrief">
         <p>Quick debrief — this is more useful than a fun score.</p>
         <div><span>Knowingly let a lane worsen?</span><button data-debrief-key="sacrifice" data-debrief-value="yes">YES</button><button data-debrief-key="sacrifice" data-debrief-value="no">NO</button></div>
-        <div><span>Could you read Guard replacement?</span><button data-debrief-key="guardRead" data-debrief-value="clear">CLEAR</button><button data-debrief-key="guardRead" data-debrief-value="unclear">UNCLEAR</button></div>
+        <div><span>Could you tell when damage beat Guard regen?</span><button data-debrief-key="guardRead" data-debrief-value="clear">CLEAR</button><button data-debrief-key="guardRead" data-debrief-value="unclear">UNCLEAR</button></div>
         <div><span>Did gold create a real fork?</span><button data-debrief-key="goldFork" data-debrief-value="yes">YES</button><button data-debrief-key="goldFork" data-debrief-value="no">NO</button></div>
       </div>
       <div class="result-actions"><button id="resultExport" type="button">EXPORT EVIDENCE</button><button id="redeployButton" class="primary">REDEPLOY</button></div>
@@ -110,5 +114,6 @@
 <script src="./config.js"></script>
 <script src="./rules.js"></script>
 <script src="./main.js"></script>
+<script src="./decision-legibility.js"></script>
 </body>
 </html>
