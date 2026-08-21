@@ -1,1 +1,32 @@
-temp
+{
+  "build": "M0-0.2.0",
+  "designBaseline": "1.7",
+  "milestone": "M0.4 — Shared gameplay harness conversion",
+  "fixture": "R-01 — Twin Toll",
+  "parameterRevision": "R01-A",
+  "status": "EXPLORATORY GAMEPLAY HARNESS",
+  "test0a": "CLOSED — COMPOSITE PASS",
+  "laneCount": 2,
+  "referenceCapacity": {"unitPoints": 6, "towerPoints": 4},
+  "implemented": [
+    "locked pre-battle deployment",
+    "staggered player and enemy pulses",
+    "melee/ranged/siege live combat",
+    "local front formation and simulation-derived lane strip",
+    "continuous Guard regeneration and replacement-state readout",
+    "Bastion clock and Core exposure",
+    "one-lane Gate vulnerability latch",
+    "Commander Presence, routed walking, Rally, Waypoint, incapacitation/reform",
+    "starting tower roles including offensive War Pylon",
+    "Presence-linked local/remote gold",
+    "gold Push and tower Overdrive opportunity-cost actions",
+    "gameplay evidence export"
+  ],
+  "notClaimed": [
+    "final balance",
+    "deterministic simulation / Test 0b",
+    "shipping R-01 encounter tuning",
+    "strategy viability proof",
+    "human north-star experience proof"
+  ]
+}
