@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#111820" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Lane Warden — M0 Channel Spike</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main id="app" aria-label="Lane Warden M0 battlefield harness">
+    <canvas id="battlefield" aria-label="Live Lane Warden battlefield"></canvas>
+
+    <header class="topbar glass">
+      <div>
+        <strong>LANE WARDEN</strong>
+        <span class="build">M0 · Test 0a Spike · build 0.1.1</span>
+      </div>
+      <div class="top-actions">
+        <button id="audioButton" class="quiet-button" type="button">Enable sound</button>
+        <button id="recenterButton" class="icon-button" type="button" aria-label="Recenter on Commander">◎</button>
+      </div>
+    </header>
+
+    <section id="diagnostics" class="diagnostics glass" aria-live="polite">
+      <span id="fps">-- fps</span>
+      <span id="visibleActors">-- visible</span>
+      <span id="totalActors">-- total</span>
+      <span id="memory">memory n/a</span>
+    </section>
+
+    <aside class="lab-wrap">
+      <details class="lab glass">
+        <summary>Lab</summary>
+        <div class="lab-content">
+          <div class="label">Crowd preset</div>
+          <div class="button-row">
+            <button data-preset="sparse" type="button">Sparse</button>
+            <button data-preset="target" class="active" type="button">Target</button>
+            <button data-preset="stress" type="button">Stress</button>
+          </div>
+          <div class="label evidence-label">Evidence</div>
+          <div class="button-row evidence-row">
+            <button id="resetEvidence" type="button">Reset</button>
+            <button id="exportEvidence" type="button">Export JSON</button>
+          </div>
+          <label class="toggle"><input id="pauseToggle" type="checkbox" /> Pause simulation</label>
+          <label class="toggle"><input id="projectileToggle" type="checkbox" checked /> Projectiles</label>
+          <div class="hint">Drag to pan · pinch to zoom · short tap moves Commander</div>
+        </div>
+      </details>
+    </aside>
+
+    <nav id="laneStrip" class="lane-strip glass" aria-label="Global lane strip">
+      <button class="lane" type="button" data-lane="0" aria-label="Jump camera to North lane">
+        <span class="lane-name">NORTH</span>
+        <span class="front-track"><span class="front-fill" style="width:68%"></span><i class="commander-marker">◆</i></span>
+        <span class="lane-state"><b class="bastion good">B</b><b class="guard critical">G</b><em>ADV</em></span>
+      </button>
+      <button class="lane" type="button" data-lane="1" aria-label="Jump camera to Middle lane">
+        <span class="lane-name">MID</span>
+        <span class="front-track"><span class="front-fill" style="width:50%"></span><i class="commander-marker active">◆</i></span>
+        <span class="lane-state"><b class="bastion good">B</b><b class="guard good">G</b><em>HOLD</em></span>
+      </button>
+      <button class="lane" type="button" data-lane="2" aria-label="Jump camera to South lane">
+        <span class="lane-name">SOUTH</span>
+        <span class="front-track"><span class="front-fill losing" style="width:31%"></span><i class="rival-marker">◇</i></span>
+        <span class="lane-state"><b class="bastion critical">B</b><b class="guard good">G</b><em>FALL</em></span>
+      </button>
+    </nav>
+
+    <div id="tapGhost" class="tap-ghost" aria-hidden="true"></div>
+
+    <section id="rotateInterstitial" class="rotate-interstitial" hidden>
+      <div class="rotate-card">
+        <div class="phone-icon">▯</div>
+        <h1>Rotate to landscape</h1>
+        <p>Lane Warden’s battlefield is designed for landscape play.</p>
+      </div>
+    </section>
+
+    <section id="fatal" class="fatal" hidden>
+      <h1>WebGL 2 unavailable</h1>
+      <p>This device/channel cannot run the M0 battlefield renderer.</p>
+    </section>
+  </main>
+  <script src="./main.js"></script>
+</body>
+</html>
