@@ -1,0 +1,9 @@
+{
+  "build": "M0-0.1.2",
+  "coreBuild": "M0-0.1.1",
+  "designBaseline": "1.7",
+  "purpose": "Formal Test 0a instrumentation",
+  "corePath": "../lane-warden-m0-v0.1.1/main.js",
+  "instrumentation": "./instrumentation.js",
+  "status": "test-candidate"
+}
