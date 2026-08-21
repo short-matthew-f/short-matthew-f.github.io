@@ -1,0 +1,9 @@
+{
+  "name": "Lane Warden M0.2.1 — R01-B",
+  "short_name": "LW R01-B",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0b1217",
+  "theme_color": "#0d151b"
+}
