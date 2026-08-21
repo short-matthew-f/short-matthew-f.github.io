@@ -1,0 +1,13 @@
+{
+  "name": "Lane Warden M0 Test 0a Harness",
+  "short_name": "Lane Warden",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#10171e",
+  "theme_color": "#111820",
+  "icons": [
+    { "src": "../lane-warden-m0-v0.1.1/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
