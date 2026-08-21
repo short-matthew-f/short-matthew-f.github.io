@@ -1,0 +1,1 @@
+This immutable test build deploys LW-0A-003. It reuses the immutable M0-0.1.1 renderer/simulation, applies the cancel-remediation shim before core registration, and runs the 3-minute cancellation-safety regression. Long-duration renderer/channel evidence remains LW-0A-001; LW-0A-002 was superseded before execution.
