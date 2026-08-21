@@ -1,0 +1,34 @@
+{
+  "build": "M0-0.2.1",
+  "designBaseline": "1.7",
+  "milestone": "M0.4 — Shared gameplay harness",
+  "fixture": "R-01 — Twin Toll",
+  "parameterRevision": "R01-B",
+  "status": "EXPLORATORY HUMAN-TEST CANDIDATE",
+  "test0a": "CLOSED — COMPOSITE PASS",
+  "changesFrom020": [
+    "correct Twin Toll enemy topology: fast balanced North / delayed siege South",
+    "share fixture and parameter source between browser runtime and deterministic simulator",
+    "repair sacrifice clock to distinct Bastion then Core windows",
+    "make Guard replacement threshold materially resist thin pressure",
+    "reduce gold income and give Push/Overdrive a shared intervention cooldown",
+    "Push adds one temporary copy of each already-committed type, not a full recurring pulse",
+    "raise Siege Ram survival/structural identity for human strategy testing",
+    "collapse Lab and action controls by default; informational HUD is tap-through",
+    "thin top/objective/lane HUD footprint and close expanded controls on battlefield tap",
+    "add 10-second state snapshots and compact post-battle human debrief to evidence"
+  ],
+  "referenceProbe": {
+    "balanced": "deterministic bot wins around 234s",
+    "siegeDelay": "deterministic bot wins around 209s after South Bastion breaks; Core nearly exhausted",
+    "allIn": "deterministic bot wins around 156s after abandoning South",
+    "thin": "no Guard breach within 600s"
+  },
+  "notClaimed": [
+    "shipping R-01 balance",
+    "5–10 minute battle-duration target satisfied",
+    "human north-star decision proof",
+    "formal strategy viability acceptance",
+    "Test 0b deterministic suspend/resume readiness"
+  ]
+}

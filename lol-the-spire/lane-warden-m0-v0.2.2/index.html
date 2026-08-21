@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0d151b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Lane Warden — R-01 Twin Toll R01-B</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<main id="app">
+  <canvas id="battlefield" aria-label="Lane Warden battlefield"></canvas>
+
+  <header class="topbar hud-info panel">
+    <div class="brand"><strong>LANE WARDEN</strong><span>M0.4 · R01-B · 0.2.1</span></div>
+    <div class="topstats">
+      <span id="timer">DEPLOY</span>
+      <span id="gold">60g</span>
+      <button id="audioButton" class="quiet hud-control" type="button">Sound</button>
+      <button id="recenterButton" class="icon hud-control" type="button" aria-label="Recenter on Commander">◎</button>
+    </div>
+  </header>
+
+  <section class="objective hud-info panel" aria-live="polite">
+    <div class="objective-copy"><span class="label">R-01 · TWIN TOLL</span><b id="objectiveText">Commit before battle</b></div>
+    <div class="objective-meter"><span>GATE</span><b id="gateState">SHIELDED</b><meter id="gateMeter" min="0" max="1" value="1"></meter></div>
+    <div class="objective-meter"><span>CORE</span><b id="coreState">SECURE</b><meter id="coreMeter" min="0" max="1" value="1"></meter></div>
+  </section>
+
+  <section id="battleHud" class="action-dock" hidden>
+    <button id="actionsToggle" class="dock-toggle panel hud-control" type="button" aria-expanded="false" aria-controls="actionDrawer">
+      <b>ACTIONS</b><span id="actionsSummary">WP READY · 60g</span>
+    </button>
+    <div id="actionDrawer" class="action-drawer panel" hidden>
+      <button id="rallyButton" type="button"><b>RALLY</b><span id="rallyStatus">ready</span></button>
+      <button id="waypointButton" type="button"><b>WAYPOINT</b><span id="waypointStatus">ready</span></button>
+      <button id="pushButton" type="button"><b>PUSH</b><span id="pushStatus">60g · ready</span></button>
+      <button id="overdriveButton" type="button"><b>OVERDRIVE</b><span id="overdriveStatus">60g · ready</span></button>
+    </div>
+  </section>
+
+  <aside class="lab-dock">
+    <button id="labToggle" class="lab-toggle panel hud-control" type="button" aria-expanded="false" aria-controls="labPanel">LAB · R01-B</button>
+    <div id="labPanel" class="lab-panel panel" hidden>
+      <div class="diag"><span id="fps">-- fps</span><span id="actors">0 actors</span><span id="fixture">R01-B</span></div>
+      <label>Simulation speed <select id="simSpeed"><option value="1">1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+      <button id="exportEvidence" type="button">Export gameplay evidence</button>
+      <button id="resetBattle" type="button">Return to deployment</button>
+      <p>Prototype controls. R01-B is exploratory tuning, not shipping balance.</p>
+    </div>
+  </aside>
+
+  <nav id="laneStrip" class="lane-strip panel" aria-label="Lane status">
+    <button class="lane selected" data-lane="north" type="button">
+      <span class="lane-name">NORTH</span>
+      <span class="front"><i id="northFront"></i><em id="northCommander">◆</em></span>
+      <span class="causes"><b id="northBastion" class="good">B 100</b><b id="northGuard" class="guard">G 100</b><small id="northPressure">READ</small></span>
+    </button>
+    <button class="lane" data-lane="south" type="button">
+      <span class="lane-name">SOUTH</span>
+      <span class="front"><i id="southFront"></i><em id="southCommander"></em></span>
+      <span class="causes"><b id="southBastion" class="good">B 100</b><b id="southGuard" class="guard">G 100</b><small id="southPressure">READ</small></span>
+    </button>
+  </nav>
+
+  <section id="deployment" class="deployment-overlay">
+    <div class="deployment-card panel">
+      <div class="deploy-head">
+        <div><span class="label">R-01 · PARAMETER SET B</span><h1>Twin Toll</h1><p>One breach is enough. North is the faster balanced pressure lane; South starts later but brings slow Rammers. Decide what you will breach and what will buy time.</p></div>
+        <div class="budgets"><b id="unitBudget">Unit 6 / 6</b><b id="towerBudget">Tower 4 / 4</b></div>
+      </div>
+      <div class="forecast" aria-label="Known Twin Toll pressure">
+        <div><b>NORTH</b><span>opens immediately · 3 Raiders</span><span>then 2 Raiders + Bowhand · ~20s</span></div>
+        <div><b>SOUTH</b><span>starts ~10s later · 2 Raiders</span><span>then 2 Raiders + Rammer · ~28s</span></div>
+      </div>
+      <div class="presets">
+        <button data-deploy-preset="siegeDelay" class="active">Siege + delay</button>
+        <button data-deploy-preset="balanced">Balanced</button>
+        <button data-deploy-preset="allIn">All-in</button>
+        <button data-deploy-preset="thin">Thin everywhere</button>
+      </div>
+      <div id="deployLanes" class="deploy-lanes"></div>
+      <div class="deploy-footer">
+        <div><b id="deployVerdict">Legal deployment</b><span id="deployNote">Deployment locks when battle begins.</span></div>
+        <button id="startBattle" class="primary">LOCK & START</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="battleResult" class="result-overlay" hidden>
+    <div class="result-card panel">
+      <span class="label">R-01 HUMAN TEST</span><h1 id="resultTitle">Gate broken</h1><p id="resultBody"></p>
+      <div id="resultStats" class="result-stats"></div>
+      <div class="debrief">
+        <p>Quick debrief — this is more useful than a fun score.</p>
+        <div><span>Knowingly let a lane worsen?</span><button data-debrief-key="sacrifice" data-debrief-value="yes">YES</button><button data-debrief-key="sacrifice" data-debrief-value="no">NO</button></div>
+        <div><span>Could you read Guard replacement?</span><button data-debrief-key="guardRead" data-debrief-value="clear">CLEAR</button><button data-debrief-key="guardRead" data-debrief-value="unclear">UNCLEAR</button></div>
+        <div><span>Did gold create a real fork?</span><button data-debrief-key="goldFork" data-debrief-value="yes">YES</button><button data-debrief-key="goldFork" data-debrief-value="no">NO</button></div>
+      </div>
+      <div class="result-actions"><button id="resultExport" type="button">EXPORT EVIDENCE</button><button id="redeployButton" class="primary">REDEPLOY</button></div>
+    </div>
+  </section>
+
+  <section id="rotateInterstitial" class="rotate-overlay" hidden><div class="panel"><h1>Rotate to landscape</h1><p>Lane Warden’s battlefield is designed for landscape play.</p></div></section>
+  <section id="fatal" class="fatal" hidden><div class="panel"><h1>WebGL 2 unavailable</h1><p>This channel cannot run the gameplay harness.</p></div></section>
+</main>
+<script src="./config.js"></script>
+<script src="./rules.js"></script>
+<script src="./main.js"></script>
+</body>
+</html>
