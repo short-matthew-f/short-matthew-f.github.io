@@ -86,7 +86,7 @@
     <div><span class="dot rose"></span>enemy</div>
     <div><span class="dot teal"></span>junction/path information</div>
   </div>
-  <div class="hint">Tap a lane to rotate the Commander</div>
+  <div class="hint">Tap a lane to rotate the Commander · build 3D-02</div>
 </div>
 
 <script type="module">
@@ -317,20 +317,31 @@ function chooseClip(clips,kind='move'){
   for(const p of patterns){const c=clips.find(x=>p.test(x.name));if(c)return c}
   return clips[0];
 }
-function spawnModel(type,color,height=1.3){
+function spawnModel(type,color,height=1.3,marker=true){
   const t=templates[type]||fallback(type);
-  const root=SkeletonUtils.clone(t.scene);
-  fitModel(root,height);
-  tintModel(root,color,.32);
+  const visual=SkeletonUtils.clone(t.scene);
+  fitModel(visual,height);
+  tintModel(visual,color,.32);
+  const root=new THREE.Group();
+  root.add(visual);
+  if(marker){
+    const ring=new THREE.Mesh(
+      new THREE.RingGeometry(.34,.48,28),
+      new THREE.MeshBasicMaterial({color,transparent:true,opacity:.85,side:THREE.DoubleSide,depthWrite:false})
+    );
+    ring.rotation.x=-Math.PI/2;
+    ring.position.y=.035;
+    root.add(ring);
+  }
   scene.add(root);
   let mixer=null;
   if((t.animations||[]).length){
-    mixer=new THREE.AnimationMixer(root);
+    mixer=new THREE.AnimationMixer(visual);
     const clip=chooseClip(t.animations,'move');
     if(clip) mixer.clipAction(clip).play();
     mixers.push(mixer);
   }
-  return {root,mixer};
+  return {root,visual,mixer};
 }
 
 function orientTo(root,a,b){
@@ -338,10 +349,10 @@ function orientTo(root,a,b){
   root.rotation.y = Math.atan2(dx,dz); // model forward assumed +Z-ish; placeholder only
 }
 class PathMover{
-  constructor(model,points,speed=1.6,loop=false,onDone=null,bob=0){
-    this.root=model.root; this.points=points.map(p=>new THREE.Vector3(p[0],0,p[1]));
+  constructor(model,points,speed=1.6,loop=false,onDone=null,bob=0,elevation=0){
+    this.root=model.root; this.points=points.map(p=>new THREE.Vector3(p[0],elevation,p[1]));
     this.speed=speed; this.loop=loop; this.i=0; this.done=false; this.onDone=onDone; this.bob=bob;
-    this.root.position.copy(this.points[0]); this.baseY=this.root.position.y;
+    this.root.position.copy(this.points[0]); this.baseY=elevation;
     if(this.points[1]) orientTo(this.root,this.points[0],this.points[1]);
     movers.push(this);
   }
@@ -361,7 +372,7 @@ class PathMover{
   }
 }
 
-let commanderModel=spawnModel('knight',0xf2a93b,1.55);
+let commanderModel=spawnModel('knight',0xf2a93b,1.85,true);
 commanderModel.root.position.set(-2,0,0);
 let commanderMover=null;
 let commanderLane=1;
@@ -384,7 +395,7 @@ document.querySelectorAll('[data-lane]').forEach(b=>b.addEventListener('click',(
 function spawnFriendlyWave(){
   LANES.forEach((z,li)=>{
     for(let i=0;i<3;i++){
-      const m=spawnModel('skeleton',0xf2a93b,.95);
+      const m=spawnModel('skeleton',0xf2a93b,1.18,true);
       const delay=i*.65+li*.18;
       m.root.visible=false;
       setTimeout(()=>{
@@ -397,13 +408,11 @@ function spawnFriendlyWave(){
 function spawnEnemyWave(){
   LANES.forEach((z,li)=>{
     for(let i=0;i<2;i++){
-      const m=spawnModel('bat',0xf2506b,.72);
+      const m=spawnModel('bat',0xf2506b,.92,false);
       const delay=i*.8+li*.16; m.root.visible=false;
       setTimeout(()=>{
         m.root.visible=true;
-        m.root.position.y=1.15;
-        const pm=new PathMover(m,[[8.7+i*.3,z],[-9.8,z]],1.55,false,()=>scene.remove(m.root),.08);
-        pm.baseY=1.15;
+        new PathMover(m,[[8.7+i*.3,z],[-9.8,z]],1.55,false,()=>scene.remove(m.root),.08,1.15);
       },delay*1000);
     }
   });
