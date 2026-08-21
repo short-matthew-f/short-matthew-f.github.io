@@ -5,7 +5,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  const BUILD='M0-0.2.1';
+  const BUILD='M0-0.2.2';
   const FIXTURE='R-01';
   const PARAM_REV='R01-B';
 
