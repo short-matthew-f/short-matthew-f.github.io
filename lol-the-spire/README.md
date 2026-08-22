@@ -6,9 +6,17 @@ This directory is a versioned GitHub Pages test archive.
 
 Each deployed build gets a new immutable subfolder under `lol-the-spire/` rather than replacing the previous deployment.
 
-Current engineering reference:
+Current exploratory gameplay build:
 
-- `lane-warden-m0-v0.3.0/` — **M0.5 / Test 0b PASS.** DET-001 hardens the frozen R01-C harness with an authoritative 60 Hz simulation step, one versioned automatic recovery snapshot, no background progress/catch-up, exact snapshot round-trip checking, deterministic continuation checks, compatibility rejection, and exact relaunch restore. `LW-0B-001` passed on 2026-08-22. This build intentionally does **not** retune R-01.
+- `lane-warden-r02-v0.4.1/` — **R02-B rotation-pressure revision.** Carries the three-lane/Rival structural spike forward after the first R02-A human run. Neglected North/South pressure is stronger, Bastion durability is reduced, Rival scoring is less dominated by player absence, Rival lane choice has hysteresis, damaged Guard pressure attracts contest, reform chooses a high-value enemy anchor, and tower-destruction telemetry is fixed. This remains exploratory and does not claim canonical R-02 balance or Test 6/7/8 acceptance.
+
+R-02 exploratory reference:
+
+- `lane-warden-r02-v0.4.0/` — **R02-A structural spike.** First human evidence was useful but incomplete: the Rival clearly changed rotations and middle concentration crossed Guard replacement, while the outer Bastions remained too safe. The first six Rival lane decisions were followed by Commander orders to the same lane; middle Guard position 0 broke at 114.38 s and the second position reached 34% by 130 s; no Bastion warning or break occurred. See `R02-A-EXPLORATORY-RESULT.md`.
+
+Deterministic engineering reference:
+
+- `lane-warden-m0-v0.3.0/` — **M0.5 / Test 0b PASS.** DET-001 hardens the frozen R01-C harness with an authoritative 60 Hz simulation step, one versioned automatic recovery snapshot, no background progress/catch-up, exact snapshot round-trip checking, deterministic continuation checks, compatibility rejection, and exact relaunch restore. `LW-0B-001` passed on 2026-08-22.
 
 Final R-01 human reference build:
 
@@ -16,29 +24,27 @@ Final R-01 human reference build:
 
 Prior builds:
 
-- `lane-warden-m0-v0.2.3/` — R01-C pacing/consequence human test. Human Siege + delay evidence: win 265s, fork opened at 160s, North Guard broke at 174.41s, two Pushes + one Overdrive, South Bastion ended at 0.6%, debrief `sacrifice=yes / guardRead=clear / goldFork=yes`. Retained as the frozen gameplay baseline for ATT-001.
-- `lane-warden-m0-v0.2.2/` — decision-legibility isolation over frozen R01-B. Human Siege + delay evidence produced a 186.6s win with `sacrifice=yes`, `guardRead=clear`, `goldFork=yes`; this supports the Twin Toll fork under **informed play**, but does not prove independent teaching/discoverability.
-- `lane-warden-m0-v0.2.1/` — corrected R-01 human decision-test candidate using `R01-B`. Human evidence found battlefield tapping easy, Thin held the replacement threshold through 462.7s, Balanced won at 210s but Guard replacement was reported unclear, and Siege + delay lost with 171g unspent and no intervention. Preserved as the comparison baseline for v0.2.2.
-- `lane-warden-m0-v0.2.0/` — first gameplay-bearing M0.4 harness using `R01-A`. Its implementation/UX evidence is retained, but its Twin Toll enemy script was later found nonconformant, so its playtests are not canonical R-01 strategy-tuning evidence.
-- `lane-warden-m0-v0.1.6/` — `LW-0A-003`; **PASS.** Together with the retained 20-minute renderer/channel evidence from `LW-0A-001`, this closed M0 Test 0a as a **COMPOSITE PASS**.
-- `lane-warden-m0-v0.1.5/` — `DIAG-PC-001`; short pointer lifecycle/capture diagnostic. It established that observed active cancellations were interrupted pans with clean recovery and exposed the latent cancel-as-tap path in the frozen core.
-- `lane-warden-m0-v0.1.4/` — `LW-0A-002`; **SUPERSEDED BEFORE EXECUTION** after diagnostic evidence refined the pointer-cancel failure model.
-- `lane-warden-m0-v0.1.3/` — `LW-0A-001`; formal result **FAILED** on its preregistered raw pointer-cancel criterion. Its 20-minute renderer/channel stability and performance evidence remains retained for the unchanged rendering/simulation path; the historical verdict itself is not rewritten.
+- `lane-warden-m0-v0.2.3/` — R01-C pacing/consequence human test. Human Siege + delay evidence: win 265s, fork opened at 160s, North Guard broke at 174.41s, two Pushes + one Overdrive, South Bastion ended at 0.6%, debrief `sacrifice=yes / guardRead=clear / goldFork=yes`.
+- `lane-warden-m0-v0.2.2/` — decision-legibility isolation over frozen R01-B. Human evidence produced a 186.6s win with `sacrifice=yes`, `guardRead=clear`, `goldFork=yes`.
+- `lane-warden-m0-v0.2.1/` — corrected R-01 human decision-test candidate using `R01-B`.
+- `lane-warden-m0-v0.2.0/` — first gameplay-bearing M0.4 harness using `R01-A`; fixture later found nonconformant for canonical R-01 strategy evidence.
+- `lane-warden-m0-v0.1.6/` — `LW-0A-003`; **PASS.** Together with retained long-run evidence from `LW-0A-001`, Test 0a is a **COMPOSITE PASS**.
+- `lane-warden-m0-v0.1.5/` — `DIAG-PC-001`; pointer lifecycle/capture diagnostic.
+- `lane-warden-m0-v0.1.4/` — `LW-0A-002`; **SUPERSEDED BEFORE EXECUTION**.
+- `lane-warden-m0-v0.1.3/` — `LW-0A-001`; formal result **FAILED** on its preregistered raw pointer-cancel criterion; renderer/channel evidence remains retained.
 - `lane-warden-m0-v0.1.2/` — persistent exploratory instrumentation over the original battlefield core.
 - `lane-warden-m0-v0.1.1/` — first real-device exploratory Web/PWA channel spike.
 
 ## Status
 
-**M0 exploratory gameplay/playtest cycle: CLOSED.** Test 0a remains a **COMPOSITE PASS**. **Test 0b is PASS.** v0.2.4 remains the final R-01 human reference; v0.3.0 is the deterministic mobile-resume engineering reference.
+**M0 exploratory gameplay/playtest cycle: CLOSED.** Test 0a remains a **COMPOSITE PASS** and Test 0b is **PASS**. v0.2.4 remains the final R-01 human reference; v0.3.0 is the deterministic mobile-resume engineering reference.
 
-The planned PR-001 pressure/commitment probe does **not** need a separate build: its exploratory question was exercised inside the final ATT-001 run. Because no PR-001 acceptance threshold was preregistered, that evidence remains exploratory rather than a formal pass.
+**R-02 structural work is active.** R02-A established two useful facts: concentration can cross a multi-position Guard line, and Rival movement can materially change Commander rotations. It also exposed two problems: neglect was not costly enough, and the Rival's lane choice collapsed to the same `exploiting your absence` behavior on every decision.
 
-**Next gameplay proving ground:** instantiate the already-authored **R-02** reference encounter on the hardened harness to test three lanes, battlefield geometry, and Rival Commander pressure.
+**Immediate gameplay work:** run R02-B, preferably with the same `Middle temptation` shape at 1×, and look for the actual Act 2 fork: a winning middle push versus an outer Bastion/Rival problem that is costly enough to ignore but not automatically mandatory to rescue.
 
-A non-blocking v0.3.0 export-wrapper ordering defect leaves the top-level gameplay export labeled `schema: 3` with the older exploratory tuning-status text even though DET-001 evidence is correctly present. Correct that telemetry-only defect when carrying the hardened harness into R-02; it does not change the Test 0b verdict.
+R-02 still does **not** claim formal three-lane hardware acceptance, Rival acceptance, canonical encounter balance, 5–10 minute battle-duration acceptance, or representative strategy diversity.
 
-M0 still does **not** claim shipping balance, independent teaching/discoverability, formal 5–10 minute acceptance, three-lane hardware viability, or representative-Gate strategy diversity.
-
-See `M0-CLOSEOUT.md` and `lane-warden-m0-v0.3.0/LW-0B-001-RESULT.md` for the concise handoffs.
+See `M0-CLOSEOUT.md`, `lane-warden-m0-v0.3.0/LW-0B-001-RESULT.md`, and `lane-warden-r02-v0.4.0/R02-A-EXPLORATORY-RESULT.md` for handoff evidence.
 
 When a newer build is deployed, add a new subfolder and update `lol-the-spire/index.html` to mark it current. Preserve prior folders for regression testing and comparison unless explicitly retired.

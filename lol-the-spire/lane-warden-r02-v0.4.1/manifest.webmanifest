@@ -1,0 +1,9 @@
+{
+  "name": "Lane Warden R02-B Rotation Pressure",
+  "short_name": "LW R02-B",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0b1217",
+  "theme_color": "#0d151b"
+}
