@@ -64,19 +64,16 @@ M0 does not establish:
 
 ## Next recommended work
 
-Do not spend another build polishing the M0 HUD.
+Do not spend another build polishing the M0 HUD or repeat R-01 merely to collect another version number.
 
-The next substantive gap is the opponent/content side of the game. The clean design handoff has an enemy-encounter contract but still needs authored reference encounters. Close that gap first with the four-reference seed corpus already identified in review:
+The clean design handoff already contains the **R-01–R-04 reference encounter corpus**. R-01 Twin Toll has now done its job as the first two-lane proving ground. The next planned proving ground is **R-02**, which introduces the structural escalation that R-01 deliberately avoided: **three lanes, battlefield geometry, and Rival Commander pressure**.
 
-1. **Act 1 teaching Gate** — two lanes, reference 6/4 capacity.
-2. **Act 2 standard Gate** — three lanes, reference 8/6 capacity.
-3. **Elite** — carries one authored mutator.
-4. **Gatekeeper** — includes an authored phase.
+That makes the next implementation question materially different from the one M0 just answered:
 
-Then use the **Act 2 three-lane standard Gate** as the next implementation spike. That gives the three-lane hardware/awareness test a real authored opponent instead of inventing a throwaway stress scene.
+> Can the player preserve global strategic awareness and make deliberate local interventions once three lanes and an adversarial Rival compete for attention on the target phone?
 
 ### Recommended next sequence
 
-**Author the four encounters → implement the Act 2 three-lane Gate → run smallest-iPhone three-lane awareness/input validation → return to human strategic testing.**
+**Instantiate R-02 in the shared gameplay harness → preserve the proven R-01 camera/input/attention conventions → exercise three-lane geometry and Rival behavior → run smallest-iPhone awareness/input validation → only then tune or broaden human strategic testing.**
 
-This preserves the design rule that implementation evidence should answer a real game question rather than create mechanics merely to keep the prototype moving.
+Test 0b deterministic resume remains separate work. It should not be smuggled into the R-02 spike unless the build is going to be cited as representative mobile-product evidence that requires serialization/resume.
