@@ -1,0 +1,9 @@
+{
+  "name":"Lane Warden Test 6 — Global Awareness v0.5.1",
+  "short_name":"LW T6 0.5.1",
+  "start_url":"./",
+  "display":"standalone",
+  "orientation":"landscape",
+  "background_color":"#0d151b",
+  "theme_color":"#0d151b"
+}
