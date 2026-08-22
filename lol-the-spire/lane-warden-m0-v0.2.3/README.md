@@ -1,33 +1,28 @@
-# Lane Warden — M0 v0.2.2
+# Lane Warden — M0 v0.2.3
 
-Decision-legibility isolation build for corrected `R-01 — Twin Toll` using frozen `R01-B` tuning.
+R-01 Twin Toll pacing/consequence pass after R01-B established the intended fork under informed human play.
 
-## What is intentionally unchanged
+## What changed from v0.2.2
 
-- The gameplay runtime (`main.js`) is byte-identical to v0.2.1.
-- R01-B combat, cadence, economy, enemy fixture, Guard, Bastion, Core, and Gate values are unchanged.
-- The successful tap-through battlefield behavior is retained.
+- **DL-001 is frozen:** same Guard `DMG > REGEN / DMG ≈ REGEN / REGEN > DMG`, 60g readiness, FORK OPEN cue, and tap-through interaction model.
+- Unit movement, unit-vs-unit damage/cadence, pulse cadence, Twin Toll enemy packages/cadence, gold rules, Commander rules, towers, and Siege Ram identity remain unchanged.
+- R01-C uses the **mathematically equivalent durability representation** of 0.6× structural throughput, allowing `main.js` and `rules.js` to remain byte-identical to v0.2.2. Guard/Gate and tower/Bastion/Core effective durability are scaled by 1/0.6; Guard regeneration is equivalently represented at 14/s.
+- `r01c-runtime-adapter.js` scales tower HP only; unit movement, unit-vs-unit combat, and tower outgoing damage are unchanged.
+- Evidence schema 3 records first `fork-open` and `intervention-ready` UI transitions through the isolated DL-001 instrumentation layer.
 
-## What changed
+## Deterministic reference
 
-The isolated `DL-001` decision layer makes the existing state more explicit without adding battlefield hitboxes:
+- Balanced ~406s.
+- Siege + delay ~312s; South Bastion ~265s; Gate ~47s later; Core ~7.6%.
+- All-in ~232s with South Bastion critical.
+- Thin: no Guard breach at 600s.
 
-- Guard pressure reads `DMG > REGEN`, `DMG ≈ REGEN`, or `REGEN > DMG`.
-- A 60g intervention becoming usable is visible without opening Actions.
-- A compact tap-through `FORK OPEN` cue appears only when a Guard is actually losing while a Bastion/Core sacrifice clock is worsening.
-- The objective line mirrors the same decision state.
+These are regression/possibility checks, not human balance proof.
 
-## Why this build exists
+## Human evidence carried forward
 
-v0.2.1 human evidence found:
+R01-B Human Playtest 02 supports the intended decision thesis under **informed play**, but not independent teaching because the player had advance knowledge of the desired sacrifice story.
 
-- battlefield interaction was easy to use;
-- Thin pressure could not breach either Guard through 462.7s even after 300g of interventions;
-- Balanced won at 210s, but the player reported Guard replacement as unclear and did not experience the intended sacrifice story;
-- Siege + delay lost at 217.2s with 171g unspent and no Push/Overdrive.
+## Future UX recorded, not enabled here
 
-That evidence does not justify another numerical tuning pass yet. v0.2.2 asks whether clearer information changes the human decision story while the simulation is held fixed.
-
-## Evidence status
-
-This remains an **exploratory human test**, not shipping balance or formal strategy acceptance. After this legibility-isolated Siege + delay run, R01-B can be judged more fairly.
+`ATTENTION-OFFSCREEN-THREAT-SIGNALING.md` records the later toast + world-locked edge indicator + optional tap-to-focus experiment. It is intentionally excluded from R01-C so this build isolates pacing/consequence rather than adding more coaching.
