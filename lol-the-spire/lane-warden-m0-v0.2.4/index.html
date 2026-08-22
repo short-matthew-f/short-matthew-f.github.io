@@ -10,13 +10,14 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="stylesheet" href="./styles.css" />
   <link rel="stylesheet" href="./decision-legibility.css" />
+  <link rel="stylesheet" href="./attention-signaling.css" />
 </head>
 <body>
 <main id="app">
   <canvas id="battlefield" aria-label="Lane Warden battlefield"></canvas>
 
   <header class="topbar hud-info panel">
-    <div class="brand"><strong>LANE WARDEN</strong><span>M0.4 · R01-C · 0.2.3</span></div>
+    <div class="brand"><strong>LANE WARDEN</strong><span>M0.4 · R01-C · 0.2.4</span></div>
     <div class="topstats">
       <span id="timer">DEPLOY</span>
       <span id="gold">60g</span>
@@ -30,6 +31,7 @@
     <div class="objective-meter"><span>GATE</span><b id="gateState">SHIELDED</b><meter id="gateMeter" min="0" max="1" value="1"></meter></div>
     <div class="objective-meter"><span>CORE</span><b id="coreState">SECURE</b><meter id="coreMeter" min="0" max="1" value="1"></meter></div>
   </section>
+
 
   <section id="decisionCue" class="decision-cue hud-info panel" hidden aria-live="polite">
     <b id="decisionCueTitle">INTERVENTION READY</b><span id="decisionCueDetail">Choose where the next 60g matters.</span>
@@ -54,7 +56,7 @@
       <label>Simulation speed <select id="simSpeed"><option value="1">1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
       <button id="exportEvidence" type="button">Export gameplay evidence</button>
       <button id="resetBattle" type="button">Return to deployment</button>
-      <p>Prototype controls. R01-C tunes pacing/consequence; DL-001 UX is frozen. Not shipping balance.</p>
+      <p>Prototype controls. R01-C pacing and DL-001 are frozen. ATT-001 tests danger attention without camera seizure.</p>
     </div>
   </aside>
 
@@ -97,7 +99,7 @@
 
   <section id="battleResult" class="result-overlay" hidden>
     <div class="result-card panel">
-      <span class="label">R-01 PACING TEST</span><h1 id="resultTitle">Gate broken</h1><p id="resultBody"></p>
+      <span class="label">R-01 ATTENTION TEST</span><h1 id="resultTitle">Gate broken</h1><p id="resultBody"></p>
       <div id="resultStats" class="result-stats"></div>
       <div class="debrief">
         <p>Quick debrief — this is more useful than a fun score.</p>
@@ -111,11 +113,16 @@
 
   <section id="rotateInterstitial" class="rotate-overlay" hidden><div class="panel"><h1>Rotate to landscape</h1><p>Lane Warden’s battlefield is designed for landscape play.</p></div></section>
   <section id="fatal" class="fatal" hidden><div class="panel"><h1>WebGL 2 unavailable</h1><p>This channel cannot run the gameplay harness.</p></div></section>
+  <section id="attentionLayer" class="attention-layer" aria-live="polite">
+    <div id="dangerToast" class="danger-toast panel" hidden><b id="dangerToastTitle">DANGER</b><span id="dangerToastDetail"></span></div>
+    <button id="dangerPointer" class="danger-pointer" type="button" hidden aria-label="Focus threatened area">
+      <span id="dangerArrow" class="danger-arrow">➤</span><b id="dangerPointerLabel">THREAT</b>
+    </button>
+  </section>
 </main>
 <script src="./config.js"></script>
 <script src="./rules.js"></script>
 <script src="./r01c-runtime-adapter.js"></script>
-<script src="./main.js"></script>
-<script src="./decision-legibility.js"></script>
+<script src="./main-loader.js"></script>
 </body>
 </html>
