@@ -1,1 +1,1 @@
-v0.2.2 is an isolated UI-information experiment over the unchanged v0.2.1 R01-B gameplay runtime. See BUILD-MANIFEST.json, DEPLOY-NOTE.md, and PLAYTEST-FOCUS.md.
+v0.2.3 is an exploratory R01-C pacing/consequence experiment. DL-001 decision legibility is frozen; unit combat tempo and Twin Toll fixture topology are unchanged. R01-C is deployed through equivalent objective/tower durability so the v0.2.2 gameplay runtime stays byte-identical. See `R01-PARAMETER-SET-C.md`, `BUILD-MANIFEST.json`, and `PLAYTEST-FOCUS.md`.
