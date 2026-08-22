@@ -1,5 +1,5 @@
 Lane Warden Production Foundation
-Build: P0-0.10.2
+Build: P0-0.10.3
 Design baseline: 1.7
 Preproduction suite: COMPLETE
-Hotfix: orientation blocker disabled pending non-blocking portrait guidance
+Hotfix: landscape layout hardened; portrait battle pauses behind CSS-only rotate guidance
