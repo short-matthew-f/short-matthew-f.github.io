@@ -5,7 +5,6 @@
   const SOURCE=BASE+'main.js';
   const CAMERA_SENTINEL="const camera={x:-30,y:0,zoom:1,tilt:.38};";
   const DIAG_SENTINEL='  // ---- Diagnostics / evidence ----------------------------------------------';
-  const STEP_SENTINEL='deriveLaneState();if(currentRun&&world.time>=currentRun.nextSnapshotAt)';
   const FRAME_SENTINEL='const dt=raw*simSpeed;simStep(dt);render();updateUI();';
   const VIS_SENTINEL="addEventListener('visibilitychange',()=>{if(currentRun)ev('visibility',{state:document.visibilityState});});";
   const BOOT_SENTINEL='renderDeployment();updateUI();requestAnimationFrame(animate);';
@@ -217,8 +216,7 @@
 
     source=requireReplace(source,CAMERA_SENTINEL,CAMERA_SENTINEL+"\n  window.__LW_ATT_CAMERA__=camera; window.__LW_ATT_FOCUS__=(x,y)=>{camera.x=x;camera.y=y;clampCamera();updateUI();};",'camera');
     source=requireReplace(source,DIAG_SENTINEL,RECOVERY_PATCH+'\n'+DIAG_SENTINEL,'recovery injection');
-    source=requireReplace(source,STEP_SENTINEL,"deriveLaneState();if(world.time-lastRecoveryAt>=RECOVERY_INTERVAL)persistRecovery('interval');if(currentRun&&world.time>=currentRun.nextSnapshotAt)",'auto recovery cadence');
-    source=requireReplace(source,FRAME_SENTINEL,"const dt=raw*simSpeed;if(!document.hidden&&!determinismProbe){fixedAccumulator+=dt;let guard=0;while(fixedAccumulator+1e-12>=FIXED_DT&&guard<20){simStep(FIXED_DT);fixedAccumulator-=FIXED_DT;guard++;}}render();updateUI();",'authoritative fixed step');
+    source=requireReplace(source,FRAME_SENTINEL,"const dt=raw*simSpeed;if(!document.hidden&&!determinismProbe){fixedAccumulator+=dt;let guard=0;while(fixedAccumulator+1e-12>=FIXED_DT&&guard<20){simStep(FIXED_DT);fixedAccumulator-=FIXED_DT;guard++;}if(phase==='battle'&&!world.result&&world.time-lastRecoveryAt>=RECOVERY_INTERVAL)persistRecovery('interval');}render();updateUI();",'authoritative fixed step');
     source=requireReplace(source,VIS_SENTINEL,"addEventListener('visibilitychange',()=>{if(currentRun)ev('visibility',{state:document.visibilityState});if(document.hidden)persistRecovery('background');else last=performance.now();});addEventListener('pagehide',()=>persistRecovery('pagehide'));",'lifecycle pause');
     source=requireReplace(source,RETURN_SENTINEL,"function returnToDeployment(){clearRecovery('return-to-deployment');if(currentRun&&!currentRun.result&&phase==='battle')",'recovery clear on redeploy');
     source=requireReplace(source,FINISH_SENTINEL,"function finishBattle(result){if(world.result)return;clearRecovery('battle-ended');",'recovery clear on resolution');
