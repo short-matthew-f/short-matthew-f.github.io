@@ -1,0 +1,46 @@
+{
+  "build": "M0-0.3.0",
+  "designBaseline": "1.7",
+  "fixture": "R-01",
+  "parameterRevision": "R01-C",
+  "purpose": "M0.5 deterministic core / Test 0b entry",
+  "patches": ["DET-001", "DL-001", "ATT-001"],
+  "gameplayTuningChanged": false,
+  "localFiles": [
+    "index.html",
+    "config.js",
+    "deterministic-loader.js",
+    "determinism-telemetry.js",
+    "manifest.webmanifest",
+    "sw.js",
+    "README.md",
+    "TEST-0B-DECLARATION.md",
+    "DEPLOY-NOTE.md"
+  ],
+  "frozenDependencies": {
+    "sourceBuild": "lane-warden-m0-v0.2.4",
+    "files": [
+      "styles.css",
+      "decision-legibility.css",
+      "attention-signaling.css",
+      "rules.js",
+      "r01c-runtime-adapter.js",
+      "main.js",
+      "decision-legibility.js",
+      "attention-signaling.js"
+    ]
+  },
+  "recovery": {
+    "snapshotSchema": 1,
+    "fixedStepSeconds": 0.016666666666666666,
+    "automaticIntervalSimulationSeconds": 5,
+    "singleSlot": true,
+    "backgroundProgress": false,
+    "rollbackPicker": false,
+    "rng": "xorshift32 state reserved; current R-01 simulation has no simulation-affecting random calls"
+  },
+  "formalEvidence": {
+    "declaration": "LW-0B-001",
+    "status": "DECLARED_NOT_RUN"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Lane Warden M0.5 Test 0b",
+  "short_name": "LW Test 0b",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0b1217",
+  "theme_color": "#0d151b"
+}
