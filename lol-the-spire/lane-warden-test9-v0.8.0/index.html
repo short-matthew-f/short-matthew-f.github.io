@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#111820" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Lane Warden — Test 9 Distributed Stress v0.8.0</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="stylesheet" href="../lane-warden-m0-v0.1.1/styles.css" />
+  <style>
+    .lab-wrap{display:none!important}.topbar .top-actions{display:none!important}.lane-strip{pointer-events:none}.diagnostics{top:56px!important}
+    #t9Panel{position:fixed;z-index:700;left:calc(env(safe-area-inset-left,0px) + 10px);right:calc(env(safe-area-inset-right,0px) + 10px);top:calc(env(safe-area-inset-top,0px) + 100px);display:flex;justify-content:center;pointer-events:none}
+    #t9Card{width:min(520px,calc(100vw - 180px));padding:10px 12px;border-radius:15px;background:rgba(12,19,25,.9);border:1px solid rgba(135,171,182,.32);box-shadow:0 8px 26px rgba(0,0,0,.35);color:#e8f0ef;pointer-events:auto}
+    #t9Card small{display:block;font-size:7px;letter-spacing:.13em;color:#91aaa9;font-weight:900}#t9Card h2{font-size:15px;margin:3px 0 4px}#t9Card p{font-size:9px;line-height:1.35;color:#aebfbd;margin:3px 0 7px}.t9-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:7px 0}.t9-grid span{padding:5px;border-radius:8px;background:rgba(255,255,255,.055);font-size:8px;text-align:center}.t9-grid b{display:block;color:#e4bf68;font-size:10px}.t9-progress{height:5px;border-radius:5px;background:#223139;overflow:hidden;margin:7px 0}.t9-progress i{display:block;height:100%;width:0;background:#74c4b2}.t9-actions{display:flex;gap:6px}.t9-actions button{min-height:44px;flex:1;border-radius:10px;font-weight:900}.t9-primary{background:#2f6b60!important}.t9-danger{color:#ef9b92}.t9-result{font-size:9px;margin-top:6px;color:#b8cbc8}
+    #t9Finish{position:fixed;z-index:1000;inset:0;background:rgba(5,9,12,.72);display:grid;place-items:center;padding:18px}#t9Finish[hidden]{display:none!important}#t9Finish .card{width:min(560px,100%);max-height:calc(100vh - 36px);overflow:auto;padding:16px;border-radius:18px;background:#111b22;border:1px solid #38505c;color:#e8f0ef}#t9Finish h2{margin:3px 0 8px}.phase-table{width:100%;border-collapse:collapse;font-size:9px}.phase-table th,.phase-table td{padding:5px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right}.phase-table th:first-child,.phase-table td:first-child{text-align:left}.pass{color:#9ed395}.fail{color:#ef9b92}#t9Export{width:100%;min-height:44px;margin-top:10px;border-radius:10px;background:#2f6b60;font-weight:900}
+    @media(max-height:360px){#t9Panel{top:88px}#t9Card{padding:7px 9px}.t9-grid{margin:4px 0}.t9-grid span{padding:3px}.diagnostics{top:48px!important}}
+  </style>
+</head>
+<body>
+  <main id="app" aria-label="Lane Warden Test 9 distributed stress harness">
+    <canvas id="battlefield" aria-label="Live Lane Warden distributed stress battlefield"></canvas>
+    <header class="topbar glass"><div><strong>LANE WARDEN</strong><span class="build">TEST 9 · DISTRIBUTED STRESS · T9-0.8.0</span></div><div class="top-actions"><button id="audioButton" class="quiet-button" type="button">Enable sound</button><button id="recenterButton" class="icon-button" type="button">◎</button></div></header>
+    <section id="diagnostics" class="diagnostics glass" aria-live="polite"><span id="fps">-- fps</span><span id="visibleActors">-- visible</span><span id="totalActors">-- total</span><span id="memory">memory n/a</span></section>
+    <aside class="lab-wrap"><details class="lab glass"><summary>Lab</summary><div class="lab-content"><div class="button-row"><button data-preset="sparse">Sparse</button><button data-preset="target" class="active">Target</button><button data-preset="stress">Stress</button></div><div class="button-row"><button id="resetEvidence">Reset</button><button id="exportEvidence">Export JSON</button></div><label class="toggle"><input id="pauseToggle" type="checkbox" /> Pause</label><label class="toggle"><input id="projectileToggle" type="checkbox" checked /> Projectiles</label></div></details></aside>
+    <nav id="laneStrip" class="lane-strip glass" aria-label="Global lane strip">
+      <button class="lane" type="button" data-lane="0"><span class="lane-name">NORTH</span><span class="front-track"><span class="front-fill" style="width:68%"></span><i class="commander-marker">◆</i></span><span class="lane-state"><b class="bastion good">B</b><b class="guard critical">G</b><em>ADV</em></span></button>
+      <button class="lane" type="button" data-lane="1"><span class="lane-name">MID</span><span class="front-track"><span class="front-fill" style="width:50%"></span><i class="commander-marker active">◆</i></span><span class="lane-state"><b class="bastion good">B</b><b class="guard good">G</b><em>HOLD</em></span></button>
+      <button class="lane" type="button" data-lane="2"><span class="lane-name">SOUTH</span><span class="front-track"><span class="front-fill losing" style="width:31%"></span><i class="rival-marker">◇</i></span><span class="lane-state"><b class="bastion critical">B</b><b class="guard good">G</b><em>FALL</em></span></button>
+    </nav>
+    <div id="tapGhost" class="tap-ghost" aria-hidden="true"></div>
+    <section id="rotateInterstitial" class="rotate-interstitial" hidden><div class="rotate-card"><div class="phone-icon">▯</div><h1>Rotate to landscape</h1><p>Test 9 runs only in landscape.</p></div></section>
+    <section id="fatal" class="fatal" hidden><h1>WebGL 2 unavailable</h1><p>This device/channel cannot run Test 9.</p></section>
+  </main>
+
+  <section id="t9Panel"><div id="t9Card"><small>LW-T9-001 · FORMAL DEVICE-SCOPED</small><h2 id="t9Title">Distributed stress matrix</h2><p id="t9Desc">Eight automatic phases isolate visible actors, offscreen actors, projectiles, particles, structures, zoom, then combine them.</p><div class="t9-grid"><span><b id="t9Phase">0/8</b>PHASE</span><span><b id="t9Load">—</b>ACTORS</span><span><b id="t9Fx">—</b>FX</span><span><b id="t9Timer">READY</b>TIME</span></div><div class="t9-progress"><i id="t9Progress"></i></div><div class="t9-actions"><button id="t9Start" class="t9-primary" type="button">START 80s MATRIX</button></div><div id="t9Live" class="t9-result">Run from the installed PWA in landscape. Avoid backgrounding the app during the matrix.</div></div></section>
+  <section id="t9Finish" hidden><div class="card"><small>LW-T9-001 · COMPLETE</small><h2 id="t9Verdict">TEST 9 COMPLETE</h2><p id="t9Summary"></p><table class="phase-table"><thead><tr><th>Phase</th><th>FPS</th><th>p95 ms</th><th>max ms</th><th>Result</th></tr></thead><tbody id="t9Rows"></tbody></table><button id="t9Export" type="button">EXPORT TEST 9 EVIDENCE</button></div></section>
+
+  <script src="./runtime-loader.js"></script>
+</body>
+</html>
