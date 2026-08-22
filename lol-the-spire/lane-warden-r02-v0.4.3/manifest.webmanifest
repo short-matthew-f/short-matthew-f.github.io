@@ -1,0 +1,9 @@
+{
+  "name": "Lane Warden R-02 Severity Alerts",
+  "short_name": "Lane Warden",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0d151b",
+  "theme_color": "#0d151b"
+}
