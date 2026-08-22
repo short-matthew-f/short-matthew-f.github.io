@@ -1,6 +1,6 @@
 {
-  "name": "Lane Warden M0 R01-C Pacing Test",
-  "short_name": "LW R01-C",
+  "name": "Lane Warden M0.2.4 ATT-001",
+  "short_name": "LW 0.2.4",
   "start_url": "./",
   "display": "standalone",
   "orientation": "landscape",
