@@ -1,7 +1,7 @@
 # LW-T6-001 — Test 6 Global Awareness / Lane Strip
 
 **Status:** DECLARED — thresholds frozen before human execution
-**Declared:** 2026-08-22
+**Declared:** 2026-08-22T12:24:00-04:00
 **Design baseline:** 1.7
 **Harness build:** T6-0.5.0
 **Frozen gameplay base:** M1-0.4.3 / R02-D over R02-C gameplay and REFORM-001
@@ -56,7 +56,7 @@ For every prompt:
 - correct / incorrect;
 - response time;
 - whether battlefield camera housekeeping occurred before the answer;
-- camera state at prompt start and answer;
+- camera-housekeeping reason(s) when present;
 - battle clock at prompt start.
 
 The harness also records viewport dimensions and lane-strip / alert-badge bounding boxes.
