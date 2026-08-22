@@ -6,7 +6,11 @@ This directory is a versioned GitHub Pages test archive.
 
 Each deployed build gets a new immutable subfolder under `lol-the-spire/` rather than replacing the previous deployment.
 
-Current M0 reference build:
+Current engineering build:
+
+- `lane-warden-m0-v0.3.0/` — **M0.5 / Test 0b entry.** DET-001 hardens the frozen R01-C harness with an authoritative 60 Hz simulation step, one versioned automatic recovery snapshot, no background progress/catch-up, exact snapshot round-trip checking, and deterministic continuation self-checks. `LW-0B-001` is preregistered but not yet run. This build intentionally does **not** retune R-01.
+
+Final R-01 human reference build:
 
 - `lane-warden-m0-v0.2.4/` — Lane Warden M0.4 ATT-001 attention/offscreen-threat UX experiment over frozen `R01-C`. The final human run retained the intended strategic fork while exercising the new attention layer: fork opened at 158s; North Guard broke at 175.98s; South warning fired at 186s; the player used the focus marker at 204s and 210s; South escalated to critical at 234s; the player still spent the next 60g offensively on North at 258.73s; South Bastion fell at 265.2s; Gate victory arrived at 286.6s with 65.2% Core health remaining. Debrief remained `sacrifice=yes / guardRead=clear / goldFork=yes`.
 
@@ -23,15 +27,16 @@ Prior builds:
 - `lane-warden-m0-v0.1.2/` — persistent exploratory instrumentation over the original battlefield core.
 - `lane-warden-m0-v0.1.1/` — first real-device exploratory Web/PWA channel spike.
 
-## M0 status
+## Status
 
-**M0 exploratory prototype/playtest cycle: CLOSED.** Test 0a remains a **COMPOSITE PASS**. The final reference build is v0.2.4 with R01-C + DL-001 + ATT-001.
+**M0 exploratory gameplay/playtest cycle: CLOSED.** Test 0a remains a **COMPOSITE PASS**. v0.2.4 remains the final R-01 human reference with R01-C + DL-001 + ATT-001.
 
-The planned PR-001 pressure/commitment probe does **not** need a separate build: its exploratory question was exercised inside the final ATT-001 run. The player read the replacement threshold, saw the fork, received escalating offscreen danger information, and still knowingly spent the decisive intervention on the winning lane. Because no PR-001 acceptance threshold was preregistered, this is retained as exploratory evidence rather than converted into a formal pass.
+The planned PR-001 pressure/commitment probe does **not** need a separate build: its exploratory question was exercised inside the final ATT-001 run. Because no PR-001 acceptance threshold was preregistered, that evidence remains exploratory rather than a formal pass.
 
-M0 does **not** claim shipping balance, independent teaching/discoverability, formal 5–10 minute acceptance, three-lane hardware viability, representative-Gate strategy diversity, or Test 0b deterministic resume readiness.
+**Immediate engineering work:** close `LW-0B-001` on v0.3.0.  
+**Next gameplay proving ground:** instantiate the already-authored **R-02** reference encounter on the hardened harness to test three lanes, battlefield geometry, and Rival Commander pressure.
 
-**Next proving ground:** instantiate the already-authored **R-02** reference encounter in the shared gameplay harness to test three lanes, battlefield geometry, and Rival Commander pressure while preserving the R-01 interaction/attention lessons.
+M0 does **not** claim shipping balance, independent teaching/discoverability, formal 5–10 minute acceptance, three-lane hardware viability, representative-Gate strategy diversity, or Test 0b deterministic resume until LW-0B-001 is actually run and passes.
 
 See `M0-CLOSEOUT.md` for the concise handoff.
 
