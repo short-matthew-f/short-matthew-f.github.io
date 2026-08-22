@@ -7,15 +7,15 @@
     'BELOW REPL': ['below', 'REGEN > DMG'],
     'BREACH': ['broken', 'BREACH']
   };
-  window.__LW_DECISION_LEGIBILITY__ = { build: 'M0-0.2.2', patch: 'DL-001', parametersChanged: false };
+  window.__LW_DECISION_LEGIBILITY__ = { build: 'M0-0.2.3', patch: 'DL-001', parametersChanged: true, uxChanged: false };
+  const uiTransitions=[]; window.__LW_DL_TELEMETRY__=uiTransitions;
+  const simTimeApprox=()=>{const t=document.getElementById('timer')?.textContent||'0:00',m=t.match(/^(\d+):(\d{2})$/);return m?Number(m[1])*60+Number(m[2]):0;};
 
   function pctFromBastion(text) {
     const m = String(text || '').match(/B\s+(\d+)/);
     return m ? Number(m[1]) : (String(text).includes('OPEN') ? 0 : 100);
   }
-  function selectedLane() {
-    return document.querySelector('.lane.selected')?.dataset.lane || 'north';
-  }
+  function selectedLane() { return document.querySelector('.lane.selected')?.dataset.lane || 'north'; }
   function patchLane(id) {
     const pressure = $(`${id}Pressure`), guard = $(`${id}Guard`);
     if (!pressure || !guard) return 'below';
@@ -30,6 +30,9 @@
     }
     return mapped[0];
   }
+  let forkWasOpen = false;
+  let interventionWasReady = false;
+  const record = (type, detail={}) => { const item={type,t:+simTimeApprox().toFixed(1),...detail,source:'DL-001'}; uiTransitions.push(item); window.dispatchEvent(new CustomEvent('lw-ui-event',{detail:{type,detail}})); };
   function frame() {
     const northState = patchLane('north');
     const southState = patchLane('south');
@@ -53,6 +56,9 @@
     else if (northB < 90) threatened = 'north';
     else if (southB < 90) threatened = 'south';
     const forkOpen = !!breachLane && !!threatened;
+    if (battle && forkOpen && !forkWasOpen) record('fork-open',{breachLane,threatened,gold});
+    if (battle && interventionReady && !interventionWasReady) record('intervention-ready',{lane,gold});
+    forkWasOpen = forkOpen; interventionWasReady = interventionReady;
     const cue = $('decisionCue');
     if (cue) {
       cue.hidden = !(battle && (forkOpen || interventionReady));
@@ -72,5 +78,29 @@
     }
     requestAnimationFrame(frame);
   }
+  const NativeBlob=window.Blob;
+  window.Blob=function(parts=[],opts={}){
+    let next=parts;
+    if(opts && opts.type==='application/json' && typeof parts[0]==='string'){
+      try{
+        const doc=JSON.parse(parts[0]);
+        if(doc && doc.build==='M0-0.2.3' && Array.isArray(doc.runs)){
+          doc.schema=3;
+          doc.tuningStatus='exploratory pacing/consequence candidate; not shipping balance';
+          doc.uiTransitions=uiTransitions.slice();
+          doc.instrumentation={decisionLegibility:'DL-001',transitionClock:'simulation timer rounded to 1s',mainRuntime:'byte-identical v0.2.2'};
+          const run=doc.runs[doc.runs.length-1];
+          if(run && Array.isArray(run.events)){
+            const existing=new Set(run.events.filter(e=>e.source==='DL-001').map(e=>`${e.type}|${e.t}`));
+            for(const e of uiTransitions){const k=`${e.type}|${e.t}`;if(!existing.has(k))run.events.push({...e});}
+            run.events.sort((a,b)=>(a.t||0)-(b.t||0));
+          }
+          next=[JSON.stringify(doc,null,2)];
+        }
+      }catch(_){}
+    }
+    return new NativeBlob(next,opts);
+  };
+  window.Blob.prototype=NativeBlob.prototype;
   requestAnimationFrame(frame);
 })();
