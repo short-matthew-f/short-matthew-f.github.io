@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0d151b" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Lane Warden — R-01 Twin Toll R01-B Decision Legibility</title>
+  <title>Lane Warden — R-01 Twin Toll R01-C Pacing & Consequence</title>
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="stylesheet" href="./styles.css" />
   <link rel="stylesheet" href="./decision-legibility.css" />
@@ -16,7 +16,7 @@
   <canvas id="battlefield" aria-label="Lane Warden battlefield"></canvas>
 
   <header class="topbar hud-info panel">
-    <div class="brand"><strong>LANE WARDEN</strong><span>M0.4 · R01-B · 0.2.2</span></div>
+    <div class="brand"><strong>LANE WARDEN</strong><span>M0.4 · R01-C · 0.2.3</span></div>
     <div class="topstats">
       <span id="timer">DEPLOY</span>
       <span id="gold">60g</span>
@@ -48,13 +48,13 @@
   </section>
 
   <aside class="lab-dock">
-    <button id="labToggle" class="lab-toggle panel hud-control" type="button" aria-expanded="false" aria-controls="labPanel">LAB · R01-B</button>
+    <button id="labToggle" class="lab-toggle panel hud-control" type="button" aria-expanded="false" aria-controls="labPanel">LAB · R01-C</button>
     <div id="labPanel" class="lab-panel panel" hidden>
-      <div class="diag"><span id="fps">-- fps</span><span id="actors">0 actors</span><span id="fixture">R01-B</span></div>
+      <div class="diag"><span id="fps">-- fps</span><span id="actors">0 actors</span><span id="fixture">R01-C</span></div>
       <label>Simulation speed <select id="simSpeed"><option value="1">1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
       <button id="exportEvidence" type="button">Export gameplay evidence</button>
       <button id="resetBattle" type="button">Return to deployment</button>
-      <p>Prototype controls. R01-B is exploratory tuning, not shipping balance.</p>
+      <p>Prototype controls. R01-C tunes pacing/consequence; DL-001 UX is frozen. Not shipping balance.</p>
     </div>
   </aside>
 
@@ -74,7 +74,7 @@
   <section id="deployment" class="deployment-overlay">
     <div class="deployment-card panel">
       <div class="deploy-head">
-        <div><span class="label">R-01 · PARAMETER SET B</span><h1>Twin Toll</h1><p>One breach is enough. North is the faster balanced pressure lane; South starts later but brings slow Rammers. Decide what you will breach and what will buy time.</p></div>
+        <div><span class="label">R-01 · PARAMETER SET C</span><h1>Twin Toll</h1><p>One breach is enough. North is the faster balanced pressure lane; South starts later but brings slow Rammers. Decide what you will breach and what will buy time.</p></div>
         <div class="budgets"><b id="unitBudget">Unit 6 / 6</b><b id="towerBudget">Tower 4 / 4</b></div>
       </div>
       <div class="forecast" aria-label="Known Twin Toll pressure">
@@ -97,7 +97,7 @@
 
   <section id="battleResult" class="result-overlay" hidden>
     <div class="result-card panel">
-      <span class="label">R-01 HUMAN TEST</span><h1 id="resultTitle">Gate broken</h1><p id="resultBody"></p>
+      <span class="label">R-01 PACING TEST</span><h1 id="resultTitle">Gate broken</h1><p id="resultBody"></p>
       <div id="resultStats" class="result-stats"></div>
       <div class="debrief">
         <p>Quick debrief — this is more useful than a fun score.</p>
@@ -114,6 +114,7 @@
 </main>
 <script src="./config.js"></script>
 <script src="./rules.js"></script>
+<script src="./r01c-runtime-adapter.js"></script>
 <script src="./main.js"></script>
 <script src="./decision-legibility.js"></script>
 </body>
