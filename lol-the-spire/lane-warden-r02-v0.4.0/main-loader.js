@@ -17,10 +17,14 @@
       "const speed=a.speed*(world.time<(a.slowUntil||0)?0.55:1);",
       'slow-state token');
 
-    // Keep physical lane ownership until junction travel actually finishes. The intent
-    // indicator may point at the destination immediately, but Presence/combat/lane-strip
-    // location stays where the Commander/Rival physically is during the walk.
+    // Keep physical lane ownership tied to junction travel. Intent may point at the
+    // destination immediately, but Presence/combat/lane-strip location follows the
+    // lane actually reached along the route, including an intermediate middle lane.
     source=patch(source,"lane:'north',hp:P.commanderHp","lane:'north',targetLane:'north',hp:P.commanderHp",'Commander target lane');
+    source=patch(source,
+      "if(d<=speed*dt+.02){entity.x=p.x;entity.y=p.y;entity.path.shift();if(!entity.path.length&&onArrive)onArrive();return;}",
+      "if(d<=speed*dt+.02){entity.x=p.x;entity.y=p.y;const reached=laneIds.find(l=>Math.abs(laneMeta[l].y-entity.y)<.1);if(reached)entity.lane=reached;entity.path.shift();if(!entity.path.length&&onArrive)onArrive();return;}",
+      'physical lane at junction waypoint');
     source=patch(source,"world.commander.path=routeBetween(world.commander.x,world.commander.y,targetX,targetLane);world.commander.lane=targetLane;if(from!==targetLane)","world.commander.path=routeBetween(world.commander.x,world.commander.y,targetX,targetLane);world.commander.targetLane=targetLane;if(from!==targetLane)",'Commander order ownership');
     source=patch(source,"moveAlong(c,dt,5.2,()=>ev('commander-arrived',{lane:c.lane,x:+c.x.toFixed(1)}));","moveAlong(c,dt,5.2,()=>{c.lane=c.targetLane;ev('commander-arrived',{lane:c.lane,x:+c.x.toFixed(1)});});",'Commander arrival ownership');
     source=patch(source,"c.x=-47;c.y=laneMeta[laneId].y;c.lane=laneId;c.path=[];","c.x=-47;c.y=laneMeta[laneId].y;c.lane=laneId;c.targetLane=laneId;c.path=[];",'Waypoint target lane');
