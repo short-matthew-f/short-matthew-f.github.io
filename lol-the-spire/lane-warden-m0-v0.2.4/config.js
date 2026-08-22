@@ -5,7 +5,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  const BUILD='M0-0.2.3';
+  const BUILD='M0-0.2.4';
   const FIXTURE='R-01';
   const PARAM_REV='R01-C';
 
@@ -55,6 +55,7 @@
     rammer:Object.freeze({hp:PARAMS.rammerHp,damage:PARAMS.rammerDamage,range:2.2,speed:2.35,cadence:.8,role:'siege',structure:PARAMS.rammerStructure})
   });
 
+  // Twin Toll reference topology: faster balanced North lane; delayed slower siege South lane.
   function enemyRecipe(laneId,pulseIndex){
     if(laneId==='north'){
       return pulseIndex===0
