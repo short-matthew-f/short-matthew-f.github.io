@@ -1,0 +1,9 @@
+{
+  "name": "Lane Warden R-02 Structural Spike",
+  "short_name": "LW R-02",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0b1217",
+  "theme_color": "#0d151b"
+}

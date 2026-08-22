@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0d151b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Lane Warden — R-02 Structural Spike v0.4.0</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="stylesheet" href="../lane-warden-m0-v0.2.4/styles.css" />
+  <link rel="stylesheet" href="../lane-warden-m0-v0.2.4/attention-signaling.css" />
+  <style>
+    .lane-strip{grid-template-columns:repeat(3,1fr);height:58px}.lane{grid-template-columns:38px 1fr 88px;padding:3px 5px}.causes{grid-template-columns:30px 30px 1fr}.front strong{position:absolute;top:-7px;font-size:13px;font-weight:900;color:#e8756a;transform:translateX(-50%);left:78%}.deploy-lanes{grid-template-columns:repeat(3,1fr)}.forecast{grid-template-columns:repeat(3,1fr)}.forecast>div{grid-template-columns:48px 1fr;grid-template-rows:auto auto}.forecast>div span:last-child{grid-column:2}.tower-row{grid-template-columns:repeat(3,1fr)}.rival-chip{color:#ee897f}.structural-note{margin:5px 0 0;color:#d6b35b!important}.recovery-tools{display:grid;gap:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)}.recovery-tools .row{display:grid;grid-template-columns:1fr 1fr;gap:5px}.recovery-tools button{min-height:37px}#recoveryStatus{font-size:8px;color:#9ab1ac}.attention-layer{pointer-events:none}.attention-layer button{pointer-events:auto}.rival-intent{position:absolute;z-index:5;top:94px;left:50%;transform:translateX(-50%);padding:5px 9px;border-radius:10px;font-size:8px;letter-spacing:.06em;color:#f0b1aa}.rival-intent b{color:#fff}.deployment-card{width:min(1120px,100%)}
+    @media(max-width:900px){.lane{grid-template-columns:32px 1fr 76px}.lane-name{font-size:8px}.causes b{font-size:7px;padding:2px}.causes small{font-size:6px}.deployment-card{padding:8px}.unit-control small{display:none}.deploy-lane{padding:6px}.forecast span{font-size:7px}}
+    @media(max-height:390px){.lane-strip{height:52px}.rival-intent{top:85px}.deploy-head p{max-width:520px}.forecast{display:none}}
+  </style>
+</head>
+<body>
+<main id="app">
+  <canvas id="battlefield" aria-label="Lane Warden three-lane battlefield"></canvas>
+
+  <header class="topbar hud-info panel">
+    <div class="brand"><strong>LANE WARDEN</strong><span>R-02 STRUCTURAL SPIKE · 0.4.0</span></div>
+    <div class="topstats"><span id="timer">DEPLOY</span><span id="gold">60g</span><button id="audioButton" class="quiet hud-control" type="button">Sound</button><button id="recenterButton" class="icon hud-control" type="button" aria-label="Recenter on Commander">◎</button></div>
+  </header>
+
+  <section class="objective hud-info panel" aria-live="polite">
+    <div class="objective-copy"><span class="label">R-02-A · THREE LANES + RIVAL</span><b id="objectiveText">Read all three lanes before committing</b></div>
+    <div class="objective-meter"><span>GATE</span><b id="gateState">SHIELDED</b><meter id="gateMeter" min="0" max="1" value="1"></meter></div>
+    <div class="objective-meter"><span>CORE</span><b id="coreState">SECURE</b><meter id="coreMeter" min="0" max="1" value="1"></meter></div>
+  </section>
+
+  <div id="rivalIntent" class="rival-intent panel hud-info" hidden><b>RIVAL → MID</b> <span id="rivalIntentReason">probing pressure</span></div>
+
+  <section id="battleHud" class="action-dock" hidden>
+    <button id="actionsToggle" class="dock-toggle panel hud-control" type="button" aria-expanded="false" aria-controls="actionDrawer"><b>ACTIONS</b><span id="actionsSummary">WP READY · 60g</span></button>
+    <div id="actionDrawer" class="action-drawer panel" hidden>
+      <button id="rallyButton" type="button"><b>RALLY</b><span id="rallyStatus">ready</span></button>
+      <button id="waypointButton" type="button"><b>WAYPOINT</b><span id="waypointStatus">ready</span></button>
+      <button id="pushButton" type="button"><b>PUSH</b><span id="pushStatus">60g · ready</span></button>
+      <button id="overdriveButton" type="button"><b>OVERDRIVE</b><span id="overdriveStatus">60g · ready</span></button>
+    </div>
+  </section>
+
+  <aside class="lab-dock">
+    <button id="labToggle" class="lab-toggle panel hud-control" type="button" aria-expanded="false" aria-controls="labPanel">LAB · R02-A</button>
+    <div id="labPanel" class="lab-panel panel" hidden>
+      <div class="diag"><span id="fps">-- fps</span><span id="actors">0 actors</span><span id="fixture">R02-A</span></div>
+      <label>Simulation speed <select id="simSpeed"><option value="1">1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+      <div class="recovery-tools"><span id="recoveryStatus">No active recovery snapshot</span><div class="row"><button id="saveRecovery" type="button">SAVE</button><button id="reloadRecovery" type="button">RESTORE</button></div><div class="row"><button id="determinismCheck" type="button">SELF-CHECK</button><button id="clearRecovery" type="button">CLEAR</button></div></div>
+      <button id="exportEvidence" type="button">Export gameplay evidence</button>
+      <button id="resetBattle" type="button">Return to deployment</button>
+      <p>Exploratory structural spike. Three-lane geometry, Rival macro behavior, Guard-line model, and DET-001 recovery are under test. Exact R02-A combat recipes are provisional.</p>
+    </div>
+  </aside>
+
+  <nav id="laneStrip" class="lane-strip panel" aria-label="Lane status">
+    <button class="lane selected" data-lane="north" type="button"><span class="lane-name">NORTH</span><span class="front"><i id="northFront"></i><em id="northCommander">◆</em><strong id="northRival"></strong></span><span class="causes"><b id="northBastion" class="good">B100</b><b id="northGuard" class="guard">G100</b><small id="northPressure">READ</small></span></button>
+    <button class="lane" data-lane="mid" type="button"><span class="lane-name">MID</span><span class="front"><i id="midFront"></i><em id="midCommander"></em><strong id="midRival">✦</strong></span><span class="causes"><b id="midBastion" class="good">B100</b><b id="midGuard" class="guard">G100</b><small id="midPressure">READ</small></span></button>
+    <button class="lane" data-lane="south" type="button"><span class="lane-name">SOUTH</span><span class="front"><i id="southFront"></i><em id="southCommander"></em><strong id="southRival"></strong></span><span class="causes"><b id="southBastion" class="good">B100</b><b id="southGuard" class="guard">G100</b><small id="southPressure">READ</small></span></button>
+  </nav>
+
+  <section id="deployment" class="deployment-overlay">
+    <div class="deployment-card panel">
+      <div class="deploy-head"><div><span class="label">R-02 STRUCTURAL SPIKE · R02-A</span><h1>Three-Lane Adversary</h1><p>This build asks one question: can you keep a global read while three lanes and a Rival Commander compete for attention? Exact encounter recipes, Guard counts, coordinates, and Rival weights are exploratory rather than claimed canonical R-02 content.</p><p class="structural-note">Lane strip navigation never moves your Commander. Walking uses junctions; Waypoint spends the emergency rotation.</p></div><div class="budgets"><b id="unitBudget">Unit 8 / 8</b><b id="towerBudget">Tower 6 / 6</b></div></div>
+      <div class="forecast" aria-label="Known exploratory pressure"><div><b>NORTH</b><span>steady ranged pressure</span><span>Rival may contest a strong push</span></div><div><b>MID</b><span>fastest pulse cadence</span><span>two-position Guard-line exercise</span></div><div><b>SOUTH</b><span>slower siege pressure</span><span>Bastion clock becomes sacrifice candidate</span></div></div>
+      <div class="presets"><button data-deploy-preset="siegeDelay" class="active">Siege + delay</button><button data-deploy-preset="balanced">Balanced</button><button data-deploy-preset="middleTemptation">Middle temptation</button><button data-deploy-preset="wide">Wide</button></div>
+      <div id="deployLanes" class="deploy-lanes"></div>
+      <div class="deploy-footer"><div><b id="deployVerdict">Legal deployment</b><span id="deployNote">Deployment locks when battle begins.</span></div><button id="startBattle" class="primary">LOCK & START</button></div>
+    </div>
+  </section>
+
+  <section id="battleResult" class="result-overlay" hidden><div class="result-card panel"><span class="label">R-02 STRUCTURAL SPIKE</span><h1 id="resultTitle">Gate broken</h1><p id="resultBody"></p><div id="resultStats" class="result-stats"></div><div class="debrief"><p>These are exploratory human-read questions, not preregistered acceptance thresholds.</p><div><span>Could you track all three lanes?</span><button data-debrief-key="globalRead" data-debrief-value="yes">YES</button><button data-debrief-key="globalRead" data-debrief-value="no">NO</button></div><div><span>Did Rival movement change a rotation?</span><button data-debrief-key="rivalChanged" data-debrief-value="yes">YES</button><button data-debrief-key="rivalChanged" data-debrief-value="no">NO</button></div><div><span>Could you predict/bait the Rival at least once?</span><button data-debrief-key="rivalPredict" data-debrief-value="yes">YES</button><button data-debrief-key="rivalPredict" data-debrief-value="no">NO</button></div></div><div class="result-actions"><button id="resultExport" type="button">EXPORT EVIDENCE</button><button id="redeployButton" class="primary">REDEPLOY</button></div></div></section>
+
+  <section id="rotateInterstitial" class="rotate-overlay" hidden><div class="panel"><h1>Rotate to landscape</h1><p>Lane Warden’s battlefield is designed for landscape play.</p></div></section>
+  <section id="fatal" class="fatal" hidden><div class="panel"><h1>WebGL 2 unavailable</h1><p>This channel cannot run the R-02 structural spike.</p></div></section>
+  <section id="attentionLayer" class="attention-layer" aria-live="polite"><div id="dangerToast" class="danger-toast panel" hidden><b id="dangerToastTitle">DANGER</b><span id="dangerToastDetail"></span></div><button id="dangerPointer" class="danger-pointer" type="button" hidden aria-label="Focus threatened area"><span id="dangerArrow" class="danger-arrow">➤</span><b id="dangerPointerLabel">THREAT</b></button></section>
+</main>
+<script src="./config.js"></script>
+<script src="./rules.js"></script>
+<script src="./main-loader.js"></script>
+</body>
+</html>
