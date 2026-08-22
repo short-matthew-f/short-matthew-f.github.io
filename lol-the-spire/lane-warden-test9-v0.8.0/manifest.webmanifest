@@ -1,0 +1,9 @@
+{
+  "name":"Lane Warden Test 9 — Distributed Stress",
+  "short_name":"LW Test 9",
+  "start_url":"./",
+  "display":"standalone",
+  "orientation":"landscape",
+  "background_color":"#111820",
+  "theme_color":"#111820"
+}
