@@ -1,0 +1,55 @@
+{
+  "build": "M0-0.2.4",
+  "designBaseline": "1.7",
+  "milestone": "M0.4 — Shared gameplay harness",
+  "fixture": "R-01 — Twin Toll",
+  "parameterRevision": "R01-C",
+  "status": "EXPLORATORY ATTENTION / OFFSCREEN THREAT UX TEST",
+  "test0a": "CLOSED — COMPOSITE PASS",
+  "r01cDisposition": "frozen from v0.2.3 for ATT-001; no combat/pacing retune",
+  "humanEvidence": {
+    "R01-C-human-playtest-01": "win 265s; fork 160s; North Guard 174.41s; South Bastion 0.6% at Gate fall; sacrifice=yes / Guard clear / gold fork=yes"
+  },
+  "frozenGameplay": [
+    "R01-C parameter values",
+    "Twin Toll pulse packages/cadence",
+    "unit movement and unit-vs-unit combat",
+    "Guard/Gate/Bastion/Core durability",
+    "gold and interventions",
+    "DL-001 decision legibility",
+    "tap-through HUD"
+  ],
+  "att001": {
+    "toast": "brief and pointer-transparent on new/escalated danger",
+    "worldLockedIndicator": "offscreen edge direction; resolves onto target when visible",
+    "focus": "tap indicator to focus camera",
+    "automaticCameraSeizure": false,
+    "threats": [
+      "Bastion <=75% while taking damage",
+      "Bastion <=35% critical",
+      "Bastion lost/Core exposed",
+      "Core under attack",
+      "Commander <=30%"
+    ],
+    "telemetry": [
+      "danger-cue",
+      "attention-focus-tap"
+    ]
+  },
+  "runtimeChange": "main.js and rules.js are byte-identical to v0.2.3. main-loader.js verifies an exact camera sentinel, then injects only camera observation/focus references before executing the frozen runtime; ATT-001 reads threat state from existing HUD/meters and does not alter simulation state or parameters.",
+  "referenceRegression": {
+    "balanced": "win ~406s",
+    "siegeDelay": "win ~312s; Core ~7.6% in deterministic policy",
+    "allIn": "win ~232s",
+    "thin": "no Guard breach within 600s",
+    "freshCoreClock": "~50.6s"
+  },
+  "notClaimed": [
+    "shipping R-01 balance",
+    "independent teaching/discoverability",
+    "ATT-001 accepted UX",
+    "formal 5–10 minute acceptance",
+    "Test 0b readiness"
+  ],
+  "runtimeIsolation": "R01-C config values and gameplay main/rules remain frozen from v0.2.3; ATT-001 is layered through main-loader.js + attention-signaling.js/css."
+}

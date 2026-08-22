@@ -1,0 +1,9 @@
+{
+  "name": "Lane Warden M0.2.4 ATT-001",
+  "short_name": "LW 0.2.4",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0b1217",
+  "theme_color": "#0d151b"
+}

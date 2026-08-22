@@ -1,0 +1,8 @@
+.attention-layer{position:absolute;inset:0;z-index:12;pointer-events:none;overflow:hidden}
+.danger-toast{position:absolute;top:96px;left:50%;transform:translateX(-50%);max-width:min(360px,70vw);padding:7px 11px;border-radius:11px;display:flex;gap:8px;align-items:center;pointer-events:none;background:rgba(47,25,24,.92);border-color:rgba(224,113,95,.6)}
+.danger-toast b{font-size:9px;letter-spacing:.12em;color:#ffb09f}.danger-toast span{font-size:9px;color:#e8d5cf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.danger-pointer{position:fixed;z-index:13;min-height:36px;max-width:150px;padding:5px 8px;border-radius:999px;background:rgba(77,31,29,.94);border:1px solid rgba(236,121,101,.85);box-shadow:0 4px 18px rgba(0,0,0,.32);display:flex;gap:5px;align-items:center;pointer-events:auto;transform:translate(-50%,-50%);touch-action:manipulation}
+.danger-pointer b{font-size:8px;letter-spacing:.08em;white-space:nowrap}.danger-arrow{font-size:16px;line-height:1;display:inline-block;transform-origin:50% 50%}
+.danger-pointer.onscreen{background:rgba(83,42,28,.88);border-color:#e9b15c}.danger-pointer.onscreen .danger-arrow{font-size:12px}.danger-pointer.critical{animation:attention-pulse 1.2s ease-in-out infinite alternate}
+@keyframes attention-pulse{from{box-shadow:0 4px 14px rgba(0,0,0,.28)}to{box-shadow:0 4px 20px rgba(216,80,65,.58)}}
+@media(max-height:390px){.danger-toast{top:87px;max-width:62vw;padding:5px 8px}.danger-pointer{min-height:32px;padding:4px 7px}}
