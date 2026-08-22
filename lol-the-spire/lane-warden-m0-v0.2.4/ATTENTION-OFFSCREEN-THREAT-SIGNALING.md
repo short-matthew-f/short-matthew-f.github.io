@@ -1,47 +1,34 @@
-# Attention & Offscreen Threat Signaling — Future UX Experiment
+# ATT-001 — Attention & Offscreen Threat Signaling
 
-**Status:** Recorded implementation hypothesis; **not enabled in R01-C**.  
-**Motivation:** Human R01-B play showed that the intended fork can work, but the tester had advance knowledge of what to watch for. The game still needs to prove that a fresh player can notice an important offscreen deterioration without external coaching.
+Status: **implemented for isolated human UX testing in M0-0.2.4**.
 
-## Goal
+## Purpose
 
-Help the player notice **where actionable danger is developing** while preserving the strategic right to ignore that danger and continue a committed push.
+Help the player notice a strategically important threatened area without restoring large blocking overlays and without taking control of the camera. This is attention support, not an instruction to rescue the threatened lane.
 
-This extends existing design-authority requirements for `BastionCritical`, `CommanderEndangered`, Guard threshold legibility, and redundant warning channels. It must not turn the battle into whack-a-mole or imply that the UI's recommended response is mandatory.
+## Behavior
 
-## Candidate interaction
+- A brief, pointer-transparent toast appears when a qualifying threat first appears or escalates.
+- A compact world-locked danger control points toward the threatened structure when it is offscreen.
+- As the player pans the target into view, the control resolves onto the actual world position rather than continuing to point abstractly toward a lane.
+- Tapping the control focuses the camera on the target.
+- **No automatic camera pan or camera seizure occurs in normal play.**
+- The rest of the layer is pointer-transparent; only the explicit focus control captures input.
 
-1. **Brief toast** on a meaningful transition, e.g. `SOUTH BASTION UNDER PRESSURE` or `CORE EXPOSED`.
-2. **Offscreen edge indicator** points toward the actual endangered world object, not merely the lane name.
-3. The indicator tracks the object's world position as the camera pans.
-4. As the target enters view, the edge indicator visually resolves/locks onto the object's existing marker and fades.
-5. **Tap-to-focus** may pan/focus the camera on the endangered object.
-6. Normal warnings do **not** automatically seize the camera.
-7. A one-time onboarding peek or a major terminal transition such as Bastion break may be separately tested, but must not interrupt active input or become the default behavior.
+## Initial threat policy
 
-## Severity model
+- Bastion warning: taking recent damage and at/below 75% HP.
+- Bastion critical: taking recent damage and at/below 35% HP.
+- Bastion lost: Core exposed.
+- Core taking damage: critical.
+- Commander at/below 30% HP: warning.
 
-- **Informational:** Guard pressure/threshold change. Directional treatment optional; no alarm semantics.
-- **Danger:** sustained Bastion deterioration or canonical `BastionCritical` transition.
-- **Critical:** Core exposed/under attack or `CommanderEndangered` where offscreen awareness is required.
+These thresholds are exploratory UX thresholds, not game-balance rules.
 
-Color may reinforce severity but cannot be the sole carrier. Icon shape, motion, text, and/or sound should redundantly communicate critical states.
+## Agency constraint
 
-## Interaction constraints
+A warning says **“this matters”**, not **“fix this.”** Twin Toll explicitly depends on the player being allowed to recognize danger and still choose to let that lane fail. ATT-001 must therefore never auto-spend, auto-rally, auto-waypoint, or force a camera move.
 
-- Pointer-transparent except for an intentionally sized indicator target when tap-to-focus is enabled.
-- Must not recreate the v0.2.0 overlay obstruction defect.
-- Must not issue Commander orders when tapped.
-- Must not obscure lane strip, objective state, or battlefield target areas.
-- Warning frequency requires suppression/cooldown so sustained damage does not spam toasts.
-- Acknowledging or ignoring a warning must not pause combat unless a separate Hold mechanic is explicitly invoked.
+## Evidence
 
-## Semantic-source rule
-
-Consume canonical system states where they exist: `BastionCritical`, `CommanderEndangered`, Guard replacement/critical state, and Core exposed/under-fire state. Do not invent duplicate hidden danger thresholds merely for the UI.
-
-## Evidence needed
-
-The eventual human test should use a player who has **not** been told "sacrifice South to breach North." Success evidence is a player independently reporting the intended causal story.
-
-Instrument at minimum: warning type and first appearance time; whether target was onscreen/offscreen; edge-indicator display duration; tap-to-focus use; time from warning to camera acquisition; whether the player changed lane/Commander plan afterward; false-alarm / annoyance debrief.
+Exports record `danger-cue` and `attention-focus-tap` events under `ATT-001`. The frozen gameplay runtime is not asked to log ATT-001 camera focus events.
