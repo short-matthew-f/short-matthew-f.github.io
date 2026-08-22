@@ -1,7 +1,7 @@
 # Lane Warden — M0 Closeout
 
 **Closed:** 2026-08-22  
-**Final reference build:** `lane-warden-m0-v0.2.4/`  
+**Final R-01 human reference build:** `lane-warden-m0-v0.2.4/`  
 **Gameplay candidate:** `R01-C`  
 **UX layers retained:** `DL-001`, `ATT-001`
 
@@ -45,7 +45,7 @@ The important behavioral result is that the warning successfully drew attention 
 
 ## PR-001 disposition
 
-A separate PR-001 build was planned as a short pressure/commitment probe. The final ATT-001 run already exercised that exploratory question with useful telemetry and a clear human debrief, so creating another near-identical M0 build would add process without adding much information.
+A separate PR-001 build was planned as a short pressure/commitment probe. The final ATT-001 run already exercised that exploratory question with useful telemetry and a clear human debrief, so creating another near-identical R-01 build would add process without adding much information.
 
 PR-001 is therefore **satisfied as exploratory coverage, not a formal PASS**. No acceptance threshold was preregistered.
 
@@ -62,18 +62,20 @@ M0 does not establish:
 - Reclamation behavior;
 - Test 0b deterministic resume.
 
-## Next recommended work
+## Immediate engineering handoff
 
-Do not spend another build polishing the M0 HUD or repeat R-01 merely to collect another version number.
+The shared harness now contains enough real simulation state that the roadmap's **M0.5 / Test 0b entry** is no longer premature. Do that hardening now, while R-01 is frozen and well understood, rather than mixing persistence defects with the first three-lane/Rival implementation.
 
-The clean design handoff already contains the **R-01–R-04 reference encounter corpus**. R-01 Twin Toll has now done its job as the first two-lane proving ground. The next planned proving ground is **R-02**, which introduces the structural escalation that R-01 deliberately avoided: **three lanes, battlefield geometry, and Rival Commander pressure**.
+`lane-warden-m0-v0.3.0/` is therefore an engineering-only DET-001 build over frozen R01-C. Its job is fixed-step simulation, one automatic recovery snapshot, background suspension, exact snapshot round-trip, and exact resumed continuation. It is not new R-01 balance evidence.
 
-That makes the next implementation question materially different from the one M0 just answered:
+## Next gameplay proving ground
+
+The clean design handoff already contains the **R-01–R-04 reference encounter corpus**. After Test 0b closes, the next gameplay proving ground is **R-02**, which introduces the structural escalation R-01 deliberately avoided: **three lanes, battlefield geometry, and Rival Commander pressure**.
+
+That next gameplay question is:
 
 > Can the player preserve global strategic awareness and make deliberate local interventions once three lanes and an adversarial Rival compete for attention on the target phone?
 
-### Recommended next sequence
+### Recommended sequence
 
-**Instantiate R-02 in the shared gameplay harness → preserve the proven R-01 camera/input/attention conventions → exercise three-lane geometry and Rival behavior → run smallest-iPhone awareness/input validation → only then tune or broaden human strategic testing.**
-
-Test 0b deterministic resume remains separate work. It should not be smuggled into the R-02 spike unless the build is going to be cited as representative mobile-product evidence that requires serialization/resume.
+**Close Test 0b on frozen R-01 → instantiate R-02 on the hardened harness → preserve the proven camera/input/attention conventions → exercise three-lane geometry and Rival behavior → run smallest-phone awareness/input validation → only then tune or broaden human strategic testing.**
