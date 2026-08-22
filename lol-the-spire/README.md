@@ -31,6 +31,8 @@ The planned PR-001 pressure/commitment probe does **not** need a separate build:
 
 M0 does **not** claim shipping balance, independent teaching/discoverability, formal 5–10 minute acceptance, three-lane hardware viability, representative-Gate strategy diversity, or Test 0b deterministic resume readiness.
 
-See `M0-CLOSEOUT.md` for the concise handoff and the next recommended work.
+**Next proving ground:** instantiate the already-authored **R-02** reference encounter in the shared gameplay harness to test three lanes, battlefield geometry, and Rival Commander pressure while preserving the R-01 interaction/attention lessons.
+
+See `M0-CLOSEOUT.md` for the concise handoff.
 
 When a newer build is deployed, add a new subfolder and update `lol-the-spire/index.html` to mark it current. Preserve prior folders for regression testing and comparison unless explicitly retired.
