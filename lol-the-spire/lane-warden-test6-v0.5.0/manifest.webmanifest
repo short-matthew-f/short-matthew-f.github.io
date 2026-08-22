@@ -1,0 +1,9 @@
+{
+  "name":"Lane Warden Test 6 — Global Awareness",
+  "short_name":"LW Test 6",
+  "start_url":"./",
+  "display":"standalone",
+  "orientation":"landscape",
+  "background_color":"#0d151b",
+  "theme_color":"#0d151b"
+}
