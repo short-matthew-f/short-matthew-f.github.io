@@ -7,7 +7,7 @@
     'BELOW REPL': ['below', 'REGEN > DMG'],
     'BREACH': ['broken', 'BREACH']
   };
-  window.__LW_DECISION_LEGIBILITY__ = { build: 'M0-0.2.3', patch: 'DL-001', parametersChanged: true, uxChanged: false };
+  window.__LW_DECISION_LEGIBILITY__ = { build: window.__LW_BUILD__ || 'M0-0.2.4', patch: 'DL-001', parametersChanged: false, uxChanged: true };
   const uiTransitions=[]; window.__LW_DL_TELEMETRY__=uiTransitions;
   const simTimeApprox=()=>{const t=document.getElementById('timer')?.textContent||'0:00',m=t.match(/^(\d+):(\d{2})$/);return m?Number(m[1])*60+Number(m[2]):0;};
 
@@ -15,7 +15,9 @@
     const m = String(text || '').match(/B\s+(\d+)/);
     return m ? Number(m[1]) : (String(text).includes('OPEN') ? 0 : 100);
   }
-  function selectedLane() { return document.querySelector('.lane.selected')?.dataset.lane || 'north'; }
+  function selectedLane() {
+    return document.querySelector('.lane.selected')?.dataset.lane || 'north';
+  }
   function patchLane(id) {
     const pressure = $(`${id}Pressure`), guard = $(`${id}Guard`);
     if (!pressure || !guard) return 'below';
@@ -84,11 +86,11 @@
     if(opts && opts.type==='application/json' && typeof parts[0]==='string'){
       try{
         const doc=JSON.parse(parts[0]);
-        if(doc && doc.build==='M0-0.2.3' && Array.isArray(doc.runs)){
+        if(doc && doc.parameterRevision==='R01-C' && Array.isArray(doc.runs)){
           doc.schema=3;
           doc.tuningStatus='exploratory pacing/consequence candidate; not shipping balance';
           doc.uiTransitions=uiTransitions.slice();
-          doc.instrumentation={decisionLegibility:'DL-001',transitionClock:'simulation timer rounded to 1s',mainRuntime:'byte-identical v0.2.2'};
+          doc.instrumentation={...(doc.instrumentation||{}),decisionLegibility:'DL-001',transitionClock:'simulation timer rounded to 1s',simulationRules:'R01-C frozen from v0.2.3'};
           const run=doc.runs[doc.runs.length-1];
           if(run && Array.isArray(run.events)){
             const existing=new Set(run.events.filter(e=>e.source==='DL-001').map(e=>`${e.type}|${e.t}`));
