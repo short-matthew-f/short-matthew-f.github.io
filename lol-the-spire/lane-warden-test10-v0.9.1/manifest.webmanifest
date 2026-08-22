@@ -1,0 +1,9 @@
+{
+  "name":"Lane Warden Test 10 — Last Stand v0.9.1",
+  "short_name":"LW Test 10",
+  "start_url":"./",
+  "display":"standalone",
+  "orientation":"landscape",
+  "background_color":"#0b1018",
+  "theme_color":"#0c1119"
+}
