@@ -5,22 +5,22 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  const BUILD='M0-0.2.2';
+  const BUILD='M0-0.2.3';
   const FIXTURE='R-01';
-  const PARAM_REV='R01-B';
+  const PARAM_REV='R01-C';
 
-  // R01-B is an exploratory human-test candidate, not shipping balance.
+  // R01-C pacing is represented as equivalent objective durability so the proven v0.2.2 main runtime remains byte-identical.
   const PARAMS=Object.freeze({
     playerPulse:20,
     enemyPulseNorth:20,
     enemyPulseSouth:28,
     enemyNorthInitial:0.5,
     enemySouthInitial:10,
-    guardHp:1100,
+    guardHp:7666.666666666667,
     guardRegen:14,
-    gateHp:5200,
-    bastionHp:2200,
-    coreHp:5400,
+    gateHp:25000,
+    bastionHp:15000,
+    coreHp:10833.333333333334,
     presenceRadius:13,
     presenceDamage:1.28,
     fullGold:5,
@@ -45,7 +45,8 @@
     siegeRamStructure:5,
     rammerHp:170,
     rammerDamage:14,
-    rammerStructure:1.8
+    rammerStructure:1.8,
+    towerDurabilityScale:1.6666666666666667
   });
 
   const ENEMY=Object.freeze({
@@ -54,7 +55,6 @@
     rammer:Object.freeze({hp:PARAMS.rammerHp,damage:PARAMS.rammerDamage,range:2.2,speed:2.35,cadence:.8,role:'siege',structure:PARAMS.rammerStructure})
   });
 
-  // Twin Toll reference topology: faster balanced North lane; delayed slower siege South lane.
   function enemyRecipe(laneId,pulseIndex){
     if(laneId==='north'){
       return pulseIndex===0
