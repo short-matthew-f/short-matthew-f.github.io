@@ -1,0 +1,9 @@
+{
+  "name":"Lane Warden Test 7 — Information Legibility",
+  "short_name":"LW Test 7",
+  "start_url":"./",
+  "display":"standalone",
+  "orientation":"landscape",
+  "background_color":"#0d151b",
+  "theme_color":"#0d151b"
+}
