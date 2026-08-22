@@ -1,3 +1,9 @@
-# v0.2.2 deployment note
+# v0.2.3 deployment note
 
-This Pages build is an isolation experiment. `main.js`, `rules.js`, and base `styles.css` are inherited byte-for-byte from v0.2.1. `config.js` changes build identity only; R01-B parameter values remain unchanged. `decision-legibility.js` and `decision-legibility.css` are the only new runtime behavior/presentation layer.
+This Pages build changes R-01 tuning from R01-B to R01-C while freezing DL-001 UX.
+
+Changed simulation knobs are limited to the effective durability representation of structural throughput and Guard/Gate/Bastion/Core durability. `main.js` and `rules.js` remain byte-identical to v0.2.2. Unit movement/combat cadence, pulse cadence, encounter script, gold rules, Commander behavior, tower outgoing behavior, and deployment presets are unchanged.
+
+The deployed browser expresses the conceptual 0.6× structure-throughput hypothesis through equivalent objective durability; `r01c-runtime-adapter.js` scales tower HP only.
+
+The future Attention & Offscreen Threat Signaling experiment is documented but is **not** part of this runtime.
