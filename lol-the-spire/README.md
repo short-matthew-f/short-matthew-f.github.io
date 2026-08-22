@@ -6,9 +6,9 @@ This directory is a versioned GitHub Pages test archive.
 
 Each deployed build gets a new immutable subfolder under `lol-the-spire/` rather than replacing the previous deployment.
 
-Current build:
+Current M0 reference build:
 
-- `lane-warden-m0-v0.2.4/` — Lane Warden M0.4 ATT-001 attention/offscreen-threat UX experiment over frozen `R01-C`. It preserves the v0.2.3 combat/pacing candidate and DL-001, then adds a brief danger toast, world-locked edge/onscreen threat marker, and optional tap-to-focus. Normal warnings never seize the camera. The preceding R01-C human Siege + delay run won at 265s with the South Bastion at 0.6%, so combat is intentionally frozen while attention signaling is isolated.
+- `lane-warden-m0-v0.2.4/` — Lane Warden M0.4 ATT-001 attention/offscreen-threat UX experiment over frozen `R01-C`. The final human run retained the intended strategic fork while exercising the new attention layer: fork opened at 158s; North Guard broke at 175.98s; South warning fired at 186s; the player used the focus marker at 204s and 210s; South escalated to critical at 234s; the player still spent the next 60g offensively on North at 258.73s; South Bastion fell at 265.2s; Gate victory arrived at 286.6s with 65.2% Core health remaining. Debrief remained `sacrifice=yes / guardRead=clear / goldFork=yes`.
 
 Prior builds:
 
@@ -25,6 +25,12 @@ Prior builds:
 
 ## M0 status
 
-**Test 0a: COMPOSITE PASS.** The delivery channel is closed as a preproduction risk. M0.4 is active. R01-C combat/pacing is frozen while v0.2.4 tests whether ATT-001 can direct attention to offscreen danger without obstructing input, stealing camera control, or undermining intentional sacrifice. Independent teaching with an uncoached player remains a later test.
+**M0 exploratory prototype/playtest cycle: CLOSED.** Test 0a remains a **COMPOSITE PASS**. The final reference build is v0.2.4 with R01-C + DL-001 + ATT-001.
+
+The planned PR-001 pressure/commitment probe does **not** need a separate build: its exploratory question was exercised inside the final ATT-001 run. The player read the replacement threshold, saw the fork, received escalating offscreen danger information, and still knowingly spent the decisive intervention on the winning lane. Because no PR-001 acceptance threshold was preregistered, this is retained as exploratory evidence rather than converted into a formal pass.
+
+M0 does **not** claim shipping balance, independent teaching/discoverability, formal 5–10 minute acceptance, three-lane hardware viability, representative-Gate strategy diversity, or Test 0b deterministic resume readiness.
+
+See `M0-CLOSEOUT.md` for the concise handoff and the next recommended work.
 
 When a newer build is deployed, add a new subfolder and update `lol-the-spire/index.html` to mark it current. Preserve prior folders for regression testing and comparison unless explicitly retired.
