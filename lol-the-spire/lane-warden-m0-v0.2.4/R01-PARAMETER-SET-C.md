@@ -1,4 +1,4 @@
-# Lane Warden M0.2.3 — R-01 Parameter Set C
+# R-01 Parameter Set C — frozen from Lane Warden M0.2.3
 
 **Design baseline:** 1.7  
 **Fixture:** R-01 — Twin Toll  
@@ -38,7 +38,7 @@ Using the existing fixed reference policies at 1× simulation:
 - **All-in:** win ~232s (~3:52); South Bastion is visibly critical (~35%) but does not necessarily break before the fast close.
 - **Thin:** no Guard breach within 600s.
 
-The same Siege + delay state continued against an effectively unreachable Gate loses the conceptual fresh 6500-HP Core (10833.33 effective runtime HP) roughly **50.6s after the South Bastion falls**, close to the design baseline's 30–50s starting hypothesis and suitable for human testing.
+The same Siege + delay state continued against an effectively unreachable Gate loses the fresh 6500-HP Core roughly **50.6s after the South Bastion falls**, close to the design baseline's 30–50s starting hypothesis and suitable for human testing.
 
 ## What this row is testing
 
