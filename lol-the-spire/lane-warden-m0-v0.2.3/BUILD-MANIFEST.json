@@ -1,53 +1,54 @@
 {
-  "build": "M0-0.2.2",
+  "build": "M0-0.2.3",
   "designBaseline": "1.7",
   "milestone": "M0.4 — Shared gameplay harness",
   "fixture": "R-01 — Twin Toll",
-  "parameterRevision": "R01-B",
-  "status": "EXPLORATORY DECISION-LEGIBILITY HUMAN TEST",
+  "parameterRevision": "R01-C",
+  "status": "EXPLORATORY PACING / CONSEQUENCE HUMAN TEST",
   "test0a": "CLOSED — COMPOSITE PASS",
-  "changesFrom020": [
-    "correct Twin Toll enemy topology: fast balanced North / delayed siege South",
-    "share fixture and parameter source between browser runtime and deterministic simulator",
-    "repair sacrifice clock to distinct Bastion then Core windows",
-    "make Guard replacement threshold materially resist thin pressure",
-    "reduce gold income and give Push/Overdrive a shared intervention cooldown",
-    "Push adds one temporary copy of each already-committed type, not a full recurring pulse",
-    "raise Siege Ram survival/structural identity for human strategy testing",
-    "collapse Lab and action controls by default; informational HUD is tap-through",
-    "thin top/objective/lane HUD footprint and close expanded controls on battlefield tap",
-    "add 10-second state snapshots and compact post-battle human debrief to evidence"
-  ],
-  "referenceProbe": {
-    "balanced": "deterministic bot wins around 234s",
-    "siegeDelay": "deterministic bot wins around 209s after South Bastion breaks; Core nearly exhausted",
-    "allIn": "deterministic bot wins around 156s after abandoning South",
-    "thin": "no Guard breach within 600s"
+  "evidenceDisposition": {
+    "R01-B-human-playtest-02": "supports intended fork under informed play; not independent-teaching evidence",
+    "battlefieldUsability": "tap-through interaction remains accepted for this iteration"
   },
+  "frozenFrom022": [
+    "DL-001 Guard damage-vs-regen language",
+    "60g intervention readiness",
+    "FORK OPEN cue",
+    "tap-through HUD/action drawer behavior",
+    "unit movement and unit-vs-unit combat",
+    "player/enemy pulse cadence and Twin Toll packages",
+    "gold/Commander/tower rules",
+    "deployment presets and Siege Ram identity"
+  ],
+  "r01cChanges": {
+    "conceptualFriendlyStructureThroughput": "0.6x, represented as 1.6667x effective Guard/Gate durability with Guard regen equivalently rescaled",
+    "conceptualEnemyStructureThroughput": "0.6x, represented as 1.6667x effective tower/Bastion/Core durability",
+    "runtimeGuardHp": 7666.666666666667,
+    "runtimeGuardRegen": 14,
+    "runtimeGateHp": 25000,
+    "runtimeBastionHp": 15000,
+    "runtimeCoreHp": 10833.333333333334,
+    "towerDurabilityScale": 1.6666666666666667
+  },
+  "referenceProbe": {
+    "balanced": "win ~406s",
+    "siegeDelay": "win ~312s; South Bastion ~264.6s; Gate ~47.4s later; Core ~7.6%",
+    "allIn": "win ~232s; South Bastion critical but standing",
+    "thin": "no Guard breach within 600s",
+    "freshCoreClock": "~50.6s after South Bastion break with Gate victory disabled"
+  },
+  "instrumentation": [
+    "evidence schema 3",
+    "first fork-open event",
+    "first intervention-ready transition events"
+  ],
+  "futureUxRecorded": "Attention & Offscreen Threat Signaling — toast + world-locked edge indicator + optional tap-to-focus; no default camera seizure; not enabled in v0.2.3",
   "notClaimed": [
     "shipping R-01 balance",
-    "5–10 minute battle-duration target satisfied",
-    "human north-star decision proof",
+    "independent teaching/discoverability",
+    "formal 5–10 minute acceptance across representative fixtures",
     "formal strategy viability acceptance",
-    "Test 0b deterministic suspend/resume readiness"
+    "Test 0b readiness"
   ],
-  "changesFrom021": [
-    "R01-B combat/fixture parameters frozen unchanged",
-    "battlefield tap-through UX retained after positive human feedback",
-    "Guard lane strip now states DMG > REGEN / DMG ≈ REGEN / REGEN > DMG",
-    "compact tap-through fork cue appears when breach progress and sacrifice clock overlap",
-    "60g intervention readiness is visible without opening the action drawer",
-    "decision-legibility patch is isolated from the byte-identical v0.2.1 gameplay runtime"
-  ],
-  "humanEvidence021": {
-    "battlefieldUsability": "positive — easy to use",
-    "siegeDelay": "loss 217.2s; no Guard breach; South Bastion 160.9s; zero interventions; 171g unspent",
-    "balanced": "win 210s; North/South Guards broke 149.02/158.89s; debrief sacrifice=no, guardRead=unclear, goldFork=yes",
-    "thin": "still running 462.7s; no Guard breach or Bastion loss despite 300g spent; replacement threshold held"
-  },
-  "runtimeComposition": {
-    "gameplayMain": "byte-identical to v0.2.1 main.js",
-    "decisionPatch": "decision-legibility.js / DL-001",
-    "parameterRevision": "R01-B unchanged"
-  }
+  "runtimeIsolation": "main.js and rules.js are byte-identical to v0.2.2; R01-C pacing is expressed through config durability plus r01c-runtime-adapter.js for tower HP."
 }
