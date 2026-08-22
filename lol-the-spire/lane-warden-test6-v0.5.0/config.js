@@ -5,12 +5,12 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  const BUILD='M1-0.4.2';
+  const BUILD='M1-0.4.3';
   const FIXTURE='R-02-STRUCTURAL';
-  const PARAM_REV='R02-C';
+  const PARAM_REV='R02-D';
   const DESIGN_BASELINE='1.7';
 
-  // Frozen gameplay base for Test 6. No combat retuning in this harness.
+  // R02-D freezes R02-C gameplay and REFORM-001. ATT-002 changes attention presentation only.
   const PARAMS=Object.freeze({
     fixedDt:1/60,
     playerPulse:20,
