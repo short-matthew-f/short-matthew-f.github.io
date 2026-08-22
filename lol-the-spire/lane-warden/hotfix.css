@@ -1,10 +1,49 @@
-/* P0-0.10.2: iOS standalone hotfix.
-   The rotate overlay's author-level display:grid overrode its hidden state on the
-   target iPhone and could permanently block the app. P0 is landscape-first and
-   the manifest already requests landscape, so do not present a blocking overlay.
-   Reintroduce portrait guidance only with a non-blocking implementation. */
+/* P0-0.10.3 production layout hardening.
+   Landscape is the gameplay target. Portrait guidance is CSS-driven so it
+   cannot become stuck on stale JavaScript orientation state. */
+
+/* Keep the canvas below the top HUD so CORE/GATE status text can never render
+   underneath the production bar. */
+#battlefield {
+  top: 52px !important;
+  height: calc(100% - 52px) !important;
+}
+
+/* Landscape: no orientation overlay. */
 #rotate,
 #rotate[hidden] {
   display: none !important;
   pointer-events: none !important;
+}
+
+@media (orientation: portrait) {
+  /* The game is not intended to reflow into a tall battlefield. Pause via
+     hotfix.js and give the player a simple CSS-only orientation message. */
+  #battle #rotate,
+  #battle #rotate[hidden] {
+    display: grid !important;
+    pointer-events: auto !important;
+    position: absolute;
+    inset: 0;
+    z-index: 120;
+    place-items: center;
+    padding: 32px;
+    background: #071016;
+    color: #edf3f2;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 900;
+  }
+
+  #battlefield,
+  .hud-top,
+  .battle-prompt,
+  .ability-rail,
+  .read-toggle,
+  .read-panel,
+  .structure-button,
+  .structure-panel,
+  .lane-strip {
+    visibility: hidden !important;
+  }
 }
