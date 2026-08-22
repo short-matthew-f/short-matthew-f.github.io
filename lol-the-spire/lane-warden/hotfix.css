@@ -1,0 +1,10 @@
+/* P0-0.10.2: iOS standalone hotfix.
+   The rotate overlay's author-level display:grid overrode its hidden state on the
+   target iPhone and could permanently block the app. P0 is landscape-first and
+   the manifest already requests landscape, so do not present a blocking overlay.
+   Reintroduce portrait guidance only with a non-blocking implementation. */
+#rotate,
+#rotate[hidden] {
+  display: none !important;
+  pointer-events: none !important;
+}
