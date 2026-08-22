@@ -1,0 +1,9 @@
+{
+  "name": "Lane Warden M0 R01-C Pacing Test",
+  "short_name": "LW R01-C",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0b1217",
+  "theme_color": "#0d151b"
+}

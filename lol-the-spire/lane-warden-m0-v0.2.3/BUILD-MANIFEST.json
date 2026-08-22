@@ -1,0 +1,54 @@
+{
+  "build": "M0-0.2.3",
+  "designBaseline": "1.7",
+  "milestone": "M0.4 — Shared gameplay harness",
+  "fixture": "R-01 — Twin Toll",
+  "parameterRevision": "R01-C",
+  "status": "EXPLORATORY PACING / CONSEQUENCE HUMAN TEST",
+  "test0a": "CLOSED — COMPOSITE PASS",
+  "evidenceDisposition": {
+    "R01-B-human-playtest-02": "supports intended fork under informed play; not independent-teaching evidence",
+    "battlefieldUsability": "tap-through interaction remains accepted for this iteration"
+  },
+  "frozenFrom022": [
+    "DL-001 Guard damage-vs-regen language",
+    "60g intervention readiness",
+    "FORK OPEN cue",
+    "tap-through HUD/action drawer behavior",
+    "unit movement and unit-vs-unit combat",
+    "player/enemy pulse cadence and Twin Toll packages",
+    "gold/Commander/tower rules",
+    "deployment presets and Siege Ram identity"
+  ],
+  "r01cChanges": {
+    "conceptualFriendlyStructureThroughput": "0.6x, represented as 1.6667x effective Guard/Gate durability with Guard regen equivalently rescaled",
+    "conceptualEnemyStructureThroughput": "0.6x, represented as 1.6667x effective tower/Bastion/Core durability",
+    "runtimeGuardHp": 7666.666666666667,
+    "runtimeGuardRegen": 14,
+    "runtimeGateHp": 25000,
+    "runtimeBastionHp": 15000,
+    "runtimeCoreHp": 10833.333333333334,
+    "towerDurabilityScale": 1.6666666666666667
+  },
+  "referenceProbe": {
+    "balanced": "win ~406s",
+    "siegeDelay": "win ~312s; South Bastion ~264.6s; Gate ~47.4s later; Core ~7.6%",
+    "allIn": "win ~232s; South Bastion critical but standing",
+    "thin": "no Guard breach within 600s",
+    "freshCoreClock": "~50.6s after South Bastion break with Gate victory disabled"
+  },
+  "instrumentation": [
+    "evidence schema 3",
+    "first fork-open event",
+    "first intervention-ready transition events"
+  ],
+  "futureUxRecorded": "Attention & Offscreen Threat Signaling — toast + world-locked edge indicator + optional tap-to-focus; no default camera seizure; not enabled in v0.2.3",
+  "notClaimed": [
+    "shipping R-01 balance",
+    "independent teaching/discoverability",
+    "formal 5–10 minute acceptance across representative fixtures",
+    "formal strategy viability acceptance",
+    "Test 0b readiness"
+  ],
+  "runtimeIsolation": "main.js and rules.js are byte-identical to v0.2.2; R01-C pacing is expressed through config durability plus r01c-runtime-adapter.js for tower HP."
+}

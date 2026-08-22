@@ -1,0 +1,6 @@
+/* v0.2.2 DL-001: tap-through decision legibility only; no gameplay hitboxes. */
+.decision-cue{position:absolute;z-index:5;top:93px;left:50%;transform:translateX(-50%);max-width:min(360px,42vw);min-width:230px;border-radius:10px;padding:5px 10px;display:flex;align-items:center;gap:8px;justify-content:center;pointer-events:none;text-align:center}
+.decision-cue b{font-size:8px;letter-spacing:.1em;color:var(--amber);white-space:nowrap}.decision-cue span{font-size:8px;color:#c5ccc6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock-toggle.intervention-ready{border-color:var(--amber);box-shadow:0 0 0 1px rgba(214,179,91,.28),0 0 18px rgba(214,179,91,.18);background:#332d1f}.dock-toggle.intervention-ready b{color:#f0cf76}
+.causes small{font-size:7.4px;font-weight:700;letter-spacing:.025em}
+@media(max-width:760px){.decision-cue{max-width:35vw;min-width:190px}.decision-cue span{display:none}}
