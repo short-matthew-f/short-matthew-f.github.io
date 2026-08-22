@@ -8,11 +8,12 @@ Each deployed build gets a new immutable subfolder under `lol-the-spire/` rather
 
 Current exploratory gameplay build:
 
-- `lane-warden-r02-v0.4.1/` — **R02-B rotation-pressure revision.** Carries the three-lane/Rival structural spike forward after the first R02-A human run. Neglected North/South pressure is stronger, Bastion durability is reduced, Rival scoring is less dominated by player absence, Rival lane choice has hysteresis, damaged Guard pressure attracts contest, reform chooses a high-value enemy anchor, and tower-destruction telemetry is fixed. This remains exploratory and does not claim canonical R-02 balance or Test 6/7/8 acceptance.
+- `lane-warden-r02-v0.4.2/` — **R02-C / REFORM-001.** Freezes R02-B combat pacing and isolates selectable reform anchors. While the player Commander is incapacitated, the lane strip chooses a reform lane until a final 2-second lock. The Rival also reevaluates reform anchors during downtime and penalizes lanes already camped by player pressure near the enemy anchor. No post-reform invulnerability is added.
 
-R-02 exploratory reference:
+R-02 exploratory references:
 
-- `lane-warden-r02-v0.4.0/` — **R02-A structural spike.** First human evidence was useful but incomplete: the Rival clearly changed rotations and middle concentration crossed Guard replacement, while the outer Bastions remained too safe. The first six Rival lane decisions were followed by Commander orders to the same lane; middle Guard position 0 broke at 114.38 s and the second position reached 34% by 130 s; no Bastion warning or break occurred. See `R02-A-EXPLORATORY-RESULT.md`.
+- `lane-warden-r02-v0.4.1/` — **R02-B rotation-pressure reference.** Human Middle temptation evidence produced the intended offensive-versus-neglect fork: Mid Guard position 0 broke at 97.70 s, the full Mid Guard line broke at 119.27 s, North Bastion warned at 108.80 s, became critical at 143.07 s, broke at 165.33 s, and the player still won at 179.80 s with 77% Core. Debrief: `globalRead=yes / rivalChanged=no / rivalPredict=yes`. The same run exposed repeatable Rival spawn locking after reform. See `R02-B-EXPLORATORY-RESULT.md`.
+- `lane-warden-r02-v0.4.0/` — **R02-A structural spike.** First human evidence established that Rival movement could pull rotations and concentrated Mid pressure could cross Guard replacement, but outer Bastion pressure was too weak. See `R02-A-EXPLORATORY-RESULT.md`.
 
 Deterministic engineering reference:
 
@@ -39,12 +40,12 @@ Prior builds:
 
 **M0 exploratory gameplay/playtest cycle: CLOSED.** Test 0a remains a **COMPOSITE PASS** and Test 0b is **PASS**. v0.2.4 remains the final R-01 human reference; v0.3.0 is the deterministic mobile-resume engineering reference.
 
-**R-02 structural work is active.** R02-A established two useful facts: concentration can cross a multi-position Guard line, and Rival movement can materially change Commander rotations. It also exposed two problems: neglect was not costly enough, and the Rival's lane choice collapsed to the same `exploiting your absence` behavior on every decision.
+**R-02 structural work is active.** R02-B is the first human run to demonstrate the intended three-lane fork under readable global information: the player kept winning Mid while knowingly allowing North to fail, then won before the Core failed. The remaining defect from that run is Commander spawn locking, not the fork itself.
 
-**Immediate gameplay work:** run R02-B, preferably with the same `Middle temptation` shape at 1×, and look for the actual Act 2 fork: a winning middle push versus an outer Bastion/Rival problem that is costly enough to ignore but not automatically mandatory to rescue.
+**Immediate gameplay work:** run R02-C with `Middle temptation` at 1×. Confirm that the R02-B fork survives and that Rival reform no longer collapses into repeated 2–3 second deaths. If the player Commander is incapacitated, change its reform lane at least once to exercise the player-side selector.
 
 R-02 still does **not** claim formal three-lane hardware acceptance, Rival acceptance, canonical encounter balance, 5–10 minute battle-duration acceptance, or representative strategy diversity.
 
-See `M0-CLOSEOUT.md`, `lane-warden-m0-v0.3.0/LW-0B-001-RESULT.md`, and `lane-warden-r02-v0.4.0/R02-A-EXPLORATORY-RESULT.md` for handoff evidence.
+See `M0-CLOSEOUT.md`, `lane-warden-m0-v0.3.0/LW-0B-001-RESULT.md`, `lane-warden-r02-v0.4.0/R02-A-EXPLORATORY-RESULT.md`, and `lane-warden-r02-v0.4.1/R02-B-EXPLORATORY-RESULT.md` for handoff evidence.
 
 When a newer build is deployed, add a new subfolder and update `lol-the-spire/index.html` to mark it current. Preserve prior folders for regression testing and comparison unless explicitly retired.
