@@ -1,5 +1,11 @@
 (() => {
   'use strict';
+  // The inherited runtime initializes Siege + delay before the Test 6 layer
+  // deliberately switches to Middle temptation. Keep the pre-runtime class
+  // state aligned so the formal lock performs a real preset click.
+  document.querySelector('[data-deploy-preset="middleTemptation"]')?.classList.remove('active');
+  document.querySelector('[data-deploy-preset="siegeDelay"]')?.classList.add('active');
+
   const runtime=document.createElement('script');
   runtime.src='../lane-warden-r02-v0.4.3/main-loader.js';
   runtime.onload=()=>{
