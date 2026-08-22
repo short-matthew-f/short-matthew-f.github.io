@@ -6,9 +6,9 @@ This directory is a versioned GitHub Pages test archive.
 
 Each deployed build gets a new immutable subfolder under `lol-the-spire/` rather than replacing the previous deployment.
 
-Current engineering build:
+Current engineering reference:
 
-- `lane-warden-m0-v0.3.0/` — **M0.5 / Test 0b entry.** DET-001 hardens the frozen R01-C harness with an authoritative 60 Hz simulation step, one versioned automatic recovery snapshot, no background progress/catch-up, exact snapshot round-trip checking, and deterministic continuation self-checks. `LW-0B-001` is preregistered but not yet run. This build intentionally does **not** retune R-01.
+- `lane-warden-m0-v0.3.0/` — **M0.5 / Test 0b PASS.** DET-001 hardens the frozen R01-C harness with an authoritative 60 Hz simulation step, one versioned automatic recovery snapshot, no background progress/catch-up, exact snapshot round-trip checking, deterministic continuation checks, compatibility rejection, and exact relaunch restore. `LW-0B-001` passed on 2026-08-22. This build intentionally does **not** retune R-01.
 
 Final R-01 human reference build:
 
@@ -29,15 +29,16 @@ Prior builds:
 
 ## Status
 
-**M0 exploratory gameplay/playtest cycle: CLOSED.** Test 0a remains a **COMPOSITE PASS**. v0.2.4 remains the final R-01 human reference with R01-C + DL-001 + ATT-001.
+**M0 exploratory gameplay/playtest cycle: CLOSED.** Test 0a remains a **COMPOSITE PASS**. **Test 0b is PASS.** v0.2.4 remains the final R-01 human reference; v0.3.0 is the deterministic mobile-resume engineering reference.
 
 The planned PR-001 pressure/commitment probe does **not** need a separate build: its exploratory question was exercised inside the final ATT-001 run. Because no PR-001 acceptance threshold was preregistered, that evidence remains exploratory rather than a formal pass.
 
-**Immediate engineering work:** close `LW-0B-001` on v0.3.0.  
 **Next gameplay proving ground:** instantiate the already-authored **R-02** reference encounter on the hardened harness to test three lanes, battlefield geometry, and Rival Commander pressure.
 
-M0 does **not** claim shipping balance, independent teaching/discoverability, formal 5–10 minute acceptance, three-lane hardware viability, representative-Gate strategy diversity, or Test 0b deterministic resume until LW-0B-001 is actually run and passes.
+A non-blocking v0.3.0 export-wrapper ordering defect leaves the top-level gameplay export labeled `schema: 3` with the older exploratory tuning-status text even though DET-001 evidence is correctly present. Correct that telemetry-only defect when carrying the hardened harness into R-02; it does not change the Test 0b verdict.
 
-See `M0-CLOSEOUT.md` for the concise handoff.
+M0 still does **not** claim shipping balance, independent teaching/discoverability, formal 5–10 minute acceptance, three-lane hardware viability, or representative-Gate strategy diversity.
+
+See `M0-CLOSEOUT.md` and `lane-warden-m0-v0.3.0/LW-0B-001-RESULT.md` for the concise handoffs.
 
 When a newer build is deployed, add a new subfolder and update `lol-the-spire/index.html` to mark it current. Preserve prior folders for regression testing and comparison unless explicitly retired.
