@@ -1,0 +1,54 @@
+(() => {
+'use strict';
+const BUILD='T10-0.9.0',DECL='LW-T10-001';
+const $=id=>document.getElementById(id);
+const state={sequence:0,startedAt:null,completedAt:null,answers:{A:{},B:{}},survey:{},playbacks:[],visibility:[],device:null,currentTimers:[]};
+const sequences={
+ A:{embers:3,quiz:[
+  ['core','What happened to your Core?',[['fell','It fell'],['held','It held'],['repaired','It repaired itself']],'fell'],
+  ['gate','What happened to the enemy Gate?',[['destroyed','It was destroyed'],['standing','It stayed standing'],['unknown','It was unclear']],'destroyed'],
+  ['ember','What happened to your Embers?',[['spent','One was spent: 3 → 2'],['same','They stayed at 3'],['zero','They dropped to 0']],'spent'],
+  ['reward','Did you receive the normal battle reward?',[['no','No'],['yes','Yes'],['double','Yes, doubled']],'no'],
+  ['next','What happens next?',[['advance','The run advances'],['end','The run ends'],['retry','The same battle restarts']],'advance']
+ ]},
+ B:{embers:0,quiz:[
+  ['core','What happened to your Core?',[['fell','It fell'],['held','It held'],['repaired','It recovered']],'fell'],
+  ['gate','What happened to the enemy Gate?',[['destroyed','It was destroyed'],['standing','It stayed standing'],['unknown','It was unclear']],'destroyed'],
+  ['ember','What did the Ember state mean?',[['terminal','No Ember could be paid; this defeat is terminal'],['hidden','A hidden Ember was spent'],['refill','Embers refilled']],'terminal'],
+  ['reward','Did you receive the normal battle reward?',[['no','No'],['yes','Yes'],['double','Yes, doubled']],'no'],
+  ['next','What happens next?',[['end','The run ends'],['advance','The run advances'],['retry','The battle restarts']],'end']
+ ]}
+};
+const surveys=[
+ ['payable','Which description best fits Sequence A?',[['forward','I lost, but forced a costly advance'],['victory','I won the battle'],['consolation','It felt like a consolation animation after an ordinary loss'],['unclear','I was not sure what happened']]],
+ ['terminal','Which description best fits Sequence B?',[['setpiece','A deliberate final run-end set piece'],['abrupt','An abrupt defeat/game-over modal'],['continue','A loss that still continued the run'],['unclear','I was not sure what happened']]],
+ ['identity','Was the Warden / Bulwark Detonation identity clear?',[['yes','YES'],['no','NO']]],
+ ['readable','Was the sequence readable at phone scale?',[['yes','YES'],['no','NO']]],
+ ['dramatic','Did the presentation feel dramatic/memorable enough to carry the game’s failure framing?',[['yes','YES'],['no','NO']]]
+];
+function device(){return{userAgent:navigator.userAgent,standalone:!!navigator.standalone||matchMedia('(display-mode: standalone)').matches,language:navigator.language,viewport:{width:innerWidth,height:innerHeight,dpr:devicePixelRatio||1,orientation:innerWidth>=innerHeight?'landscape':'portrait'}}}
+function setScreen(id){['intro','battleWrap','quiz','survey','result'].forEach(x=>$(x).hidden=x!==id)}
+function embers(n){$('emberHud').innerHTML='';for(let i=0;i<3;i++){const e=document.createElement('i');e.className='ember'+(i>=n?' empty':'');$('emberHud').appendChild(e)}}
+function clearTimers(){state.currentTimers.forEach(clearTimeout);state.currentTimers=[]}
+function later(ms,fn){state.currentTimers.push(setTimeout(fn,ms))}
+function title(kicker,headline,sub){const t=$('cineTitle');t.querySelector('small').textContent=kicker;t.querySelector('strong').textContent=headline;t.querySelector('span').textContent=sub;t.classList.remove('show');void t.offsetWidth;t.classList.add('show')}
+function consequence(seq){const c=$('consequence');c.classList.toggle('terminal',seq==='B');if(seq==='A'){$('conEyebrow').textContent='THE COST OF ADVANCE';$('conTitle').textContent='EMBER SPENT';$('conBig').textContent='3 → 2 EMBERS';$('conBody').textContent='No normal battle reward. Near-miss salvage banked: +310.';$('conNext').textContent='THE MARCH CONTINUES · ADVANCE TO NEXT NODE';embers(2)}else{$('conEyebrow').textContent='NO EMBER REMAINS';$('conTitle').textContent='THE RUN ENDS HERE';$('conBig').textContent='0 EMBERS · COST CANNOT BE PAID';$('conBody').textContent='No normal battle reward. The Gate falls with you, but there is no further march.';$('conNext').textContent='RUN COMPLETE · REVIEW THE CAMPAIGN';embers(0)}c.classList.add('show')}
+function resetBattle(seq){const b=$('battleWrap');b.className='battle';$('consequence').className='consequence';$('cineTitle').className='title';embers(sequences[seq].embers)}
+function play(seq){clearTimers();state.sequence=seq==='A'?1:2;setScreen('battleWrap');resetBattle(seq);const pb={sequence:seq,startedAt:new Date().toISOString(),completedAt:null,orientationStart:innerWidth>=innerHeight?'landscape':'portrait',interrupted:false};state.playbacks.push(pb);
+ later(700,()=>{ $('battleWrap').classList.add('collapse'); title('CORE STATUS','CORE FALLEN','The defense has broken.'); });
+ later(2600,()=>{ title('THE WARDEN','LAST STAND','The battlefield goes quiet for one final command.'); });
+ later(4100,()=>{ $('battleWrap').classList.add('laststand'); title('BULWARK DETONATION','BREAK THE SIEGE','The Warden turns collapse into a weapon.'); });
+ later(6100,()=>{ $('battleWrap').classList.add('detonate'); title('LAST STAND','GATE BREACH','The blast races the length of the battlefield.'); });
+ later(7900,()=>{ title('ENEMY OBJECTIVE','GATE DESTROYED','Defeat still tears open the road ahead.'); });
+ later(9400,()=>{ consequence(seq); });
+ later(11800,()=>{pb.completedAt=new Date().toISOString();pb.orientationEnd=innerWidth>=innerHeight?'landscape':'portrait';showQuiz(seq)});
+}
+function showQuiz(seq){setScreen('quiz');$('quizLabel').textContent=`SEQUENCE ${seq} · COMPREHENSION`;$('quizQuestions').innerHTML='';$('quizNext').disabled=true;const qs=sequences[seq].quiz;qs.forEach(([key,q,opts])=>{const wrap=document.createElement('div');wrap.className='q';wrap.innerHTML=`<b>${q}</b><div class="opts"></div>`;const row=wrap.querySelector('.opts');opts.forEach(([value,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{row.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');state.answers[seq][key]=value;$('quizNext').disabled=Object.keys(state.answers[seq]).length!==5};row.appendChild(b)});$('quizQuestions').appendChild(wrap)});$('quizNext').textContent=seq==='A'?'PLAY SEQUENCE B':'CONTINUE TO FINAL QUESTIONS';$('quizNext').onclick=()=>seq==='A'?play('B'):showSurvey()}
+function showSurvey(){setScreen('survey');$('surveyQuestions').innerHTML='';surveys.forEach(([key,q,opts])=>{const w=document.createElement('div');w.className='survey-row';w.innerHTML=`<b>${q}</b><div class="opts"></div>`;const r=w.querySelector('.opts');opts.forEach(([v,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{r.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');state.survey[key]=v;$('export').disabled=Object.keys(state.survey).length!==surveys.length};r.appendChild(b)});$('surveyQuestions').appendChild(w)})}
+function quizScore(seq){let correct=0;const detail={};for(const [key,, ,answer] of sequences[seq].quiz){const selected=state.answers[seq][key]??null;const ok=selected===answer;if(ok)correct++;detail[key]={selected,correctAnswer:answer,correct:ok}}return{correct,total:5,detail}}
+function score(){const A=quizScore('A'),B=quizScore('B');const playbackComplete=state.playbacks.length===2&&state.playbacks.every(p=>p.completedAt);const uninterrupted=state.playbacks.every(p=>!p.interrupted&&p.orientationStart==='landscape'&&p.orientationEnd==='landscape');const standalone=state.device?.standalone===true;const checks={playbackComplete,comprehension:A.correct===5&&B.correct===5,payableForwardMotion:state.survey.payable==='forward',terminalSetPiece:state.survey.terminal==='setpiece',wardenIdentity:state.survey.identity==='yes',phoneReadable:state.survey.readable==='yes',dramatic:state.survey.dramatic==='yes',standalone,landscapeUninterrupted:uninterrupted};return{verdict:Object.values(checks).every(Boolean)?'PASS':'FAIL',checks,metrics:{comprehensionCorrect:A.correct+B.correct,comprehensionTotal:10,sequenceA:A,sequenceB:B,survey:state.survey},playbacks:state.playbacks}}
+function payload(){state.survey.note=$('note').value.trim();if(!state.completedAt)state.completedAt=new Date().toISOString();return{schema:1,declarationId:DECL,build:BUILD,designBaseline:'1.7',test:'Test 10 — Last Stand Presentation',question:'Does defeat still feel like a dramatic forward-moving event?',device:state.device,thresholds:{sequences:2,criticalComprehensionCorrect:10,payableClassification:'forward',terminalClassification:'setpiece',requireIdentityYes:true,requireReadableYes:true,requireDramaticYes:true,requireStandalone:true,requireLandscapeUninterrupted:true},startedAt:state.startedAt,completedAt:state.completedAt,answers:state.answers,survey:state.survey,visibility:state.visibility,finalScore:score(),exportedAt:new Date().toISOString(),note:'Presentation prototype tests comprehension and failure framing. It does not claim final production art/VFX quality.'}}
+function download(){const doc=payload();$('resultTitle').textContent=doc.finalScore.verdict;$('resultBody').textContent=`${doc.finalScore.metrics.comprehensionCorrect}/10 critical facts · payable=${state.survey.payable||'—'} · terminal=${state.survey.terminal||'—'} · identity=${state.survey.identity||'—'}`;setScreen('result');const blob=new Blob([JSON.stringify(doc,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`lane-warden-${DECL}-${BUILD}-${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function orientation(){const landscape=innerWidth>=innerHeight;$('rotate').hidden=landscape;if(!landscape&&state.playbacks.length&& !state.playbacks.at(-1).completedAt)state.playbacks.at(-1).interrupted=true}
+$('start').onclick=()=>{state.startedAt=new Date().toISOString();state.device=device();play('A')};$('export').onclick=download;$('exportAgain').onclick=download;addEventListener('resize',orientation);addEventListener('orientationchange',()=>setTimeout(orientation,50));document.addEventListener('visibilitychange',()=>{state.visibility.push({at:new Date().toISOString(),state:document.visibilityState});if(document.visibilityState!=='visible'&&state.playbacks.length&&!state.playbacks.at(-1).completedAt)state.playbacks.at(-1).interrupted=true});orientation();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+})();
