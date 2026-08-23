@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   window.LW_DATA = Object.freeze({
-    version: 'P1-0.12.0',
+    version: 'P2-0.13.0',
     deployment: { unitCapacity: 6, towerCapacity: 4 },
     encounter: {
       id: 'A1-B1',
@@ -35,10 +35,10 @@
       { id:'pylon', name:'War Pylon', cost:2, role:'Buffs friendly waves passing its zone', effect:'amplify', power:.18 }
     ],
     nodes: [
-      { id:'A1-B1', kind:'battle', name:'Outer Approach', subtitle:'Two-lane teaching battle', x:16, y:55 },
-      { id:'A1-F1', kind:'forge', name:'Ruined Forge', subtitle:'Build shaping — P2', x:42, y:34, placeholder:true },
-      { id:'A1-B2', kind:'battle', name:'Split Causeway', subtitle:'Second battle — P2', x:66, y:58, placeholder:true },
-      { id:'A1-GK', kind:'gatekeeper', name:'Gatekeeper', subtitle:'Act-end pressure — P2/P3', x:87, y:35, placeholder:true }
+      { id:'A1-B1', kind:'battle', name:'Outer Approach', subtitle:'Easy Pool · SALVAGE + ?', x:16, y:55 },
+      { id:'A1-F1', kind:'forge', name:'Ruined Forge', subtitle:'Build shaping · next P2 seam', x:43, y:29, placeholder:true },
+      { id:'A1-B2', kind:'battle', name:'Split Causeway', subtitle:'Reward proving ground · SALVAGE + ?', x:54, y:62 },
+      { id:'A1-GK', kind:'gatekeeper', name:'Gatekeeper', subtitle:'SALVAGE + RELIC + ACT GROWTH', x:87, y:35, placeholder:true }
     ]
   });
 })();
