@@ -1,0 +1,28 @@
+(() => {
+'use strict';
+const E=window.LW_ENGINE,L=window.LW_LIVING,D=window.LW_DATA;
+if(!E||!L||!D)return;
+const BUILD='P2-0.15.3';
+const JUNCTION=.38,VERTICAL_EQUIV=.055,EPS=.0001;
+const baseSetLane=E.setCommanderLane.bind(E);
+const baseStep=E.stepBattle.bind(E);
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function laneY(lane){return lane==='south'?1:0}
+function yLane(y){return y>=.5?'south':'north'}
+function samePoint(a,b){return Math.abs(a.x-b.x)<EPS&&Math.abs(a.y-b.y)<EPS}
+function segLen(a,b){return Math.abs(a.x-b.x)+Math.abs(a.y-b.y)*VERTICAL_EQUIV}
+function routeLen(points){let n=0;for(let i=1;i<points.length;i++)n+=segLen(points[i-1],points[i]);return n}
+function clean(points){const out=[];for(const p of points){const q={x:clamp(p.x,.12,.86),y:clamp(p.y,0,1)};if(!out.length||!samePoint(out[out.length-1],q))out.push(q)}return out}
+function durationMultiplier(b,fromLane,toLane){let m=1;const effects=b.runEffects||{};if(effects.relics?.includes('relic-junction-spurs'))m*=.8;const dep=b.deployment||{};if((dep[fromLane]?.units?.wardrunner||0)>0||(dep[toLane]?.units?.wardrunner||0)>0)m*=.85;if(dep[fromLane]?.tower==='beacon'||dep[toLane]?.tower==='beacon')m*=.85;return m}
+function routePoint(t){const route=t?.route;if(!route?.length)return{x:t?.fromPos??.3,y:laneY(t?.from||'north')};if(route.length===1)return{...route[0]};const total=t.routeLength||routeLen(route),elapsed=Math.max(0,total*(1-clamp((t.remaining||0)/Math.max(.0001,t.total||1),0,1)));let left=elapsed;for(let i=1;i<route.length;i++){const a=route[i-1],b=route[i],len=segLen(a,b);if(left<=len+EPS){const q=len<=EPS?1:clamp(left/len,0,1);return{x:a.x+(b.x-a.x)*q,y:a.y+(b.y-a.y)*q}}left-=len}return{...route[route.length-1]}}
+function buildRoute(start,targetLane,targetPos){const y=laneY(targetLane),points=[start];if(Math.abs(start.y-y)<EPS){points.push({x:targetPos,y});return clean(points)}if(Math.abs(start.x-JUNCTION)>EPS)points.push({x:JUNCTION,y:start.y});points.push({x:JUNCTION,y});points.push({x:targetPos,y});return clean(points)}
+function installTravel(b,start,targetLane,targetPos,template){targetPos=clamp(targetPos,.12,.86);const route=buildRoute(start,targetLane,targetPos),length=Math.max(.001,routeLen(route)),fromLane=yLane(start.y),mult=durationMultiplier(b,fromLane,targetLane),speed=L.cfg.commanderSpeed/Math.max(.001,mult),duration=Math.max(.05,length/speed);b.commander.move=null;b.commander.travel={...(template||{}),from:fromLane,to:targetLane,fromPos:start.x,targetPos,route,routeLength:length,total:duration,remaining:duration,speed,movementMultiplier:mult};b.events.push({t:b.elapsed,type:'commander-route',from:fromLane,to:targetLane,targetPos,length,duration,multiplier:mult});return true}
+function settledPoint(c){return{x:clamp(c.pos??.3,.12,.86),y:laneY(c.lane||'north')}}
+function targetForLane(b,lane){return clamp(L.frontlinePos?.(b,lane)??b.lanes?.[lane]?.front??.3,.12,.86)}
+E.setCommanderPosition=(b,lane,pos)=>{L.ensureLiving?.(b);const c=b?.commander;if(!c||c.incapacitated||!b.lanes?.[lane])return false;pos=clamp(pos,.12,.86);if(c.travel){const start=routePoint(c.travel);return installTravel(b,start,lane,pos,c.travel)}if(c.lane===lane){const from=clamp(c.pos??.3,.12,.86),dist=Math.abs(pos-from);if(dist<.01){c.pos=pos;c.move=null;return true}const mult=durationMultiplier(b,lane,lane),speed=L.cfg.commanderSpeed/Math.max(.001,mult),duration=Math.max(.05,dist/speed);c.move={from,to:pos,total:duration,remaining:duration,speed,movementMultiplier:mult};b.events.push({t:b.elapsed,type:'commander-position-move',lane,from,to:pos,duration,multiplier:mult});return true}const start=settledPoint(c),ok=baseSetLane(b,lane);if(!ok)return false;const template=c.travel;return installTravel(b,start,lane,pos,template)};
+E.setCommanderLane=(b,lane)=>{L.ensureLiving?.(b);const c=b?.commander;if(!c||c.incapacitated||!b.lanes?.[lane])return false;const pos=targetForLane(b,lane);if(c.travel)return E.setCommanderPosition(b,lane,pos);if(c.lane===lane)return E.setCommanderPosition(b,lane,pos);const start=settledPoint(c),ok=baseSetLane(b,lane);if(!ok)return false;return installTravel(b,start,lane,pos,c.travel)};
+E.stepBattle=(b,dt)=>baseStep(b,dt);
+function display(c){if(!c)return{lane:'north',pos:.3,y:0,moving:false};if(c.travel?.route){const p=routePoint(c.travel);return{lane:yLane(p.y),pos:p.x,y:p.y,moving:true}}if(c.move){return{lane:c.lane||'north',pos:c.pos??.3,y:laneY(c.lane||'north'),moving:true}}return{lane:c.lane||'north',pos:c.pos??.3,y:laneY(c.lane||'north'),moving:false}}
+const priorSelf=E.selfTest?.bind(E);E.selfTest=()=>{const base=priorSelf?priorSelf():{pass:true,checks:{}},run=E.newRun('movement-consistency'),b=E.createBattle(run,E.defaultDeployment());const p0=b.commander.pos??.3;E.setCommanderPosition(b,'north',p0+.18);const sameDuration=b.commander.move?.total||0;const expectedSame=.18/(L.cfg.commanderSpeed/(durationMultiplier(b,'north','north')));const sameConstant=Math.abs(sameDuration-expectedSame)<.02;while(b.commander.move)E.stepBattle(b,.05);E.setCommanderPosition(b,'south',.62);const t=b.commander.travel,routeConstant=!!t?.route&&Math.abs(t.total-(t.routeLength/t.speed))<.02;const before=routePoint(t);E.stepBattle(b,.5);const after=routePoint(b.commander.travel),advanced=segLen(before,after)>0;const checks={movementSameLaneConstant:sameConstant,movementRouteConstant:routeConstant,movementRouteAdvances:advanced};return{pass:base.pass&&Object.values(checks).every(Boolean),checks:{...base.checks,...checks}}};
+window.LW_MOVEMENT={build:BUILD,junction:JUNCTION,verticalEquivalent:VERTICAL_EQUIV,display,routePoint,durationMultiplier};
+})();
