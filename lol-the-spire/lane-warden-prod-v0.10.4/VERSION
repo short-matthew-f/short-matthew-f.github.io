@@ -1,4 +1,5 @@
 Lane Warden Production Foundation
-Build: P0-0.10.4
-Fresh scope: yes
-Purpose: bypass stale installed PWA cache and verify hardened phone layout
+Build: P0-0.10.5
+Production scope: self-updating
+Update policy: build.json no-store + updateViaCache none + skipWaiting + clients.claim + controlled reload
+Active-battle policy: download immediately; reload after battle/resolution seam
