@@ -1,12 +1,12 @@
 (() => {
   'use strict';
   window.LW_DATA = Object.freeze({
-    version: 'P1-0.11.1',
+    version: 'P1-0.12.0',
     deployment: { unitCapacity: 6, towerCapacity: 4 },
     encounter: {
       id: 'A1-B1',
       name: 'Outer Approach',
-      reclamationTrigger: 180,
+      reclamationTrigger: 210,
       artilleryCadence: 14,
       artilleryTelegraph: 4,
       guardRebuildCadence: 28
@@ -17,7 +17,7 @@
         { id:'rally', name:'Rally', cooldown:12, description:'For 6s, allied pressure in the Warden’s lane gains +35%.' },
         { id:'sunder', name:'Sunder', cooldown:16, description:'Burst the current lane objective; once its Guard is broken, Sunder strikes the exposed Gate.' },
         { id:'waypoint', name:'Waypoint', cooldown:24, description:'Relocate instantly to a chosen lane, bypassing junction travel.' },
-        { id:'conscript', name:'Conscript', cooldown:18, description:'Strengthen the next two pulses using only unit types already committed to this lane.' }
+        { id:'conscript', name:'Conscript', cooldown:18, description:'While the Warden is settled in a lane, reinforce that lane’s next two pulses using its committed unit types.' }
       ],
       lastStand: 'Bulwark Detonation'
     },
