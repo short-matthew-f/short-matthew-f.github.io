@@ -1,0 +1,21 @@
+/* P0-0.10.4 fresh-scope layout hardening */
+#portraitGate{display:none;position:fixed;inset:0;z-index:1000;background:#071016;color:#edf3f2;place-items:center;text-align:center;padding:32px}
+#portraitGate div{display:grid;gap:8px}#portraitGate b{font-size:22px;letter-spacing:.08em}#portraitGate span{font-size:12px;color:#91a5a8}
+.hud-state{white-space:nowrap;font-weight:800;color:#bdcccb}.build-id{font-size:7px;color:#70868a;white-space:nowrap}
+/* Status now lives in the HUD. The canvas is purely battlefield rendering. */
+@media (orientation: portrait),(max-aspect-ratio:1/1){
+  #battle:not([hidden]) #portraitGate{display:grid!important}
+  #battle:not([hidden])>canvas,
+  #battle:not([hidden])>.hud-top,
+  #battle:not([hidden])>.battle-prompt,
+  #battle:not([hidden])>.ability-rail,
+  #battle:not([hidden])>.read-toggle,
+  #battle:not([hidden])>.read-panel,
+  #battle:not([hidden])>.structure-button,
+  #battle:not([hidden])>.structure-panel,
+  #battle:not([hidden])>.lane-strip{visibility:hidden!important}
+}
+@media (orientation:landscape) and (max-height:430px){
+  .hud-top{left:max(68px,calc(env(safe-area-inset-left) + 8px));right:max(68px,calc(env(safe-area-inset-right) + 8px));gap:7px;font-size:8px}
+  .hud-state{font-size:8px}
+}
