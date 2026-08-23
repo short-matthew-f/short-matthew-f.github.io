@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   window.LW_DATA = Object.freeze({
-    version: 'P1-0.11.0',
+    version: 'P1-0.11.1',
     deployment: { unitCapacity: 6, towerCapacity: 4 },
     encounter: {
       id: 'A1-B1',
