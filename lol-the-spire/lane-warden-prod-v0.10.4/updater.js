@@ -1,17 +1,22 @@
 (() => {
   'use strict';
-  const CURRENT_BUILD='P2-0.15.0';
+  const CURRENT_BUILD='P2-0.15.1';
+  const EXPECTED_SHELL='P2-0.15.1';
   const hadControllerAtLoad=!!navigator.serviceWorker?.controller;
-  let registration=null,reloading=false,latestAdvertised=CURRENT_BUILD,swBuild=navigator.serviceWorker?.controller?'checking':'installing',updateReady=false;
-  const diag=()=>{const el=document.getElementById('buildDiag');if(el)el.textContent=`APP ${CURRENT_BUILD} · LATEST ${latestAdvertised} · SW ${swBuild}`};
+  let registration=null,reloading=false,latestAdvertised=CURRENT_BUILD,swBuild=navigator.serviceWorker?.controller?'checking':'installing',updateReady=false,repairTimer=0;
+  const shellBuild=()=>document.querySelector('meta[name="lw-shell-build"]')?.content||((document.title.match(/P2-\d+\.\d+\.\d+/)||[])[0]||'legacy');
+  const diag=()=>{const el=document.getElementById('buildDiag');if(el)el.textContent=`APP ${CURRENT_BUILD} · SHELL ${shellBuild()} · LATEST ${latestAdvertised} · SW ${swBuild}`};
   const note=text=>{const el=document.getElementById('updateNote');if(el)el.textContent=text||''};
   const inActiveBattle=()=>{const el=document.getElementById('battle');return!!el&&!el.hidden};
   async function fetchLatest(){try{const r=await fetch(`./build.json?t=${Date.now()}`,{cache:'no-store'});if(!r.ok)return null;const j=await r.json();if(j?.build)latestAdvertised=j.build;diag();return j}catch{return null}}
+  async function fetchFreshShell(){try{const url=new URL('./index.html',location.href);url.searchParams.set('lw-shell',EXPECTED_SHELL);url.searchParams.set('t',Date.now());const r=await fetch(url.href,{cache:'no-store'});if(!r.ok)return null;const text=await r.text();const marker=`<meta name="lw-shell-build" content="${EXPECTED_SHELL}"`;if(!text.includes(marker)||!text.includes('living-lanes.js')||!text.includes('living-ui.js'))return null;return url}catch{return null}}
+  function scheduleRepairRetry(){clearTimeout(repairTimer);repairTimer=setTimeout(()=>{if(shellBuild()!==EXPECTED_SHELL&&!inActiveBattle())checkForUpdate()},3500)}
+  async function repairShell(latest){if(latest?.build!==CURRENT_BUILD||shellBuild()===EXPECTED_SHELL)return false;if(inActiveBattle()){note(`Update ${CURRENT_BUILD} ready · fresh page shell applies after battle`);return true}if(reloading)return true;note(`Refreshing Lane Warden ${CURRENT_BUILD} page shell…`);const url=await fetchFreshShell();if(!url){note(`${CURRENT_BUILD} scripts are ready · waiting for fresh page shell`);scheduleRepairRetry();return true}reloading=true;url.searchParams.set('nav',Date.now());location.replace(url.href);return true}
   function askControllerBuild(){const c=navigator.serviceWorker?.controller;if(!c){swBuild='none';diag();return}const ch=new MessageChannel(),timer=setTimeout(()=>{swBuild='unknown';diag()},1200);ch.port1.onmessage=e=>{clearTimeout(timer);swBuild=e.data?.build||'unknown';diag()};c.postMessage({type:'GET_BUILD'},[ch.port2])}
   function armInstalling(worker){if(!worker)return;worker.addEventListener('statechange',()=>{if(worker.state==='installed'){registration?.waiting?.postMessage({type:'SKIP_WAITING'});note(`Lane Warden ${latestAdvertised} installed…`)}})}
-  async function checkForUpdate(){if(!registration)return;const latest=await fetchLatest();try{await registration.update()}catch{}if(registration.installing)armInstalling(registration.installing);if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});if(!latest||latest.build===CURRENT_BUILD)askControllerBuild();else note(`Updating Lane Warden to ${latest.build}…`)}
-  function applyIfReady(){if(!updateReady||reloading||inActiveBattle())return;reloading=true;location.reload()}
+  async function checkForUpdate(){if(!registration)return;const latest=await fetchLatest();try{await registration.update()}catch{}if(registration.installing)armInstalling(registration.installing);if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});if(await repairShell(latest))return;if(!latest||latest.build===CURRENT_BUILD)askControllerBuild();else note(`Updating Lane Warden to ${latest.build}…`)}
+  async function applyIfReady(){if(reloading||inActiveBattle())return;const latest=await fetchLatest();if(await repairShell(latest))return;if(!updateReady)return;reloading=true;location.reload()}
   async function register(){if(!('serviceWorker'in navigator)){swBuild='unsupported';diag();return}try{registration=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});registration.addEventListener('updatefound',()=>armInstalling(registration.installing));await navigator.serviceWorker.ready;askControllerBuild();await checkForUpdate()}catch{swBuild='registration failed';diag()}}
   navigator.serviceWorker?.addEventListener('controllerchange',()=>{askControllerBuild();if(!hadControllerAtLoad)return;updateReady=true;if(inActiveBattle())note(`Update ${latestAdvertised} ready · applies after battle`);else applyIfReady()});
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkForUpdate()});window.addEventListener('pageshow',()=>checkForUpdate());window.LW_UPDATE={currentBuild:CURRENT_BUILD,check:checkForUpdate,applyIfReady};diag();register();
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkForUpdate()});window.addEventListener('pageshow',()=>checkForUpdate());window.LW_UPDATE={currentBuild:CURRENT_BUILD,shellBuild,check:checkForUpdate,applyIfReady};diag();register();
 })();
