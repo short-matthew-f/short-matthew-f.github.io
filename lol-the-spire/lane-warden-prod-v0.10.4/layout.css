@@ -1,24 +1,15 @@
-/* P0-0.10.5 self-updating production layout */
+/* P1-0.11.0 production battle slice */
 #portraitGate{display:none;position:fixed;inset:0;z-index:1000;background:#071016;color:#edf3f2;place-items:center;text-align:center;padding:32px}
 #portraitGate div{display:grid;gap:8px}#portraitGate b{font-size:22px;letter-spacing:.08em}#portraitGate span{font-size:12px;color:#91a5a8}
-.hud-state{white-space:nowrap;font-weight:800;color:#bdcccb}.build-id{font-size:7px;color:#70868a;white-space:nowrap}
+.hud-state{white-space:nowrap;font-weight:800;color:#bdcccb}.build-id{font-size:7px;color:#70868a;white-space:nowrap}.reclamation-state{color:#d8b56a}
 .build-diag{margin-top:8px;font-size:8px;color:#647b80;letter-spacing:.03em}
-.update-note{position:fixed;z-index:1400;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);max-width:min(560px,calc(100vw - 24px));padding:7px 12px;border-radius:10px;background:#16242d;border:1px solid #41606a;color:#d7e1df;font-size:9px;font-weight:800;pointer-events:none;opacity:0;transition:opacity .15s ease}
-html[data-update-state="updating"] .update-note,html[data-update-state="ready"] .update-note{opacity:1}
-/* Status lives in the HUD. The canvas is purely battlefield rendering. */
-@media (orientation: portrait),(max-aspect-ratio:1/1){
-  #battle:not([hidden]) #portraitGate{display:grid!important}
-  #battle:not([hidden])>canvas,
-  #battle:not([hidden])>.hud-top,
-  #battle:not([hidden])>.battle-prompt,
-  #battle:not([hidden])>.ability-rail,
-  #battle:not([hidden])>.read-toggle,
-  #battle:not([hidden])>.read-panel,
-  #battle:not([hidden])>.structure-button,
-  #battle:not([hidden])>.structure-panel,
-  #battle:not([hidden])>.lane-strip{visibility:hidden!important}
-}
-@media (orientation:landscape) and (max-height:430px){
-  .hud-top{left:max(68px,calc(env(safe-area-inset-left) + 8px));right:max(68px,calc(env(safe-area-inset-right) + 8px));gap:7px;font-size:8px}
-  .hud-state{font-size:8px}
-}
+.update-note{position:fixed;z-index:1400;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);max-width:min(560px,calc(100vw - 24px));padding:7px 12px;border-radius:10px;background:#16242d;border:1px solid #41606a;color:#d7e1df;font-size:9px;font-weight:800;pointer-events:none;opacity:0;transition:opacity .15s ease}html[data-update-state="updating"] .update-note,html[data-update-state="ready"] .update-note{opacity:1}
+.p1-deploy{width:min(1050px,100%)}.deploy-budget{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.deploy-budget>*{padding:6px 9px;border:1px solid #314751;border-radius:9px;font-size:9px}.deploy-budget .bad,#deployLegal.bad{border-color:#7e3e40;color:#f0a6a4}
+.unit-editor{display:grid;gap:5px}.unit-row{display:grid;grid-template-columns:minmax(140px,1.3fr) 1fr 1fr;gap:6px;align-items:center;padding:5px;border:1px solid #283d47;border-radius:11px;background:#0c161d}.unit-name b,.unit-name small{display:block}.unit-name small{font-size:7px;color:#859b9e}.lane-step{display:grid;grid-template-columns:44px 1fr 44px;gap:4px;align-items:center}.lane-step button{height:44px;padding:0}.lane-step span{text-align:center;font-size:9px;font-weight:900}
+.tower-editor{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.tower-pick{padding:8px;border:1px solid #304650;border-radius:12px;background:#0c161d}.tower-pick b{display:block;font-size:9px;margin-bottom:5px}.tower-pick select{width:100%;min-height:44px;margin:3px 0;background:#14222b;color:#edf3f2;border:1px solid #3b5460;border-radius:9px;padding:6px}.tower-pick small{font-size:7px;color:#879c9f}
+.target-panel{position:absolute;right:max(68px,calc(env(safe-area-inset-right) + 68px));top:64px;z-index:20;padding:7px;display:grid;grid-template-columns:auto repeat(3,56px);gap:5px;align-items:center;border:1px solid #466069;border-radius:12px;background:rgba(9,16,21,.97)}.target-panel[hidden]{display:none!important}.target-panel b{font-size:8px}.target-panel button{min-height:44px;padding:4px;font-size:8px}
+.walk-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:7px 0}.walk-actions button{font-size:8px}.structure-head{display:flex;gap:6px;align-items:center}.structure-head>div{flex:1}.structure-head button{width:44px;height:44px;padding:0}.structure-panel button{width:100%;margin-top:5px;font-size:8px}.structure-panel #purchaseFeedback{min-height:12px;color:#d8b56a}.states{min-width:0}.states strong:empty{display:none}.states strong.artillery{background:#6d3b2c;color:#ffd6a3}.states strong.rebuild{background:#51472d;color:#f4ddb0}.states strong.travel{background:#315067;color:#d2e9f5}
+.reclamation-banner{position:absolute;z-index:25;left:50%;top:48%;transform:translate(-50%,-50%);padding:14px 18px;text-align:center;border:1px solid #8c6335;border-radius:14px;background:rgba(26,19,13,.95);box-shadow:0 0 35px rgba(214,171,82,.16)}.reclamation-banner b,.reclamation-banner span{display:block}.reclamation-banner b{font-size:20px;letter-spacing:.14em;color:#e0b765}.reclamation-banner span{font-size:9px;color:#bcae91;margin-top:4px}.reclamation-banner[hidden]{display:none!important}
+#battlefield{touch-action:none}.lane-strip button.selected{outline:2px solid rgba(111,195,181,.55)}
+@media (orientation: portrait),(max-aspect-ratio:1/1){#battle:not([hidden]) #portraitGate{display:grid!important}#battle:not([hidden])>canvas,#battle:not([hidden])>.hud-top,#battle:not([hidden])>.battle-prompt,#battle:not([hidden])>.ability-rail,#battle:not([hidden])>.read-toggle,#battle:not([hidden])>.read-panel,#battle:not([hidden])>.target-panel,#battle:not([hidden])>.structure-button,#battle:not([hidden])>.structure-panel,#battle:not([hidden])>.lane-strip{visibility:hidden!important}}
+@media (orientation:landscape) and (max-height:430px){.hud-top{left:max(68px,calc(env(safe-area-inset-left) + 8px));right:max(68px,calc(env(safe-area-inset-right) + 8px));gap:6px;font-size:7.5px}.hud-state{font-size:7.5px}.p1-deploy{padding:10px}.p1-deploy h2{font-size:17px}.p1-deploy p{font-size:9px;margin:4px 0}.unit-row{padding:3px}.tower-editor{margin-top:5px}.tower-pick{padding:5px}.tower-pick select{min-height:40px}.deploy-actions button{min-height:40px}.lane-strip{height:54px}}
