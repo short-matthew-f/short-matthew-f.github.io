@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "node render-tactical-sprites.mjs"
+  },
+  "dependencies": {
+    "sharp": "0.34.3",
+    "three": "0.179.1"
+  }
+}

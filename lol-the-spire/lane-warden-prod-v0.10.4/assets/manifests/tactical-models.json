@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "build": "P2-0.16.0",
+  "artBaseline": "Lane Warden design baseline 1.7 / PRODUCTION-ROADMAP section 8",
+  "runtime": {
+    "mode": "sprite-baked-gltf",
+    "atlas": "./assets/models/processed/sprites/tactical-models-atlas.png",
+    "frames": "./assets/models/processed/sprites/tactical-models-atlas.json",
+    "cellPixels": 128,
+    "phoneValidationPixels": "30-60",
+    "camera": "fixed three-quarter tactical",
+    "generatedBy": "assets/tools/render-tactical-sprites.mjs"
+  },
+  "simulationMappings": {
+    "warden": "tactical_warden",
+    "ironjack": "tactical_ironjack",
+    "bulwark": "tactical_ironjack",
+    "slingline": "tactical_slingline",
+    "zealot": "tactical_slingline",
+    "ram": "tactical_ram",
+    "enemy-line": "tactical_enemy_line",
+    "enemy-raider": "tactical_enemy_raider",
+    "enemy-brute": "tactical_enemy_brute",
+    "bastion": "tactical_bastion",
+    "guard": "tactical_guard",
+    "gate": "tactical_gate",
+    "tower": "tactical_tower_chassis"
+  },
+  "archetypes": {
+    "tactical_warden": {"sourceAsset":"quaternius-rpg-warrior","scale":1.3,"states":["idle","march","engaged","fallen"]},
+    "tactical_ironjack": {"sourceAsset":"quaternius-golden-knight","scale":1.08,"states":["idle","march","engaged","fallen"]},
+    "tactical_slingline": {"sourceAsset":"quaternius-rpg-ranger","scale":1.0,"states":["idle","march","engaged","fallen"]},
+    "tactical_enemy_line": {"sourceAsset":"quaternius-soldier","scale":1.0,"states":["idle","march","engaged","fallen"]},
+    "tactical_enemy_raider": {"sourceAsset":"quaternius-goblin","scale":0.92,"states":["idle","march","engaged","fallen"]},
+    "tactical_enemy_brute": {"sourceAsset":"quaternius-monster-orc","scale":1.62,"states":["idle","march","engaged","fallen"]},
+    "tactical_ram": {"sourceAsset":null,"scale":1.55,"states":["idle","march","engaged","fallen"],"proxy":"runtime low-poly siege chassis with crew silhouettes"},
+    "tactical_bastion": {"sourceAsset":"quaternius-rts-barracks","scale":1.25,"states":["idle"]},
+    "tactical_guard": {"sourceAsset":"quaternius-rts-wall-towers","scale":1.05,"states":["idle"]},
+    "tactical_gate": {"sourceAsset":"quaternius-rts-closed-gate","scale":1.28,"states":["idle"]},
+    "tactical_tower_chassis": {"sourceAsset":"quaternius-rts-watchtower","scale":1.1,"states":["idle"]}
+  },
+  "sources": [
+    {"id":"quaternius-rpg-warrior","pack":"RPG Character Pack","creator":"Quaternius","sourceUrl":"https://quaternius.com/packs/rpgcharacters.html","downloadUrl":"https://drive.google.com/drive/folders/1MIRQXLfTd21HMI5rwOb6Xy0rv0xv1m8b","license":"CC0 1.0 Universal","originalFilename":"Warrior.gltf","role":"Warden","sha256":"2bab905ce12d279e1d099c2a8de0b1ef31c9f5e8d1959b41d24470b4f4181add","modifications":"Animation poses sampled; skinned mesh rasterized through fixed tactical camera; flat teal palette; 128 px atlas bake."},
+    {"id":"quaternius-rpg-ranger","pack":"RPG Character Pack","creator":"Quaternius","sourceUrl":"https://quaternius.com/packs/rpgcharacters.html","downloadUrl":"https://drive.google.com/drive/folders/1MIRQXLfTd21HMI5rwOb6Xy0rv0xv1m8b","license":"CC0 1.0 Universal","originalFilename":"Ranger.gltf","role":"Slingline","sha256":"2732741d5e21c20760d7f3dd9d71812d4b796f466be1a6cba212f45483dd56ed","modifications":"Animation poses sampled; skinned mesh rasterized through fixed tactical camera; flat teal palette; 128 px atlas bake."},
+    {"id":"quaternius-golden-knight","pack":"Ultimate Animated Character Pack","creator":"Quaternius","sourceUrl":"https://quaternius.com/packs/ultimatedanimatedcharacter.html","downloadUrl":"https://drive.google.com/drive/folders/1sNi1AfenfPRrvRt5yfaj5QMMd6KKcUJ5","license":"CC0 1.0 Universal","originalFilename":"Knight_Golden_Male.gltf","role":"Ironjack and Bulwark visual base","sha256":"96b5ac2f7b46fd279bc28bb9eda54a9e1d8d6aa2ffded19fbeb33d3e7c09265f","modifications":"Animation poses sampled; skinned mesh rasterized through fixed tactical camera; flat gold palette; 128 px atlas bake."},
+    {"id":"quaternius-soldier","pack":"Ultimate Animated Character Pack","creator":"Quaternius","sourceUrl":"https://quaternius.com/packs/ultimatedanimatedcharacter.html","downloadUrl":"https://drive.google.com/drive/folders/1sNi1AfenfPRrvRt5yfaj5QMMd6KKcUJ5","license":"CC0 1.0 Universal","originalFilename":"Soldier_Male.gltf","role":"Enemy line infantry","sha256":"d1482e21910ed8b68541558efe9b79cc12666cfe26607d19ed2ebe64e27bc9d0","modifications":"Animation poses sampled; skinned mesh rasterized through fixed tactical camera; flat red palette; 128 px atlas bake."},
+    {"id":"quaternius-goblin","pack":"Ultimate Animated Character Pack","creator":"Quaternius","sourceUrl":"https://quaternius.com/packs/ultimatedanimatedcharacter.html","downloadUrl":"https://drive.google.com/drive/folders/1sNi1AfenfPRrvRt5yfaj5QMMd6KKcUJ5","license":"CC0 1.0 Universal","originalFilename":"Goblin_Male.gltf","role":"Enemy raider","sha256":"cab2cbe315e34f1f223fac6754c1e0c3f635060b7ebd516b95e5efbc9ba2c9ea","modifications":"Animation poses sampled; skinned mesh rasterized through fixed tactical camera; flat orange palette; 128 px atlas bake."},
+    {"id":"quaternius-monster-orc","pack":"Ultimate Monsters","creator":"Quaternius","sourceUrl":"https://quaternius.com/packs/ultimatemonsters.html","downloadUrl":"https://drive.google.com/drive/folders/18m4KpzpEzhC9wl7jzr6dUc0N8Jozr79C","license":"CC0 1.0 Universal","originalFilename":"Orc.gltf","role":"Enemy brute","sha256":"e61a37f8d9b2eee28928bdfad2c55e0798cc0a212e925cc5dcc66b243526c1a3","modifications":"Animation poses sampled; skinned mesh rasterized through fixed tactical camera; flat dark-red palette; exaggerated 162% visual scale; 128 px atlas bake."},
+    {"id":"quaternius-rts-barracks","pack":"Ultimate Fantasy RTS","creator":"Quaternius","sourceUrl":"https://quaternius.com/packs/ultimatefantasyrts.html","downloadUrl":"https://drive.google.com/drive/folders/1h7sztlZyavWla-JDk3jp6KiWDdMh08yd","license":"CC0 1.0 Universal","originalFilename":"Barracks_FirstAge_Level1.gltf","role":"Bastion","sha256":"5cf25a470f743b8ed9824b5e66af30c1521f1bed06efdc9070cb32bc57ad554b","modifications":"Static mesh rasterized through fixed tactical camera; flat teal-stone palette; 128 px atlas bake."},
+    {"id":"quaternius-rts-wall-towers","pack":"Ultimate Fantasy RTS","creator":"Quaternius","sourceUrl":"https://quaternius.com/packs/ultimatefantasyrts.html","downloadUrl":"https://drive.google.com/drive/folders/1h7sztlZyavWla-JDk3jp6KiWDdMh08yd","license":"CC0 1.0 Universal","originalFilename":"WallTowers_FirstAge.gltf","role":"Guard","sha256":"fbf71575b204d9ea7a8d83a33a6875578ece5536a4d800317dfc9102650f0be6","modifications":"Static mesh rasterized through fixed tactical camera; flat hostile-red palette; 128 px atlas bake."},
+    {"id":"quaternius-rts-closed-gate","pack":"Ultimate Fantasy RTS","creator":"Quaternius","sourceUrl":"https://quaternius.com/packs/ultimatefantasyrts.html","downloadUrl":"https://drive.google.com/drive/folders/1h7sztlZyavWla-JDk3jp6KiWDdMh08yd","license":"CC0 1.0 Universal","originalFilename":"WallTowers_DoorClosed_FirstAge.gltf","role":"Gate","sha256":"6660a79f17b28ccc597d559143860a1cbc44c2959caa4b97a343bf5a3929c9f6","modifications":"Static mesh rasterized through fixed tactical camera; flat amber-stone palette; 128 px atlas bake."},
+    {"id":"quaternius-rts-watchtower","pack":"Ultimate Fantasy RTS","creator":"Quaternius","sourceUrl":"https://quaternius.com/packs/ultimatefantasyrts.html","downloadUrl":"https://drive.google.com/drive/folders/1h7sztlZyavWla-JDk3jp6KiWDdMh08yd","license":"CC0 1.0 Universal","originalFilename":"WatchTower_FirstAge_Level1.gltf","role":"Shared functional tower chassis","sha256":"780da8a1d2a9a30419dabaa48115555cf95816a750dde9163fd07c8fdf37f430","modifications":"Static mesh rasterized through fixed tactical camera; flat blue-steel palette; 128 px atlas bake; runtime attachments identify tower function."}
+  ]
+}

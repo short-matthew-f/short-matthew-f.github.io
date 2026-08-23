@@ -1,10 +1,11 @@
 Lane Warden Production Battle Slice
-Build: P2-0.15.3
+Build: P2-0.16.0
 Design baseline: 1.7
 Stable install scope: /lol-the-spire/lane-warden-prod-v0.10.4/
-P2 Living Lanes: cohorts are persistent moving battlefield entities; pulses spawn reinforcements; enemy waves advance independently; engagements occur spatially; surviving cohorts continue after breakthroughs; Guard/Bastion/Gate damage is positional.
-Commander: real lane position, tap-to-move within and across lanes, spatial Presence, spatial Rally/Sunder/Waypoint behavior. P2-0.15.2 added mid-move retargeting, destination changes, cross-lane reversal, and restored wide-world camera controls.
-P2-0.15.3 movement normalization: one spatial speed model now drives same-lane travel and junction routes. Route duration is proportional to actual path length, each path segment advances at the same battlefield speed, and mid-route retargeting recalculates from the Warden's actual current point. Junction Spurs, Wardrunners, and Junction Beacon multiply movement speed consistently instead of distorting individual route segments.
-Battlefield camera: one-finger drag pan, pinch zoom, tap-to-move, recenter, and lane-focus navigation.
-Reward packet system from P2-0.13.0 retained; Split Causeway rotation profile from P2-0.14.0 operates on living cohorts.
-P2-0.15.1 delivery protections remain: explicit shell build marker, mixed-shell repair, and stale-shell rejection during service-worker installation.
+P2 Tactical Models: Living Lanes cohorts now render as phone-scale miniature formations baked from CC0 Quaternius glTF models. Warden, Ironjack, Slingline, enemy line, raider, and brute use distinct silhouettes, scale, palette, formation, facing, and motion language.
+Cohort representation: simulation remains cohort-based; visual members are not separately simulated. Visible member count falls with cohort HP, fallen poses persist briefly, reinforcements arrive with an entry pulse, supporting cohorts show ranged intent, and slowed/reinforced/engaged states retain clear treatments.
+Structures: Bastion, Guard, Gate, and one shared tower chassis use model-derived silhouettes. Tower function is identified through lightweight attachments. Siege Ram uses an original low-poly runtime chassis proxy with crew silhouettes.
+Asset pipeline: untouched downloaded originals, deterministic processed sprite atlas, authoritative manifest, per-file hashes, licenses, source URLs, and transformation records are stored under assets/.
+Commander and camera: constant spatial speed, tap-to-move, mid-move retarget/reversal, one-finger pan, pinch zoom, recenter, and lane focus remain unchanged from P2-0.15.3.
+Combat, reward packets, progression, run persistence, encounter tuning, Reclamation, Last Stand, and deployment capacity are unchanged.
+P2-0.15.1 delivery protections remain: explicit shell build marker, mixed-shell repair, stale-shell rejection, and build.json-last deployment discipline.

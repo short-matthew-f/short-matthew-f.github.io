@@ -1,0 +1,175 @@
+{
+  "cell": 128,
+  "columns": 4,
+  "rows": 7,
+  "sprites": {
+    "tactical_warden:idle": {
+      "x": 0,
+      "y": 0,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_warden:march": {
+      "x": 128,
+      "y": 0,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_warden:engaged": {
+      "x": 256,
+      "y": 0,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_warden:fallen": {
+      "x": 384,
+      "y": 0,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_ironjack:idle": {
+      "x": 0,
+      "y": 128,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_ironjack:march": {
+      "x": 128,
+      "y": 128,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_ironjack:engaged": {
+      "x": 256,
+      "y": 128,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_ironjack:fallen": {
+      "x": 384,
+      "y": 128,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_slingline:idle": {
+      "x": 0,
+      "y": 256,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_slingline:march": {
+      "x": 128,
+      "y": 256,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_slingline:engaged": {
+      "x": 256,
+      "y": 256,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_slingline:fallen": {
+      "x": 384,
+      "y": 256,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_enemy_line:idle": {
+      "x": 0,
+      "y": 384,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_enemy_line:march": {
+      "x": 128,
+      "y": 384,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_enemy_line:engaged": {
+      "x": 256,
+      "y": 384,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_enemy_line:fallen": {
+      "x": 384,
+      "y": 384,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_enemy_raider:idle": {
+      "x": 0,
+      "y": 512,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_enemy_raider:march": {
+      "x": 128,
+      "y": 512,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_enemy_raider:engaged": {
+      "x": 256,
+      "y": 512,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_enemy_raider:fallen": {
+      "x": 384,
+      "y": 512,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_enemy_brute:idle": {
+      "x": 0,
+      "y": 640,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_enemy_brute:march": {
+      "x": 128,
+      "y": 640,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_enemy_brute:engaged": {
+      "x": 256,
+      "y": 640,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_enemy_brute:fallen": {
+      "x": 384,
+      "y": 640,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_bastion:idle": {
+      "x": 0,
+      "y": 768,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_guard:idle": {
+      "x": 128,
+      "y": 768,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_gate:idle": {
+      "x": 256,
+      "y": 768,
+      "w": 128,
+      "h": 128
+    },
+    "tactical_tower_chassis:idle": {
+      "x": 384,
+      "y": 768,
+      "w": 128,
+      "h": 128
+    }
+  }
+}

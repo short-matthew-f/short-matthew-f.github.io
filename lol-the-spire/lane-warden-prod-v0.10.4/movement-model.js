@@ -2,7 +2,7 @@
 'use strict';
 const E=window.LW_ENGINE,L=window.LW_LIVING,D=window.LW_DATA;
 if(!E||!L||!D)return;
-const BUILD='P2-0.15.3';
+const BUILD='P2-0.16.0';
 const JUNCTION=.38,VERTICAL_EQUIV=.055,EPS=.0001;
 const baseSetLane=E.setCommanderLane.bind(E);
 const baseStep=E.stepBattle.bind(E);
