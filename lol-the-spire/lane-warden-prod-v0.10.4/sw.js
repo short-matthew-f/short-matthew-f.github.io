@@ -1,1 +1,68 @@
-const CACHE='lane-warden-prod-v0.10.4-v1';const ASSETS=['./','./index.html','./layout.css','./app.js','./manifest.webmanifest','../lane-warden/styles.css?v=0.10.4','../lane-warden/data.js?v=0.10.4','../lane-warden/engine.js?v=0.10.4'];self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('lane-warden-prod-v0.10.4-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).catch(()=>caches.match('./index.html')));return}e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(x=>{const y=x.clone();caches.open(CACHE).then(c=>c.put(e.request,y));return x})))})
+const BUILD='P0-0.10.5';
+const CACHE=`lane-warden-prod-live-${BUILD}`;
+const ASSETS=[
+  './',
+  './index.html',
+  './layout.css?v=0.10.5',
+  './app.js?v=0.10.5',
+  './updater.js?v=0.10.5',
+  './manifest.webmanifest',
+  './VERSION',
+  '../lane-warden/styles.css?v=0.10.5',
+  '../lane-warden/data.js?v=0.10.5',
+  '../lane-warden/engine.js?v=0.10.5'
+];
+
+self.addEventListener('install',event=>{
+  event.waitUntil(
+    caches.open(CACHE)
+      .then(cache=>Promise.all(ASSETS.map(url=>fetch(url,{cache:'reload'}).then(r=>{if(!r.ok)throw new Error(url);return cache.put(url,r)}))))
+      .then(()=>self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate',event=>{
+  event.waitUntil(
+    caches.keys()
+      .then(keys=>Promise.all(keys.filter(k=>k.startsWith('lane-warden-prod-')&&k!==CACHE).map(k=>caches.delete(k))))
+      .then(()=>self.clients.claim())
+  );
+});
+
+self.addEventListener('message',event=>{
+  if(event.data?.type==='GET_BUILD'){
+    const port=event.ports?.[0];
+    if(port) port.postMessage({build:BUILD});
+  }
+  if(event.data?.type==='SKIP_WAITING') self.skipWaiting();
+});
+
+self.addEventListener('fetch',event=>{
+  const req=event.request;
+  if(req.method!=='GET') return;
+  const url=new URL(req.url);
+
+  if(url.pathname.endsWith('/build.json')){
+    event.respondWith(fetch(req,{cache:'no-store'}));
+    return;
+  }
+
+  if(req.mode==='navigate'){
+    event.respondWith(
+      fetch(req,{cache:'no-store'}).then(r=>{
+        const copy=r.clone();
+        caches.open(CACHE).then(c=>c.put('./index.html',copy));
+        return r;
+      }).catch(()=>caches.match('./index.html'))
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(req).then(hit=>hit||fetch(req).then(r=>{
+      const copy=r.clone();
+      caches.open(CACHE).then(c=>c.put(req,copy));
+      return r;
+    }))
+  );
+});
