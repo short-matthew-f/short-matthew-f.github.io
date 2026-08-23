@@ -1,6 +1,6 @@
 (() => {
 'use strict';
-const BUILD='P2-0.16.1';
+const BUILD='P2-0.17.0';
 const $=id=>document.getElementById(id);
 function battle(){return window.LW_ACTIVE_BATTLE||null}
 function ensureLaneBadges(){
@@ -37,7 +37,7 @@ function syncLaneBadges(){
     else badge.hidden=true;
   }
 }
-function syncBuild(){document.querySelectorAll('.build-id').forEach(x=>x.textContent='0.16.1');const r=$('regression');if(r&&r.textContent)r.textContent=r.textContent.replace(/P1-0\.11\.0|P1-0\.11\.1|P1-0\.11\.2/g,BUILD)}
+function syncBuild(){document.querySelectorAll('.build-id').forEach(x=>x.textContent='0.17.0');const r=$('regression');if(r&&r.textContent)r.textContent=r.textContent.replace(/P1-0\.11\.0|P1-0\.11\.1|P1-0\.11\.2/g,BUILD)}
 function sync(){syncConscript();syncLaneBadges();syncBuild()}
 setInterval(sync,100);sync();
 window.LW_CONSCRIPT_UI={build:BUILD};

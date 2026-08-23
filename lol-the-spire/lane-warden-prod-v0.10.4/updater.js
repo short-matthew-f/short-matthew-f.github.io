@@ -1,7 +1,7 @@
 (() => {
   'use strict';
-  const CURRENT_BUILD='P2-0.16.1';
-  const EXPECTED_SHELL='P2-0.16.1';
+  const CURRENT_BUILD='P2-0.17.0';
+  const EXPECTED_SHELL='P2-0.17.0';
   const hadControllerAtLoad=!!navigator.serviceWorker?.controller;
   let registration=null,reloading=false,latestAdvertised=CURRENT_BUILD,swBuild=navigator.serviceWorker?.controller?'checking':'installing',updateReady=false,repairTimer=0;
   const shellBuild=()=>document.querySelector('meta[name="lw-shell-build"]')?.content||((document.title.match(/P2-\d+\.\d+\.\d+/)||[])[0]||'legacy');
@@ -9,7 +9,7 @@
   const note=text=>{const el=document.getElementById('updateNote');if(el)el.textContent=text||''};
   const inActiveBattle=()=>{const el=document.getElementById('battle');return!!el&&!el.hidden};
   async function fetchLatest(){try{const r=await fetch(`./build.json?t=${Date.now()}`,{cache:'no-store'});if(!r.ok)return null;const j=await r.json();if(j?.build)latestAdvertised=j.build;diag();return j}catch{return null}}
-  async function fetchFreshShell(){try{const url=new URL('./index.html',location.href);url.searchParams.set('lw-shell',EXPECTED_SHELL);url.searchParams.set('t',Date.now());const r=await fetch(url.href,{cache:'no-store'});if(!r.ok)return null;const text=await r.text();const marker=`<meta name="lw-shell-build" content="${EXPECTED_SHELL}"`;if(!text.includes(marker)||!text.includes('living-lanes.js')||!text.includes('movement-model.js')||!text.includes('tactical-models.js')||!text.includes('living-ui.js'))return null;return url}catch{return null}}
+  async function fetchFreshShell(){try{const url=new URL('./index.html',location.href);url.searchParams.set('lw-shell',EXPECTED_SHELL);url.searchParams.set('t',Date.now());const r=await fetch(url.href,{cache:'no-store'});if(!r.ok)return null;const text=await r.text();const marker=`<meta name="lw-shell-build" content="${EXPECTED_SHELL}"`;if(!text.includes(marker)||!text.includes('living-lanes.js')||!text.includes('movement-model.js')||!text.includes('fieldworks.js')||!text.includes('fieldworks-ui.js')||!text.includes('tactical-models.js')||!text.includes('living-ui.js'))return null;return url}catch{return null}}
   function scheduleRepairRetry(){clearTimeout(repairTimer);repairTimer=setTimeout(()=>{if(shellBuild()!==EXPECTED_SHELL&&!inActiveBattle())checkForUpdate()},3500)}
   async function repairShell(latest){if(latest?.build!==CURRENT_BUILD||shellBuild()===EXPECTED_SHELL)return false;if(inActiveBattle()){note(`Update ${CURRENT_BUILD} ready · fresh page shell applies after battle`);return true}if(reloading)return true;note(`Refreshing Lane Warden ${CURRENT_BUILD} page shell…`);const url=await fetchFreshShell();if(!url){note(`${CURRENT_BUILD} scripts are ready · waiting for fresh page shell`);scheduleRepairRetry();return true}reloading=true;url.searchParams.set('nav',Date.now());location.replace(url.href);return true}
   function askControllerBuild(){const c=navigator.serviceWorker?.controller;if(!c){swBuild='none';diag();return}const ch=new MessageChannel(),timer=setTimeout(()=>{swBuild='unknown';diag()},1200);ch.port1.onmessage=e=>{clearTimeout(timer);swBuild=e.data?.build||'unknown';diag()};c.postMessage({type:'GET_BUILD'},[ch.port2])}

@@ -20,7 +20,7 @@ const PROFILE=Object.freeze({
   interceptFrontShove:.020,
   interceptGold:8
 });
-function present(b,lane){const c=b.commander;return!!c&&!c.incapacitated&&!c.travel&&c.lane===lane}
+function present(b,lane){const c=b.commander;return!!c&&!c.incapacitated&&!c.travel&&!c.siteTravel&&!c.atSite&&!c.work&&c.lane===lane}
 function other(lane){return lane==='north'?'south':'north'}
 function initCauseway(b){
   if(!b||b.nodeId!==NODE||b.causeway)return b;

@@ -1,11 +1,11 @@
 Lane Warden Production Battle Slice
-Build: P2-0.16.1
+Build: P2-0.17.0
 Design baseline: 1.7
 Stable install scope: /lol-the-spire/lane-warden-prod-v0.10.4/
-P2 Living Battlefield: both tactical lanes now follow distinct curving terrain paths instead of straight rails. Ground variation, creek, scrub, stone, camps, objective approaches, and route markers make the field readable as a place.
-Commander routing: Old Gate Steps, Dry Creek Ford, and Ridge Cut provide three spatially distinct cross-lane routes. The route system selects the shortest viable cut-through and preserves mid-move retargeting and reversal.
-Camera: pinch zoom is now a true two-axis field inspection. Roads, scenery, structures, formations, health bars, effects, and labels all scale together up to 225%, with anchored horizontal and vertical panning.
-Movement feel: cohort simulation remains unchanged, while presentation positions use state-aware damping, reduced bob/lunge amplitudes, dust, curved-path alignment, and slower cross-lane traversal to add weight and remove visual skating.
-Tactical models: P2-0.16.0 model-derived miniature formations, casualty counts, reinforcements, structures, tower attachments, and source/license pipeline remain intact.
-Combat, reward packets, progression, run persistence, encounter tuning, Reclamation, Last Stand, and deployment capacity are unchanged.
+P2 Strategic Fieldworks: four fixed off-lane worksites add irreversible battle commitments without changing deployment legality or reward packet structure.
+Fieldwork plans: Tower Emplacement costs 32g and 8s for autonomous local fire; Muster Camp costs 38g and 9s to relocate controlled scheduled reinforcements; Field Relay costs 28g and 7s to shorten its paired cut-through by 22%.
+Commander commitment: the Warden physically approaches a selected site, loses Presence while off-lane or working, may leave at any time, and retains paid construction progress for a later return.
+Living battlefield: vertical world space is 38% taller, with build clearings and spur roads above and below the two organic lanes. The default overview retains both lanes while close zoom preserves full model scaling.
+Breach flow: a destroyed Guard no longer remains the friendly formation cap. Cohorts stream through and compress into a visible Gate assault rather than attacking from behind the old breach line.
+Compatibility: existing P2 saves initialize fieldworks lazily. Combat balance, scheduled pulse totals, deployment capacity, reward packets, progression, Reclamation, and Last Stand remain otherwise unchanged.
 P2-0.15.1 delivery protections remain: explicit shell build marker, mixed-shell repair, stale-shell rejection, and build.json-last deployment discipline.

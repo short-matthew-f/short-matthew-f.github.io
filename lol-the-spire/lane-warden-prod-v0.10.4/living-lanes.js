@@ -2,7 +2,7 @@
 'use strict';
 const E=window.LW_ENGINE,D=window.LW_DATA;
 if(!E||!D)return;
-const BUILD='P2-0.16.1';
+const BUILD='P2-0.17.0';
 const original={createBattle:E.createBattle,stepBattle:E.stepBattle,useAbility:E.useAbility,setCommanderLane:E.setCommanderLane,purchaseStructure:E.purchaseStructure,selfTest:E.selfTest};
 const LANES=['north','south'];
 const CFG=Object.freeze({
@@ -50,7 +50,7 @@ function makeEnemy(b,lane,x,wave){
 }
 function livingLane(b,id){return b.living.lanes[id]}
 function alive(list){return list.filter(c=>c.hp>0)}
-function spawnFriendly(b,lane,initial=false,reinforced=false){const ll=livingLane(b,lane);const c=makeFriendly(b,lane,initial?CFG.initialFriendlyX:CFG.friendlySpawn,reinforced);if(!initial){const drummers=b.deployment?.[lane]?.units?.drummer||0;c.x=Math.min(.24,c.x+.006*drummers);if(b.runEffects?.upgrades?.includes('upgrade-slingline-drums')&&(b.deployment?.[lane]?.units?.slingline||0)>0&&b.lanes[lane].pulseCount%3===0)c.x=Math.min(.26,c.x+.018)}ll.friendly.push(c);b.events.push({t:b.elapsed,type:'cohort-spawn',side:'friendly',lane,id:c.id,reinforced});return c}
+function spawnFriendly(b,lane,initial=false,reinforced=false){const ll=livingLane(b,lane),fieldSpawn=!initial?window.LW_FIELDWORKS?.musterSpawn?.(b,lane):null;const c=makeFriendly(b,lane,initial?CFG.initialFriendlyX:(fieldSpawn??CFG.friendlySpawn),reinforced);if(!initial&&fieldSpawn==null){const drummers=b.deployment?.[lane]?.units?.drummer||0;c.x=Math.min(.24,c.x+.006*drummers);if(b.runEffects?.upgrades?.includes('upgrade-slingline-drums')&&(b.deployment?.[lane]?.units?.slingline||0)>0&&b.lanes[lane].pulseCount%3===0)c.x=Math.min(.26,c.x+.018)}if(fieldSpawn!=null)c.fieldSpawn=true;ll.friendly.push(c);b.events.push({t:b.elapsed,type:'cohort-spawn',side:'friendly',lane,id:c.id,reinforced,fieldSpawn:fieldSpawn!=null});return c}
 function spawnEnemy(b,lane,initial=false){const ll=livingLane(b,lane);ll.enemyWave++;const c=makeEnemy(b,lane,initial?CFG.initialEnemyX:CFG.enemySpawn,ll.enemyWave);ll.enemy.push(c);b.events.push({t:b.elapsed,type:'cohort-spawn',side:'enemy',lane,id:c.id,kind:c.kind});return c}
 function ensureLiving(b){
   if(!b||b.living)return b;
@@ -61,7 +61,7 @@ function ensureLiving(b){
   window.LW_ACTIVE_BATTLE=b;
   return b;
 }
-function commanderNear(b,lane,x,r=CFG.presenceRadius){const c=b.commander;return !!c&&!c.incapacitated&&!c.travel&&c.lane===lane&&Math.abs((c.pos??.3)-x)<=r}
+function commanderNear(b,lane,x,r=CFG.presenceRadius){const c=b.commander;return !!c&&!c.incapacitated&&!c.travel&&!c.siteTravel&&!c.atSite&&!c.work&&c.lane===lane&&Math.abs((c.pos??.3)-x)<=r}
 function towerX(l){return l.tower?.slot==='forward'?.38:.22}
 function towerEffects(b,lane,dt){
   const l=b.lanes[lane],ll=livingLane(b,lane),t=l.tower;if(!t?.id||t.hp<=0)return;
@@ -90,8 +90,8 @@ function chooseTargets(ll){
   for(const e of E2.filter(c=>!c.target)){const engaged=E2.filter(c=>c.target&&c.x<=e.x&&e.x-c.x<=CFG.support).sort((a,c)=>c.x-a.x)[0];if(engaged){const f=F.find(x=>x.id===engaged.target);if(f&&Math.abs(f.x-e.x)<=CFG.support){e.target=f.id;e.state='supporting'}}}
 }
 function moveCohorts(b,lane,dt){
-  const ll=livingLane(b,lane),F=alive(ll.friendly).sort((a,c)=>c.x-a.x),E2=alive(ll.enemy).sort((a,c)=>a.x-c.x);
-  for(let i=0;i<F.length;i++){const c=F[i];if(c.target)continue;const ahead=F[i-1];let cap=ahead?ahead.x-CFG.spacing:CFG.guardX-CFG.objectiveRange;c.x=Math.min(cap,c.x+c.speed*dt)}
+  const ll=livingLane(b,lane),l=b.lanes[lane],F=alive(ll.friendly).sort((a,c)=>c.x-a.x),E2=alive(ll.enemy).sort((a,c)=>a.x-c.x),breached=l.guard<=0&&l.guardDestroyedEver;
+  for(let i=0;i<F.length;i++){const c=F[i];if(c.target)continue;const ahead=F[i-1];let cap;if(breached){const rank=Math.floor(i/3),file=i%3;cap=CFG.gateX-.018-rank*.010-file*.003}else cap=ahead?ahead.x-CFG.spacing:CFG.guardX-CFG.objectiveRange;if(c.x<cap)c.x=Math.min(cap,c.x+c.speed*dt)}
   for(let i=0;i<E2.length;i++){const c=E2[i];if(c.target)continue;const ahead=E2[i-1];let cap=ahead?ahead.x+CFG.spacing:CFG.bastionX+CFG.objectiveRange;const slow=1-(c.slow||0);c.x=Math.max(cap,c.x-c.speed*slow*dt);c.slow=Math.max(0,(c.slow||0)-dt*.6)}
 }
 function damageCohorts(b,lane,dt){
@@ -102,7 +102,7 @@ function damageCohorts(b,lane,dt){
 }
 function objectives(b,lane,dt){
   const ll=livingLane(b,lane),l=b.lanes[lane],F=alive(ll.friendly),E2=alive(ll.enemy);
-  const attackers=F.filter(c=>c.x>=CFG.guardX-CFG.objectiveRange-.002&&!E2.some(e=>Math.abs(e.x-c.x)<=CFG.engage));
+  const threshold=l.guard>0?CFG.guardX-CFG.objectiveRange-.002:CFG.guardX-.006,attackers=F.filter(c=>c.x>=threshold&&!E2.some(e=>Math.abs(e.x-c.x)<=CFG.engage));
   if(attackers.length){const dmg=attackers.reduce((s,c)=>s+friendlyPowerAt(b,lane,c),0)*dt;if(l.guard>0){const before=l.guard;l.guard=Math.max(0,l.guard-dmg*CFG.guardDamageScale);if(before>0&&l.guard<=0){l.guardDestroyedEver=true;b.gateVulnerabilityLatched=true;b.gateVulnerable=true;if(b.runEffects?.relics?.includes('relic-gatebite-sigil')&&!b.runEffects.gatebiteUsed){b.runEffects.gatebiteUsed=true;b.gate=Math.max(0,b.gate-8);b.events.push({t:b.elapsed,type:'reward-effect',id:'relic-gatebite-sigil',lane})}b.events.push({t:b.elapsed,type:'guard-broken',lane,source:'living-lanes'})}}else if(b.gateVulnerabilityLatched){b.gate=Math.max(0,b.gate-dmg*CFG.gateDamageScale)}}
   const breakers=E2.filter(c=>c.x<=CFG.bastionX+CFG.objectiveRange+.002&&!F.some(f=>Math.abs(f.x-c.x)<=CFG.engage));
   if(breakers.length){const dmg=breakers.reduce((s,c)=>s+enemyPowerAt(b,lane,c),0)*dt;if(l.bastion>0)l.bastion=Math.max(0,l.bastion-dmg*CFG.bastionDamageScale);else b.core=Math.max(0,b.core-dmg*CFG.coreDamageScale);l.status=E.bastionState(l.bastion)}
@@ -120,7 +120,7 @@ function stepCommanderSpatial(b,dt,travelBefore){const c=b.commander;if(c.incapa
 function spawnAndSpatial(b,dt,pulseBefore,enemyBase){
   for(const lane of LANES){const ll=livingLane(b,lane),l=b.lanes[lane];if(l.pulseCount>pulseBefore[lane]){const reinforced=b.effects?.[lane]?.conscript>0;spawnFriendly(b,lane,false,reinforced)}ll.enemySpawnTimer-=dt;if(ll.enemySpawnTimer<=0){spawnEnemy(b,lane,false);ll.enemySpawnTimer=(lane==='north'?CFG.enemyCadenceNorth:CFG.enemyCadenceSouth)*(enemyBase[lane]>3.4?.92:1)}chooseTargets(ll);moveCohorts(b,lane,dt);chooseTargets(ll);damageCohorts(b,lane,dt);towerEffects(b,lane,dt);objectives(b,lane,dt);l.front=derivedFront(b,lane);cleanup(ll,b.elapsed)}
   if(b.gate<=0&&!b.result){b.result={kind:'victory',at:b.elapsed};b.events.push({t:b.elapsed,type:'victory',source:'living-lanes'})}else if(b.core<=0&&!b.lastStand?.active){b.lastStand={active:true,phase:'core-fallen',t:0,payable:true};b.events.push({t:b.elapsed,type:'core-fallen',source:'living-lanes'})}
-  if(b.commander.health<=0&&!b.commander.incapacitated){b.commander.incapacitated=true;b.commander.reform=D.commander.reformTime;b.commander.health=0;b.commander.move=null;b.commander.travel=null;b.commander.lane=null;b.events.push({t:b.elapsed,type:'commander-incapacitated',source:'living-lanes'})}
+  if(b.commander.health<=0&&!b.commander.incapacitated){b.commander.incapacitated=true;b.commander.reform=D.commander.reformTime;b.commander.health=0;b.commander.move=null;b.commander.travel=null;b.commander.fieldTarget=null;b.commander.siteTravel=null;b.commander.atSite=null;b.commander.work=null;b.commander.lane=null;b.events.push({t:b.elapsed,type:'commander-incapacitated',source:'living-lanes'})}
 }
 E.createBattle=(run,deployment)=>ensureLiving(original.createBattle(run,deployment));
 E.stepBattle=(b,dt)=>{
@@ -159,6 +159,6 @@ E.useAbility=(b,id,targetLane)=>{
 };
 E.livingState=b=>b?.living||null;
 E.frontlinePosition=frontlinePos;
-E.selfTest=()=>{const base=original.selfTest(),run=E.newRun('living-lanes-regression'),b=E.createBattle(run,E.defaultDeployment());const startF=b.living.lanes.north.friendly[0].x,startE=b.living.lanes.north.enemy[0].x;for(let i=0;i<80;i++)E.stepBattle(b,.1);const moved=b.living.lanes.north.friendly.some(c=>c.x>startF)&&b.living.lanes.north.enemy.some(c=>c.x<startE);const countBefore=b.living.lanes.north.friendly.length;b.lanes.north.pulseTimer=.01;E.stepBattle(b,.02);const spawned=b.living.lanes.north.friendly.length>countBefore;const posBefore=b.commander.pos;E.setCommanderPosition(b,'north',.55);for(let i=0;i<40;i++)E.stepBattle(b,.1);const commanderMoved=(b.commander.pos||0)>posBefore;const checks={livingInit:!!b.living&&b.living.version===1,cohortsMove:moved,pulseSpawnsCohort:spawned,commanderSpatial:commanderMoved};return{pass:base.pass&&Object.values(checks).every(Boolean),checks:{...base.checks,...checks}}};
+E.selfTest=()=>{const base=original.selfTest(),run=E.newRun('living-lanes-regression'),b=E.createBattle(run,E.defaultDeployment());const startF=b.living.lanes.north.friendly[0].x,startE=b.living.lanes.north.enemy[0].x;for(let i=0;i<80;i++)E.stepBattle(b,.1);const moved=b.living.lanes.north.friendly.some(c=>c.x>startF)&&b.living.lanes.north.enemy.some(c=>c.x<startE);const countBefore=b.living.lanes.north.friendly.length;b.lanes.north.pulseTimer=.01;E.stepBattle(b,.02);const spawned=b.living.lanes.north.friendly.length>countBefore;const posBefore=b.commander.pos;E.setCommanderPosition(b,'north',.55);for(let i=0;i<40;i++)E.stepBattle(b,.1);const commanderMoved=(b.commander.pos||0)>posBefore;const breach=E.createBattle(E.newRun('breach-flow'),E.defaultDeployment());breach.lanes.north.guard=0;breach.lanes.north.guardDestroyedEver=true;breach.gateVulnerabilityLatched=true;breach.living.lanes.north.enemy=[];for(let i=0;i<3;i++)breach.living.lanes.north.friendly.push(makeFriendly(breach,'north',.895-i*.01));for(let i=0;i<30;i++)E.stepBattle(breach,.1);const through=breach.living.lanes.north.friendly.filter(c=>c.hp>0&&c.x>CFG.guardX).length>=3;const checks={livingInit:!!b.living&&b.living.version===1,cohortsMove:moved,pulseSpawnsCohort:spawned,commanderSpatial:commanderMoved,breachReleasesCohorts:through};return{pass:base.pass&&Object.values(checks).every(Boolean),checks:{...base.checks,...checks}}};
 window.LW_LIVING={build:BUILD,cfg:CFG,ensureLiving,frontlinePos};
 })();

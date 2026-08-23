@@ -1,6 +1,6 @@
 (() => {
 'use strict';
-const BUILD='P2-0.16.1',SAVE='lane-warden-production-run-v1',NODE='A1-B2';
+const BUILD='P2-0.17.0',SAVE='lane-warden-production-run-v1',NODE='A1-B2';
 const $=id=>document.getElementById(id);
 function saved(){try{return JSON.parse(localStorage.getItem(SAVE)||'null')}catch{return null}}
 function ensureBar(){let el=$('causewayBar');if(el)return el;const prompt=$('battlePrompt');if(!prompt)return null;el=document.createElement('div');el.id='causewayBar';el.className='causeway-bar';el.hidden=true;prompt.insertAdjacentElement('afterend',el);return el}
@@ -16,7 +16,7 @@ function battleUI(b){const bar=ensureBar();if(!bar)return;if(!b||b.nodeId!==NODE
  laneState('north',b,c);laneState('south',b,c);
  const hud=document.querySelector('#battle .hud-top > b');if(hud)hud.textContent='THE WARDEN · SPLIT CAUSEWAY';
 }
-function homeUI(){const eyebrow=document.querySelector('#home .eyebrow'),p=document.querySelector('#home .home-card > p'),build=document.querySelector('#battle .build-id');if(eyebrow)eyebrow.textContent='P2 · LIVING BATTLEFIELD · P2-0.16.1';if(p)p.textContent='Curving roads, three tactical cut-throughs, terrain landmarks, weightier formations, and true close inspection make the battlefield feel like a place rather than a diagram.';if(build)build.textContent='0.16.1';const reg=$('regression');if(reg&&reg.textContent.includes('P1-0.11.0'))reg.textContent=reg.textContent.replace('P1-0.11.0',BUILD)}
+function homeUI(){const eyebrow=document.querySelector('#home .eyebrow'),p=document.querySelector('#home .home-card > p'),build=document.querySelector('#battle .build-id');if(eyebrow)eyebrow.textContent='P2 · STRATEGIC FIELDWORKS · P2-0.17.0';if(p)p.textContent='A taller living battlefield now holds four strategic worksites. Commit the Warden’s time and gold to defensive fire, forward reinforcement camps, or faster cut-through relays.';if(build)build.textContent='0.17.0';const reg=$('regression');if(reg&&reg.textContent.includes('P1-0.11.0'))reg.textContent=reg.textContent.replace('P1-0.11.0',BUILD)}
 function loop(){const run=saved(),b=currentBattle();homeUI();setDeploymentCopy(run);setMapCopy(run);battleUI(b);requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 })();
