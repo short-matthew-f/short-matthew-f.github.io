@@ -1,9 +1,10 @@
 Lane Warden Production Battle Slice
-Build: P2-0.15.2
+Build: P2-0.15.3
 Design baseline: 1.7
 Stable install scope: /lol-the-spire/lane-warden-prod-v0.10.4/
 P2 Living Lanes: cohorts are persistent moving battlefield entities; pulses spawn reinforcements; enemy waves advance independently; engagements occur spatially; surviving cohorts continue after breakthroughs; Guard/Bastion/Gate damage is positional.
-Commander: real lane position, tap-to-move within and across lanes, spatial Presence, spatial Rally/Sunder/Waypoint behavior. P2-0.15.2 adds mid-move retargeting, destination changes, and cross-lane reversal.
-Battlefield camera: Living Lanes again uses a wide world with one-finger drag pan, pinch zoom, tap-to-move, recenter, and lane-focus navigation.
+Commander: real lane position, tap-to-move within and across lanes, spatial Presence, spatial Rally/Sunder/Waypoint behavior. P2-0.15.2 added mid-move retargeting, destination changes, cross-lane reversal, and restored wide-world camera controls.
+P2-0.15.3 movement normalization: one spatial speed model now drives same-lane travel and junction routes. Route duration is proportional to actual path length, each path segment advances at the same battlefield speed, and mid-route retargeting recalculates from the Warden's actual current point. Junction Spurs, Wardrunners, and Junction Beacon multiply movement speed consistently instead of distorting individual route segments.
+Battlefield camera: one-finger drag pan, pinch zoom, tap-to-move, recenter, and lane-focus navigation.
 Reward packet system from P2-0.13.0 retained; Split Causeway rotation profile from P2-0.14.0 operates on living cohorts.
 P2-0.15.1 delivery protections remain: explicit shell build marker, mixed-shell repair, and stale-shell rejection during service-worker installation.
