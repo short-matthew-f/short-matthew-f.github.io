@@ -1,6 +1,6 @@
 (() => {
 'use strict';
-const BUILD='P1-0.11.1';
+const BUILD='P1-0.11.2';
 const $=id=>document.getElementById(id);
 const battle=$('battle'),laneStrip=$('laneStrip'),readToggle=$('readToggle'),readPanel=$('readPanel'),targetPanel=$('targetPanel'),structurePanel=$('structurePanel');
 if(!battle||!laneStrip)return;
@@ -31,7 +31,6 @@ $('uiFortify').onclick=e=>{e.stopPropagation();proxyClick('fortifyTower')};
 $('uiOvercharge').onclick=e=>{e.stopPropagation();proxyClick('overchargeTower')};
 $('uiReinforce').onclick=e=>{e.stopPropagation();proxyClick('reinforceLane')};
 $('laneTrayClose').onclick=e=>{e.stopPropagation();closeTray()};
-
 targetCancel.onclick=e=>{e.stopPropagation();$('targetCancel')?.click();syncTargetMode()};
 
 // Reference panel is explanatory only; actions remain on the right rail.
@@ -55,16 +54,51 @@ document.addEventListener('pointerdown',e=>{
  if(targetMode&&!t.closest('#laneStrip')&&!t.closest('#abilityRail')&&!t.closest('#uiTargetCancel')){$('targetCancel')?.click();syncTargetMode()}
 },true);
 
-function syncReference(){if(!readToggle||!readPanel)return;const open=!readPanel.hidden;readToggle.textContent=open?'×':'?';readToggle.setAttribute('aria-expanded',String(open));const intro=readPanel.firstElementChild;if(intro){const b=intro.querySelector('b'),s=intro.querySelector('small');if(b)b.textContent='TACTICAL REFERENCE';if(s)s.textContent='Protected reading is active while this reference is open. Abilities are used from the right rail; lane actions live in the lane cards.'}
+function syncReference(){
+ if(!readToggle||!readPanel)return;
+ const open=!readPanel.hidden;
+ readToggle.textContent=open?'×':'?';
+ readToggle.setAttribute('aria-expanded',String(open));
+ const intro=readPanel.firstElementChild;
+ if(intro){const b=intro.querySelector('b'),s=intro.querySelector('small');if(b)b.textContent='TACTICAL REFERENCE';if(s)s.textContent='Protected reading is active while this reference is open. Abilities are used from the right rail; lane actions live in the lane cards.'}
  for(const b of readPanel.querySelectorAll('#readAbilityList button')){b.tabIndex=-1;b.setAttribute('aria-disabled','true')}
 }
-function syncAbilities(){for(const b of document.querySelectorAll('#abilityRail button[data-id]')){let state='ready',label='READY';const cd=parseFloat(b.title);if(b.disabled){if(Number.isFinite(cd)&&cd>0){state='cooldown';label=`${Math.ceil(cd)}s`}else{state='down';label='DOWN'}}
- const prev=lastAbilityState.get(b.dataset.id);b.classList.toggle('ui-ready',state==='ready');b.classList.toggle('ui-cooldown',state==='cooldown');b.classList.toggle('ui-down',state==='down');let s=b.querySelector('.ui-ability-state');if(!s){s=document.createElement('span');s.className='ui-ability-state';b.appendChild(s)}s.textContent=label;if(prev&&prev!=='ready'&&state==='ready'){b.classList.remove('ui-ready-ping');void b.offsetWidth;b.classList.add('ui-ready-ping');setTimeout(()=>b.classList.remove('ui-ready-ping'),750)}lastAbilityState.set(b.dataset.id,state)}
+function syncAbilities(){
+ for(const b of document.querySelectorAll('#abilityRail button[data-id]')){
+  let state='ready',label='READY';
+  const cd=parseFloat(b.title);
+  if(b.disabled){if(Number.isFinite(cd)&&cd>0){state='cooldown';label=`${Math.ceil(cd)}s`}else{state='down';label='DOWN'}}
+  const prev=lastAbilityState.get(b.dataset.id);
+  b.classList.toggle('ui-ready',state==='ready');b.classList.toggle('ui-cooldown',state==='cooldown');b.classList.toggle('ui-down',state==='down');
+  let s=b.querySelector('.ui-ability-state');if(!s){s=document.createElement('span');s.className='ui-ability-state';b.appendChild(s)}s.textContent=label;
+  if(prev&&prev!=='ready'&&state==='ready'){b.classList.remove('ui-ready-ping');void b.offsetWidth;b.classList.add('ui-ready-ping');setTimeout(()=>b.classList.remove('ui-ready-ping'),750)}
+  lastAbilityState.set(b.dataset.id,state);
+ }
 }
-function syncTargetMode(){targetMode=!!targetPanel&&!targetPanel.hidden;laneStrip.classList.toggle('ui-targeting',targetMode);targetCancel.hidden=!targetMode;for(const chip of laneStrip.querySelectorAll('.lane-move-chip'))if(targetMode)chip.textContent='WAYPOINT HERE';}
-function syncLaneChips(){ensureLaneChips();for(const card of laneButtons()){const lane=card.dataset.lane,chip=card.querySelector('.lane-move-chip'),cmd=card.querySelector('[id$="Cmd"]')?.textContent?.trim(),extra=card.querySelector('[id$="Extra"]')?.textContent?.trim();chip.classList.remove('current','moving');if(targetMode){chip.textContent='WAYPOINT HERE';continue}if(cmd){chip.textContent='COMMANDER';chip.classList.add('current')}else if(extra==='WALKING'){chip.textContent='MOVING';chip.classList.add('moving')}else chip.textContent='WALK HERE'}
-function syncTray(){if(tray.hidden||!openLane)return;const title=$('structureTitle')?.textContent||`${openLane.toUpperCase()} ACTIONS`,status=$('structureStatus')?.textContent||'';$('laneTrayTitle').textContent=title;$('laneTrayStatus').textContent=status;$('laneTrayFeedback').textContent=$('purchaseFeedback')?.textContent||'';for(const [ui,src] of[['uiFortify','fortifyTower'],['uiOvercharge','overchargeTower'],['uiReinforce','reinforceLane']]){const a=$(ui),b=$(src);if(a&&b)a.disabled=b.disabled}positionTray()}
-function syncBuildMarker(){document.querySelectorAll('.build-id').forEach(el=>el.textContent='0.11.1')}
+function syncTargetMode(){
+ targetMode=!!targetPanel&&!targetPanel.hidden;
+ laneStrip.classList.toggle('ui-targeting',targetMode);
+ targetCancel.hidden=!targetMode;
+}
+function syncLaneChips(){
+ ensureLaneChips();
+ for(const card of laneButtons()){
+  const chip=card.querySelector('.lane-move-chip'),cmd=card.querySelector('[id$="Cmd"]')?.textContent?.trim(),extra=card.querySelector('[id$="Extra"]')?.textContent?.trim();
+  chip.classList.remove('current','moving');
+  if(targetMode){chip.textContent='WAYPOINT HERE';continue}
+  if(cmd){chip.textContent='COMMANDER';chip.classList.add('current')}
+  else if(extra==='WALKING'){chip.textContent='MOVING';chip.classList.add('moving')}
+  else chip.textContent='WALK HERE';
+ }
+}
+function syncTray(){
+ if(tray.hidden||!openLane)return;
+ const title=$('structureTitle')?.textContent||`${openLane.toUpperCase()} ACTIONS`,status=$('structureStatus')?.textContent||'';
+ $('laneTrayTitle').textContent=title;$('laneTrayStatus').textContent=status;$('laneTrayFeedback').textContent=$('purchaseFeedback')?.textContent||'';
+ for(const [ui,src] of[['uiFortify','fortifyTower'],['uiOvercharge','overchargeTower'],['uiReinforce','reinforceLane']]){const a=$(ui),b=$(src);if(a&&b)a.disabled=b.disabled}
+ positionTray();
+}
+function syncBuildMarker(){document.querySelectorAll('.build-id').forEach(el=>el.textContent='0.11.2')}
 function sync(){syncReference();syncAbilities();syncTargetMode();syncLaneChips();syncTray();syncBuildMarker()}
 setInterval(sync,120);addEventListener('resize',positionTray);addEventListener('orientationchange',()=>setTimeout(positionTray,80));sync();
 window.LW_UI_PATCH={build:BUILD};
