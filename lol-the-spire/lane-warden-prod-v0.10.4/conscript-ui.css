@@ -1,0 +1,7 @@
+/* P1-0.12.0 Conscript feedback */
+.ability-rail button .ui-ability-detail{display:block;margin-top:1px;font-size:5px;line-height:1;color:#c7d5d2;letter-spacing:.02em}
+.ability-rail button.ui-blocked{border-color:#6c5a45;background:#28231d;opacity:.82}
+.ability-rail button.ui-blocked .ui-ability-state{color:#e1c28d}
+.ui-cons-badge{position:absolute;left:50px;top:4px;padding:2px 5px;border-radius:6px;background:#17483b;border:1px solid #65dab5;color:#c9f8e8;font-size:5.5px;font-weight:900;letter-spacing:.04em;line-height:1;pointer-events:none}
+.ui-cons-badge[hidden]{display:none!important}
+@media (orientation:landscape) and (max-height:430px){.ability-rail button .ui-ability-detail{font-size:4.8px}.ui-cons-badge{top:2px}}
