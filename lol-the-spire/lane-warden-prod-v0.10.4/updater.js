@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const CURRENT_BUILD='P1-0.11.1';
+  const CURRENT_BUILD='P1-0.11.2';
   const hadControllerAtLoad=!!navigator.serviceWorker?.controller;
   let registration=null,reloading=false,latestAdvertised=CURRENT_BUILD,swBuild=navigator.serviceWorker?.controller?'checking':'installing',updateReady=false;
   const diag=()=>{const el=document.getElementById('buildDiag');if(el)el.textContent=`APP ${CURRENT_BUILD} · LATEST ${latestAdvertised} · SW ${swBuild}`};
