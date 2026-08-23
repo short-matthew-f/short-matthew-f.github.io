@@ -1,26 +1,21 @@
 (() => {
   'use strict';
-  const CURRENT_BUILD = 'P0-0.10.5';
+  const CURRENT_BUILD = 'P0-0.10.6';
   const hadControllerAtLoad = !!navigator.serviceWorker?.controller;
   let registration = null;
   let reloading = false;
-  let pendingReload = false;
   let latestAdvertised = CURRENT_BUILD;
   let swBuild = navigator.serviceWorker?.controller ? 'checking' : 'installing';
-
-  const battleActive = () => {
-    const battle = document.getElementById('battle');
-    return !!battle && !battle.hidden;
-  };
-
-  const setNote = text => {
-    const note = document.getElementById('updateNote');
-    if (note) note.textContent = text || '';
-  };
+  let updateReady = false;
 
   const diag = () => {
     const el = document.getElementById('buildDiag');
     if (el) el.textContent = `APP ${CURRENT_BUILD} · LATEST ${latestAdvertised} · SW ${swBuild}`;
+  };
+  const note = text => { const el=document.getElementById('updateNote'); if(el) el.textContent=text||''; };
+  const inActiveBattle = () => {
+    const battle=document.getElementById('battle');
+    return !!battle && !battle.hidden;
   };
 
   async function fetchLatest() {
@@ -31,9 +26,7 @@
       if (j?.build) latestAdvertised = j.build;
       diag();
       return j;
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   }
 
   function askControllerBuild() {
@@ -41,68 +34,44 @@
     if (!c) { swBuild = 'none'; diag(); return; }
     const channel = new MessageChannel();
     const timer = setTimeout(() => { swBuild = 'unknown'; diag(); }, 1200);
-    channel.port1.onmessage = e => {
-      clearTimeout(timer);
-      swBuild = e.data?.build || 'unknown';
-      diag();
-    };
-    c.postMessage({ type: 'GET_BUILD' }, [channel.port2]);
+    channel.port1.onmessage = e => { clearTimeout(timer); swBuild=e.data?.build||'unknown'; diag(); };
+    c.postMessage({ type:'GET_BUILD' }, [channel.port2]);
   }
 
   async function checkForUpdate() {
     if (!registration) return;
     const latest = await fetchLatest();
-    if (!latest || latest.build === CURRENT_BUILD) {
-      askControllerBuild();
-      return;
-    }
-    document.documentElement.dataset.updateState = 'updating';
-    setNote(`Updating Lane Warden to ${latest.build}…`);
+    if (!latest || latest.build === CURRENT_BUILD) { askControllerBuild(); return; }
+    note(`Updating Lane Warden to ${latest.build}…`);
     try { await registration.update(); } catch {}
   }
 
   function applyIfReady() {
-    if (!pendingReload || reloading || battleActive()) return false;
-    reloading = true;
+    if (!updateReady || reloading || inActiveBattle()) return;
+    reloading=true;
     location.reload();
-    return true;
   }
 
   async function register() {
-    if (!('serviceWorker' in navigator)) { swBuild = 'unsupported'; diag(); return; }
+    if (!('serviceWorker' in navigator)) { swBuild='unsupported'; diag(); return; }
     try {
-      registration = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
+      registration=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});
       await navigator.serviceWorker.ready;
       askControllerBuild();
       await checkForUpdate();
-    } catch {
-      swBuild = 'registration failed';
-      diag();
-    }
+    } catch { swBuild='registration failed'; diag(); }
   }
 
-  navigator.serviceWorker?.addEventListener('controllerchange', () => {
+  navigator.serviceWorker?.addEventListener('controllerchange',()=>{
     askControllerBuild();
-    if (!hadControllerAtLoad || reloading) return;
-    pendingReload = true;
-    if (battleActive()) {
-      setNote(`Update ${latestAdvertised} ready · applies after battle`);
-      document.documentElement.dataset.updateState = 'ready';
-      return;
-    }
-    applyIfReady();
+    if (!hadControllerAtLoad) return;
+    updateReady=true;
+    if (inActiveBattle()) note(`Update ${latestAdvertised} ready · applies after battle`);
+    else applyIfReady();
   });
-
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) checkForUpdate();
-  });
-  window.addEventListener('pageshow', () => checkForUpdate());
-  window.LW_UPDATE = {
-    currentBuild: CURRENT_BUILD,
-    check: checkForUpdate,
-    applyIfReady,
-    get pendingReload() { return pendingReload; }
-  };
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkForUpdate()});
+  window.addEventListener('pageshow',()=>checkForUpdate());
+  window.LW_UPDATE={currentBuild:CURRENT_BUILD,check:checkForUpdate,applyIfReady};
   diag();
   register();
 })();
