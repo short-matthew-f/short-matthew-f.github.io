@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   window.LW_DATA = Object.freeze({
-    version: 'P2-0.14.0',
+    version: 'P2-0.15.0',
     deployment: { unitCapacity: 6, towerCapacity: 4 },
     encounter: {
       id: 'A1-B1',
@@ -14,10 +14,10 @@
     commander: {
       id: 'warden', name: 'The Warden', presence: 1.16, maxHealth: 100, reformTime: 12, walkTime: 7,
       abilities: [
-        { id:'rally', name:'Rally', cooldown:12, description:'For 6s, allied pressure in the Warden’s lane gains +35%.' },
-        { id:'sunder', name:'Sunder', cooldown:16, description:'Burst the current lane objective; once its Guard is broken, Sunder strikes the exposed Gate.' },
-        { id:'waypoint', name:'Waypoint', cooldown:24, description:'Relocate instantly to a chosen lane, bypassing junction travel.' },
-        { id:'conscript', name:'Conscript', cooldown:18, description:'While the Warden is settled in a lane, reinforce that lane’s next two pulses using its committed unit types.' }
+        { id:'rally', name:'Rally', cooldown:12, description:'For 6s, nearby allied cohorts around the Warden fight harder.' },
+        { id:'sunder', name:'Sunder', cooldown:16, description:'Strike a nearby enemy cohort, Guard, or exposed Gate from the Warden’s actual position.' },
+        { id:'waypoint', name:'Waypoint', cooldown:24, description:'Relocate instantly to the chosen lane’s active friendly line.' },
+        { id:'conscript', name:'Conscript', cooldown:18, description:'While the Warden is settled in a lane, reinforce that lane’s next two arriving cohorts.' }
       ],
       lastStand: 'Bulwark Detonation'
     },
@@ -30,14 +30,14 @@
     ],
     towers: [
       { id:'bolt', name:'Bolt Tower', cost:2, role:'Reliable single-target defense', effect:'defense', power:.42 },
-      { id:'frost', name:'Frost Coil', cost:2, role:'Slows pressure and buys rotation time', effect:'slow', power:.24 },
-      { id:'scatter', name:'Scattergun', cost:3, role:'Swarm-control defense', effect:'swarm', power:.5 },
-      { id:'pylon', name:'War Pylon', cost:2, role:'Buffs friendly waves passing its zone', effect:'amplify', power:.18 }
+      { id:'frost', name:'Frost Coil', cost:2, role:'Slows enemies moving through its local zone', effect:'slow', power:.24 },
+      { id:'scatter', name:'Scattergun', cost:3, role:'Damages clustered enemy cohorts in its local zone', effect:'swarm', power:.5 },
+      { id:'pylon', name:'War Pylon', cost:2, role:'Buffs friendly cohorts moving through its local zone', effect:'amplify', power:.18 }
     ],
     nodes: [
-      { id:'A1-B1', kind:'battle', name:'Outer Approach', subtitle:'Easy Pool · concentration · SALVAGE + ?', x:16, y:55 },
+      { id:'A1-B1', kind:'battle', name:'Outer Approach', subtitle:'Easy Pool · living-lane concentration · SALVAGE + ?', x:16, y:55 },
       { id:'A1-F1', kind:'forge', name:'Ruined Forge', subtitle:'Build shaping · next P2 seam', x:43, y:29, placeholder:true },
-      { id:'A1-B2', kind:'battle', name:'Split Causeway', subtitle:'Easy Pool · rotation · SALVAGE + ?', x:54, y:62 },
+      { id:'A1-B2', kind:'battle', name:'Split Causeway', subtitle:'Easy Pool · living-lane rotation · SALVAGE + ?', x:54, y:62 },
       { id:'A1-GK', kind:'gatekeeper', name:'Gatekeeper', subtitle:'SALVAGE + RELIC + ACT GROWTH', x:87, y:35, placeholder:true }
     ]
   });
