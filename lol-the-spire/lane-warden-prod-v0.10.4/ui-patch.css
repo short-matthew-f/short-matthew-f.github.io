@@ -1,0 +1,42 @@
+/* P1-0.11.1 — UI cleanup only. No simulation/balance changes. */
+
+/* Ability state must be obvious without relying on color alone. */
+.ability-rail button{position:relative;transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,opacity .15s ease}
+.ability-rail button .ui-ability-state{display:block;margin-top:2px;font-size:6px;font-weight:900;letter-spacing:.06em;line-height:1;color:#a9bbb9}
+.ability-rail button.ui-ready{border-color:#55c9a8;background:#173a34;box-shadow:0 0 0 1px rgba(85,201,168,.2),0 0 14px rgba(85,201,168,.26)}
+.ability-rail button.ui-ready .ui-ability-state{color:#9af0d4}
+.ability-rail button.ui-cooldown{border-color:#88484b;background:#311d21;opacity:.9}
+.ability-rail button.ui-cooldown .ui-ability-state{color:#ffaaa8}
+.ability-rail button.ui-down{border-color:#67383a;background:#24191c;opacity:.62}
+.ability-rail button.ui-ready-ping{animation:uiReadyPing .72s ease-out}
+@keyframes uiReadyPing{0%{box-shadow:0 0 0 0 rgba(102,237,194,.8)}55%{box-shadow:0 0 0 8px rgba(102,237,194,.12)}100%{box-shadow:0 0 0 0 rgba(102,237,194,0)}}
+
+/* The old detached structure control remains as a compatibility DOM surface only. */
+#structureButton,#structurePanel{display:none!important}
+
+/* Reference/help is explanatory, not another action menu. */
+#readToggle{width:48px;height:48px;border-radius:50%;font-size:20px;font-weight:900;padding:0}
+#readPanel{width:272px;max-height:205px}
+#readPanel .walk-actions{display:none!important}
+#readAbilityList button{pointer-events:none;cursor:default;background:#101c23;border-color:#2b424b;color:#d4dfdd}
+#readAbilityList button b{color:#f0f4f3}
+
+/* Lane cards own lane-local decisions. */
+.lane-strip button{position:relative;overflow:visible}
+.lane-move-chip{position:absolute;left:7px;bottom:4px;min-width:42px;padding:2px 5px;border-radius:6px;background:#20343d;border:1px solid #42616a;color:#bcd3d2;font-size:5.5px;font-weight:900;letter-spacing:.05em;line-height:1.1;text-align:center;pointer-events:auto}
+.lane-move-chip.current{background:#3b3322;border-color:#765d2e;color:#f0c96d}
+.lane-move-chip.moving{background:#294458;color:#c6e6f3}
+.lane-strip.ui-targeting button{outline:2px solid rgba(98,224,183,.75);box-shadow:0 0 14px rgba(98,224,183,.2)}
+.lane-strip.ui-targeting .lane-move-chip{background:#17483b;border-color:#65dab5;color:#c9f8e8;font-size:6px}
+
+.lane-action-tray{position:absolute;z-index:30;padding:7px;border:1px solid #4f6e76;border-radius:13px;background:rgba(8,15,20,.985);box-shadow:0 10px 28px rgba(0,0,0,.42)}
+.lane-action-tray[hidden]{display:none!important}
+.lane-tray-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}.lane-tray-head>div{min-width:0;flex:1}.lane-tray-head b,.lane-tray-head small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lane-tray-head b{font-size:8px}.lane-tray-head small{font-size:6.5px;color:#8fa5a7;margin-top:2px}.lane-tray-close{width:44px;height:44px;min-width:44px;padding:0;border-radius:10px;font-size:15px}
+.lane-tray-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.lane-tray-actions button{min-height:44px;padding:4px 5px;font-size:6.5px;font-weight:900;line-height:1.15}.lane-tray-actions button small{display:block;margin-top:2px;font-size:5.5px;color:#9fb1b0}.lane-tray-actions button:disabled{opacity:.45}
+.lane-tray-feedback{display:block;min-height:9px;margin-top:4px;font-size:6px;color:#ddb961}
+
+.ui-target-cancel{position:absolute;z-index:31;left:50%;bottom:72px;transform:translateX(-50%);min-height:44px;padding:5px 12px;border-color:#715056;background:#281b20;color:#f0b0ae;font-size:7px;font-weight:900}
+.ui-target-cancel[hidden]{display:none!important}
+
+@media (orientation:portrait),(max-aspect-ratio:1/1){#battle:not([hidden])>.lane-action-tray,#battle:not([hidden])>.ui-target-cancel{visibility:hidden!important}}
+@media (orientation:landscape) and (max-height:430px){.lane-action-tray{padding:5px}.lane-tray-head{margin-bottom:4px}.lane-tray-actions button{min-height:40px}.lane-tray-close{height:40px;min-height:40px}.ui-target-cancel{bottom:66px}.lane-move-chip{bottom:2px}}
