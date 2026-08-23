@@ -1,12 +1,12 @@
 (() => {
   'use strict';
   window.LW_DATA = Object.freeze({
-    version: 'P0-0.10.0',
+    version: 'P0-0.10.6',
     commander: {
       id: 'warden', name: 'The Warden', presence: 1.16,
       abilities: [
         { id:'rally', name:'Rally', cooldown:12, description:'For 6s, allied lane pressure gains +35%.' },
-        { id:'sunder', name:'Sunder', cooldown:16, description:'Deal a heavy burst to the current lane Guard after the Bastion falls.' },
+        { id:'sunder', name:'Sunder', cooldown:16, description:'Deal a heavy burst to the current lane Bastion, Guard, or exposed Gate.' },
         { id:'waypoint', name:'Waypoint', cooldown:8, description:'Move the Warden directly to the chosen lane.' },
         { id:'conscript', name:'Conscript', cooldown:18, description:'Add a temporary allied squad to the current lane.' }
       ],
