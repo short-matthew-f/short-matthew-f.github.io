@@ -1,11 +1,11 @@
 Lane Warden Production Battle Slice
-Build: P2-0.16.0
+Build: P2-0.16.1
 Design baseline: 1.7
 Stable install scope: /lol-the-spire/lane-warden-prod-v0.10.4/
-P2 Tactical Models: Living Lanes cohorts now render as phone-scale miniature formations baked from CC0 Quaternius glTF models. Warden, Ironjack, Slingline, enemy line, raider, and brute use distinct silhouettes, scale, palette, formation, facing, and motion language.
-Cohort representation: simulation remains cohort-based; visual members are not separately simulated. Visible member count falls with cohort HP, fallen poses persist briefly, reinforcements arrive with an entry pulse, supporting cohorts show ranged intent, and slowed/reinforced/engaged states retain clear treatments.
-Structures: Bastion, Guard, Gate, and one shared tower chassis use model-derived silhouettes. Tower function is identified through lightweight attachments. Siege Ram uses an original low-poly runtime chassis proxy with crew silhouettes.
-Asset pipeline: untouched downloaded originals, deterministic processed sprite atlas, authoritative manifest, per-file hashes, licenses, source URLs, and transformation records are stored under assets/.
-Commander and camera: constant spatial speed, tap-to-move, mid-move retarget/reversal, one-finger pan, pinch zoom, recenter, and lane focus remain unchanged from P2-0.15.3.
+P2 Living Battlefield: both tactical lanes now follow distinct curving terrain paths instead of straight rails. Ground variation, creek, scrub, stone, camps, objective approaches, and route markers make the field readable as a place.
+Commander routing: Old Gate Steps, Dry Creek Ford, and Ridge Cut provide three spatially distinct cross-lane routes. The route system selects the shortest viable cut-through and preserves mid-move retargeting and reversal.
+Camera: pinch zoom is now a true two-axis field inspection. Roads, scenery, structures, formations, health bars, effects, and labels all scale together up to 225%, with anchored horizontal and vertical panning.
+Movement feel: cohort simulation remains unchanged, while presentation positions use state-aware damping, reduced bob/lunge amplitudes, dust, curved-path alignment, and slower cross-lane traversal to add weight and remove visual skating.
+Tactical models: P2-0.16.0 model-derived miniature formations, casualty counts, reinforcements, structures, tower attachments, and source/license pipeline remain intact.
 Combat, reward packets, progression, run persistence, encounter tuning, Reclamation, Last Stand, and deployment capacity are unchanged.
 P2-0.15.1 delivery protections remain: explicit shell build marker, mixed-shell repair, stale-shell rejection, and build.json-last deployment discipline.
