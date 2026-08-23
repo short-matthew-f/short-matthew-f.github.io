@@ -1,4 +1,5 @@
 Lane Warden Production Battle Slice
-Build: P1-0.11.0
+Build: P1-0.11.1
 Design baseline: 1.7
+Change class: UI/control cleanup only; P1-0.11.0 battle balance frozen
 Stable install scope: /lol-the-spire/lane-warden-prod-v0.10.4/
