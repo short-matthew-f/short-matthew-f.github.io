@@ -1,5 +1,4 @@
 Lane Warden Production Foundation
-Build: P0-0.10.5
-Production scope: self-updating
-Update policy: build.json no-store + updateViaCache none + skipWaiting + clients.claim + controlled reload
-Active-battle policy: download immediately; reload after battle/resolution seam
+Build: P0-0.10.6
+Stable self-updating scope: yes
+Gate phase: Guard opens Gate; victory requires Gate destruction
