@@ -1,0 +1,244 @@
+{
+  "schemaVersion": 1,
+  "id": "lane-warden-reward-system-v0.1",
+  "status": "production-specification",
+  "encounterPools": {
+    "normalEasyResolvedCount": 3,
+    "countBy": "normal-battle-node-resolved",
+    "eliteAdvancesNormalCount": false,
+    "gatekeeperAdvancesNormalCount": false
+  },
+  "categories": {
+    "salvage": {"kind": "grant", "ordinaryPool": false},
+    "unit": {"kind": "choice", "ordinaryPool": true},
+    "tower": {"kind": "choice", "ordinaryPool": true},
+    "commander": {"kind": "choice", "ordinaryPool": true},
+    "relic": {"kind": "choice", "ordinaryPool": true},
+    "upgrade": {"kind": "choice", "ordinaryPool": true},
+    "capacity": {"kind": "choice", "ordinaryPool": true},
+    "logistics": {"kind": "choice", "ordinaryPool": true},
+    "ember": {"kind": "choice", "ordinaryPool": false, "premiumSpecialOnly": true}
+  },
+  "categoryPools": {
+    "normalGrowth": {
+      "unit": 20,
+      "tower": 20,
+      "commander": 15,
+      "relic": 15,
+      "upgrade": 15,
+      "capacity": 10,
+      "logistics": 5
+    },
+    "normalBonus": {
+      "upgrade": 30,
+      "logistics": 30,
+      "relic": 20,
+      "capacity": 20
+    },
+    "eliteSecondary": {
+      "unit": 20,
+      "tower": 20,
+      "commander": 15,
+      "upgrade": 20,
+      "capacity": 15,
+      "logistics": 10
+    },
+    "gatekeeperGrowth": {
+      "unit": 18,
+      "tower": 18,
+      "commander": 18,
+      "upgrade": 20,
+      "capacity": 16,
+      "logistics": 10
+    }
+  },
+  "qualityPolicies": {
+    "normal": {"common": 75, "uncommon": 23, "rare": 2},
+    "normalBonus": {"common": 60, "uncommon": 35, "rare": 5},
+    "eliteRelic": {"common": 35, "uncommon": 50, "rare": 15},
+    "eliteSecondary": {"common": 55, "uncommon": 38, "rare": 7},
+    "gatekeeperRelic": {"common": 10, "uncommon": 55, "rare": 35},
+    "gatekeeperGrowth": {"common": 40, "uncommon": 45, "rare": 15}
+  },
+  "templates": {
+    "normal": {
+      "usedBy": ["easy-normal", "hard-normal"],
+      "salvageBand": "normal",
+      "components": [
+        {
+          "id": "growth",
+          "kind": "choice",
+          "guaranteed": true,
+          "categoryPool": "normalGrowth",
+          "offerCount": 3,
+          "takeCount": 1,
+          "qualityPolicy": "normal",
+          "skipForSalvage": true,
+          "thesisFloorEligible": true
+        }
+      ],
+      "bonusComponents": [
+        {
+          "id": "normal-bonus",
+          "chance": 0.25,
+          "kind": "bonus",
+          "categoryPool": "normalBonus",
+          "offerCount": 2,
+          "takeCount": 1,
+          "qualityPolicy": "normalBonus",
+          "skipForSalvage": true
+        }
+      ]
+    },
+    "elite": {
+      "salvageBand": "elite",
+      "components": [
+        {
+          "id": "elite-relic",
+          "kind": "choice",
+          "guaranteed": true,
+          "category": "relic",
+          "offerCount": 3,
+          "takeCount": 1,
+          "qualityPolicy": "eliteRelic",
+          "skipForSalvage": true
+        },
+        {
+          "id": "elite-secondary",
+          "kind": "choice",
+          "guaranteed": true,
+          "categoryPool": "eliteSecondary",
+          "offerCount": 3,
+          "takeCount": 1,
+          "qualityPolicy": "eliteSecondary",
+          "skipForSalvage": true,
+          "thesisFloorEligible": true
+        }
+      ]
+    },
+    "gatekeeper": {
+      "salvageBand": "gatekeeper",
+      "components": [
+        {
+          "id": "gatekeeper-relic",
+          "kind": "choice",
+          "guaranteed": true,
+          "category": "relic",
+          "offerCount": 3,
+          "takeCount": 1,
+          "qualityPolicy": "gatekeeperRelic",
+          "skipForSalvage": true
+        },
+        {
+          "id": "gatekeeper-growth",
+          "kind": "choice",
+          "guaranteed": true,
+          "categoryPool": "gatekeeperGrowth",
+          "offerCount": 3,
+          "takeCount": 1,
+          "qualityPolicy": "gatekeeperGrowth",
+          "skipForSalvage": true,
+          "thesisFloorEligible": true
+        }
+      ],
+      "authoredSpecialAllowed": true
+    },
+    "cache": {
+      "salvageBand": null,
+      "components": [
+        {
+          "id": "cache-growth",
+          "kind": "choice",
+          "guaranteed": true,
+          "categoryPool": "normalGrowth",
+          "offerCount": 3,
+          "takeCount": 1,
+          "qualityPolicy": "normal",
+          "skipForSalvage": true,
+          "thesisFloorEligible": true
+        }
+      ],
+      "bonusComponents": [
+        {
+          "id": "cache-bonus",
+          "chance": 0.25,
+          "kind": "bonus",
+          "categoryPool": "normalBonus",
+          "offerCount": 2,
+          "takeCount": 1,
+          "qualityPolicy": "normalBonus",
+          "skipForSalvage": true
+        }
+      ]
+    },
+    "payableLastStand": {
+      "normalPacket": false,
+      "performanceSalvage": true
+    }
+  },
+  "rewardAffinity": {
+    "defaultWeightMultiplier": 1.5,
+    "canOverrideIllegalCategory": false,
+    "forecastExplicitGuarantees": true
+  },
+  "thesisFloor": {
+    "enabled": true,
+    "maxDefaultComponentsPerPacket": 1,
+    "minimumCompatibleOffers": 1,
+    "playerFacingDisclosureRequired": true,
+    "establishmentRule": "p2-tuning-open"
+  },
+  "rerolls": {
+    "defaultFreeRerolls": 0,
+    "primitives": ["component", "category", "packet"],
+    "guaranteedCategoryProtectedFromOrdinaryCategoryReroll": true,
+    "persistImmediately": true
+  },
+  "modifierHooks": [
+    "offerCountDelta",
+    "freeComponentRerolls",
+    "freeCategoryRerolls",
+    "bonusChanceDelta",
+    "addBonusComponent",
+    "qualityShift",
+    "skipSalvageMultiplier",
+    "revealRandomCategory",
+    "thesisFloorBoost",
+    "eliteExtraComponent",
+    "packetReroll"
+  ],
+  "forecast": {
+    "exactOffersHiddenUntilEarned": true,
+    "guaranteedCategoriesMayBeShown": true,
+    "randomCategoriesShownAsUnknownByDefault": true,
+    "rewardRevealEffectsMayExposeRandomCategories": true
+  },
+  "generationOrder": [
+    "template",
+    "catalogue-eligibility",
+    "authored-guarantees-and-affinity",
+    "packet-structure-modifiers",
+    "bonus-component-rolls",
+    "category-rolls",
+    "quality-rolls",
+    "offer-generation",
+    "thesis-floor",
+    "dedupe",
+    "persist",
+    "present",
+    "persisted-player-mutations"
+  ],
+  "fallbackOrder": ["authored-fallback", "upgrade", "logistics", "salvage"],
+  "tuningOpen": [
+    "salvage-amounts",
+    "quartermaster-prices",
+    "bonus-component-chance",
+    "quality-distributions",
+    "thesis-establishment-rule",
+    "capacity-frequency",
+    "upgrade-frequency",
+    "elite-premium-strength",
+    "gatekeeper-premium-strength",
+    "act2plus-easy-pool-count"
+  ]
+}
