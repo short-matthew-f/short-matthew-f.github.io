@@ -4,8 +4,19 @@
   const hadControllerAtLoad = !!navigator.serviceWorker?.controller;
   let registration = null;
   let reloading = false;
+  let pendingReload = false;
   let latestAdvertised = CURRENT_BUILD;
   let swBuild = navigator.serviceWorker?.controller ? 'checking' : 'installing';
+
+  const battleActive = () => {
+    const battle = document.getElementById('battle');
+    return !!battle && !battle.hidden;
+  };
+
+  const setNote = text => {
+    const note = document.getElementById('updateNote');
+    if (note) note.textContent = text || '';
+  };
 
   const diag = () => {
     const el = document.getElementById('buildDiag');
@@ -38,7 +49,7 @@
     c.postMessage({ type: 'GET_BUILD' }, [channel.port2]);
   }
 
-  async function checkForUpdate(reason) {
+  async function checkForUpdate() {
     if (!registration) return;
     const latest = await fetchLatest();
     if (!latest || latest.build === CURRENT_BUILD) {
@@ -46,9 +57,15 @@
       return;
     }
     document.documentElement.dataset.updateState = 'updating';
-    const note = document.getElementById('updateNote');
-    if (note) note.textContent = `Updating Lane Warden to ${latest.build}…`;
+    setNote(`Updating Lane Warden to ${latest.build}…`);
     try { await registration.update(); } catch {}
+  }
+
+  function applyIfReady() {
+    if (!pendingReload || reloading || battleActive()) return false;
+    reloading = true;
+    location.reload();
+    return true;
   }
 
   async function register() {
@@ -57,7 +74,7 @@
       registration = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
       await navigator.serviceWorker.ready;
       askControllerBuild();
-      await checkForUpdate('launch');
+      await checkForUpdate();
     } catch {
       swBuild = 'registration failed';
       diag();
@@ -67,15 +84,25 @@
   navigator.serviceWorker?.addEventListener('controllerchange', () => {
     askControllerBuild();
     if (!hadControllerAtLoad || reloading) return;
-    reloading = true;
-    location.reload();
+    pendingReload = true;
+    if (battleActive()) {
+      setNote(`Update ${latestAdvertised} ready · applies after battle`);
+      document.documentElement.dataset.updateState = 'ready';
+      return;
+    }
+    applyIfReady();
   });
 
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) checkForUpdate('foreground');
+    if (!document.hidden) checkForUpdate();
   });
-  window.addEventListener('pageshow', () => checkForUpdate('pageshow'));
-  window.LW_UPDATE = { currentBuild: CURRENT_BUILD, check: checkForUpdate };
+  window.addEventListener('pageshow', () => checkForUpdate());
+  window.LW_UPDATE = {
+    currentBuild: CURRENT_BUILD,
+    check: checkForUpdate,
+    applyIfReady,
+    get pendingReload() { return pendingReload; }
+  };
   diag();
   register();
 })();
