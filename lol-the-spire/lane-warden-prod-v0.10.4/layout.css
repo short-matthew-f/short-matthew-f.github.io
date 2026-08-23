@@ -1,8 +1,11 @@
-/* P0-0.10.4 fresh-scope layout hardening */
+/* P0-0.10.5 self-updating production layout */
 #portraitGate{display:none;position:fixed;inset:0;z-index:1000;background:#071016;color:#edf3f2;place-items:center;text-align:center;padding:32px}
 #portraitGate div{display:grid;gap:8px}#portraitGate b{font-size:22px;letter-spacing:.08em}#portraitGate span{font-size:12px;color:#91a5a8}
 .hud-state{white-space:nowrap;font-weight:800;color:#bdcccb}.build-id{font-size:7px;color:#70868a;white-space:nowrap}
-/* Status now lives in the HUD. The canvas is purely battlefield rendering. */
+.build-diag{margin-top:8px;font-size:8px;color:#647b80;letter-spacing:.03em}
+.update-note{position:fixed;z-index:1400;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);max-width:min(560px,calc(100vw - 24px));padding:7px 12px;border-radius:10px;background:#16242d;border:1px solid #41606a;color:#d7e1df;font-size:9px;font-weight:800;pointer-events:none;opacity:0;transition:opacity .15s ease}
+html[data-update-state="updating"] .update-note,html[data-update-state="ready"] .update-note{opacity:1}
+/* Status lives in the HUD. The canvas is purely battlefield rendering. */
 @media (orientation: portrait),(max-aspect-ratio:1/1){
   #battle:not([hidden]) #portraitGate{display:grid!important}
   #battle:not([hidden])>canvas,
