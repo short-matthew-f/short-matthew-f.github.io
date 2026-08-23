@@ -1,7 +1,7 @@
-const BUILD='P0-0.10.6';
+const BUILD='P1-0.11.0';
 const CACHE=`lane-warden-prod-live-${BUILD}`;
-const ASSETS=['./','./index.html','./layout.css?v=0.10.6','./app.js?v=0.10.6','./updater.js?v=0.10.6','./manifest.webmanifest','./VERSION','../lane-warden/styles.css?v=0.10.6','../lane-warden/data.js?v=0.10.6','../lane-warden/engine.js?v=0.10.6'];
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>Promise.all(ASSETS.map(url=>fetch(url,{cache:'reload'}).then(r=>{if(!r.ok)throw new Error(url);return cache.put(url,r)})))).then(()=>self.skipWaiting()))});
-self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('lane-warden-prod-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
+const ASSETS=['./','./index.html','./layout.css?v=0.11.0','./data.js?v=0.11.0','./engine.js?v=0.11.0','./app.js?v=0.11.0','./updater.js?v=0.11.0','./manifest.webmanifest','./VERSION','../lane-warden/styles.css?v=0.11.0'];
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>Promise.all(ASSETS.map(url=>fetch(url,{cache:'reload'}).then(r=>{if(!r.ok)throw new Error(url);return cache.put(url,r)})))).then(()=>self.skipWaiting())));
+self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('lane-warden-prod-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('message',event=>{if(event.data?.type==='GET_BUILD'){const port=event.ports?.[0];if(port)port.postMessage({build:BUILD})}if(event.data?.type==='SKIP_WAITING')self.skipWaiting()});
 self.addEventListener('fetch',event=>{const req=event.request;if(req.method!=='GET')return;const url=new URL(req.url);if(url.pathname.endsWith('/build.json')){event.respondWith(fetch(req,{cache:'no-store'}));return}if(req.mode==='navigate'){event.respondWith(fetch(req,{cache:'no-store'}).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put('./index.html',copy));return r}).catch(()=>caches.match('./index.html')));return}event.respondWith(caches.match(req).then(hit=>hit||fetch(req).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(req,copy));return r})))})
