@@ -1,5 +1,5 @@
 const BUILD='P1-0.12.0';
-const CACHE=`lane-warden-prod-live-${BUILD}`;
+const CACHE=`lane-warden-prod-live-${BUILD}-r2`;
 const ASSETS=['./','./index.html','./layout.css?v=0.12.0','./ui-patch.css?v=0.12.0','./conscript-ui.css?v=0.12.0','./data.js?v=0.12.0','./engine.js?v=0.12.0','./balance-patch.js?v=0.12.0','./app.js?v=0.12.0','./updater.js?v=0.12.0','./ui-patch.js?v=0.12.0','./conscript-ui.js?v=0.12.0','./manifest.webmanifest','./VERSION','../lane-warden/styles.css?v=0.12.0'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>Promise.all(ASSETS.map(url=>fetch(url,{cache:'reload'}).then(r=>{if(!r.ok)throw new Error(url);return cache.put(url,r)})))).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('lane-warden-prod-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
