@@ -1,6 +1,6 @@
 (() => {
 'use strict';
-const BUILD='P2-0.15.2';
+const BUILD='P2-0.15.3';
 const $=id=>document.getElementById(id);
 const battle=$('battle'),laneStrip=$('laneStrip'),readToggle=$('readToggle'),readPanel=$('readPanel'),targetPanel=$('targetPanel'),structurePanel=$('structurePanel');
 if(!battle||!laneStrip)return;
@@ -42,7 +42,7 @@ function syncAbilities(){
 function syncTargetMode(){targetMode=!!targetPanel&&!targetPanel.hidden;laneStrip.classList.toggle('ui-targeting',targetMode);targetCancel.hidden=!targetMode}
 function syncLaneChips(){ensureLaneChips();for(const card of laneButtons()){const chip=card.querySelector('.lane-move-chip'),cmd=card.querySelector('[id$="Cmd"]')?.textContent?.trim(),extra=card.querySelector('[id$="Extra"]')?.textContent?.trim();chip.classList.remove('current','moving');if(targetMode){chip.textContent='WAYPOINT HERE';continue}if(cmd){chip.textContent='COMMANDER';chip.classList.add('current')}else if(extra==='WALKING'){chip.textContent='MOVING';chip.classList.add('moving')}else chip.textContent='WALK HERE'}}
 function syncTray(){if(tray.hidden||!openLane)return;const title=$('structureTitle')?.textContent||`${openLane.toUpperCase()} ACTIONS`,status=$('structureStatus')?.textContent||'';$('laneTrayTitle').textContent=title;$('laneTrayStatus').textContent=status;$('laneTrayFeedback').textContent=$('purchaseFeedback')?.textContent||'';for(const [ui,src] of[['uiFortify','fortifyTower'],['uiOvercharge','overchargeTower'],['uiReinforce','reinforceLane']]){const a=$(ui),b=$(src);if(a&&b)a.disabled=b.disabled}positionTray()}
-function syncBuildMarker(){document.querySelectorAll('.build-id').forEach(el=>el.textContent='0.15.2')}
+function syncBuildMarker(){document.querySelectorAll('.build-id').forEach(el=>el.textContent='0.15.3')}
 function sync(){syncReference();syncAbilities();syncTargetMode();syncLaneChips();syncTray();syncBuildMarker()}
 setInterval(sync,120);addEventListener('resize',positionTray);addEventListener('orientationchange',()=>setTimeout(positionTray,80));sync();window.LW_UI_PATCH={build:BUILD};
 })();
