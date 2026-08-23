@@ -1,7 +1,7 @@
 Lane Warden Production Battle Slice
-Build: P2-0.14.0
+Build: P2-0.15.0
 Design baseline: 1.7
 Stable install scope: /lol-the-spire/lane-warden-prod-v0.10.4/
-P2 reward seam retained from P2-0.13.0.
-Act 1 Easy Pool now includes Split Causeway: alternating 8-second raid telegraphs, Commander brace/intercept timing, missed-rotation Bastion/tower damage, surge pressure, and +8g intercept tempo.
-Outer Approach tuning retained unchanged from P1-0.12.0.
+P2 Living Lanes: cohorts are persistent moving battlefield entities; pulses spawn reinforcements; enemy waves advance independently; engagements occur spatially; surviving cohorts continue after breakthroughs; Guard/Bastion/Gate damage is positional.
+Commander: real lane position, tap-to-move within and across lanes, spatial Presence, spatial Rally/Sunder/Waypoint behavior.
+Reward packet system from P2-0.13.0 retained; Split Causeway rotation profile from P2-0.14.0 now operates on living cohorts.
