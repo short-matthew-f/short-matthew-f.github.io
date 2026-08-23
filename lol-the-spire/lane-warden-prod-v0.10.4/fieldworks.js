@@ -2,7 +2,7 @@
 'use strict';
 const E=window.LW_ENGINE,L=window.LW_LIVING;
 if(!E||!L)return;
-const BUILD='P2-0.17.0';
+const BUILD='P2-0.17.1';
 const original={
   createBattle:E.createBattle.bind(E),stepBattle:E.stepBattle.bind(E),
   setCommanderPosition:E.setCommanderPosition.bind(E),setCommanderLane:E.setCommanderLane.bind(E),
@@ -93,6 +93,26 @@ E.setCommanderLane=(b,lane)=>{ensure(b);leaveSite(b,'change-lane');return origin
 E.useAbility=(b,id,targetLane)=>{ensure(b);const c=b?.commander;if(c&&(c.work||c.atSite||c.siteTravel||c.fieldTarget)){if(id!=='waypoint'){b.events?.push({t:b.elapsed,type:'ability-blocked',id,reason:'fieldwork'});return false}leaveSite(b,'waypoint')}return original.useAbility(b,id,targetLane)};
 if(original.abilityAvailability)E.abilityAvailability=(b,id)=>{const a=original.abilityAvailability(b,id);if(a.usable&&id!=='waypoint'&&(b?.commander?.work||b?.commander?.atSite||b?.commander?.siteTravel||b?.commander?.fieldTarget))return{usable:false,reason:'FIELDWORK'};return a};
 E.selectFieldSite=selectSite;E.beginFieldwork=begin;E.resumeFieldwork=resume;E.pauseFieldwork=b=>pauseWork(b,'manual');E.fieldworkSites=sites;E.fieldworkState=(b,id)=>{const s=site(b,id);if(!s)return null;const d=def(s.kind);return{...s,definition:d,remaining:d?Math.max(0,d.time-s.progress):0,controlled:s.kind==='muster'&&s.status==='complete'?siteControlled(b,s):null}};
-E.selfTest=()=>{const base=original.selfTest?original.selfTest():{pass:true,checks:{}},b=E.createBattle(E.newRun('fieldworks-regression'),E.defaultDeployment()),s=site(b,'north-rear');b.commander.lane='north';b.commander.pos=s.pos;b.commander.atSite=s.id;const gold=b.gold,started=begin(b,s.id,'tower').ok&&b.gold===gold-KINDS.tower.cost;E.stepBattle(b,1);const partial=s.progress>0&&s.progress<KINDS.tower.time;E.setCommanderPosition(b,'north',.5);const preserved=s.progress>0&&!b.commander.work; b.commander.move=null;b.commander.pos=s.pos;b.commander.atSite=s.id;resume(b,s.id);for(let i=0;i<90&&s.status!=='complete';i++)E.stepBattle(b,.1);const completed=s.status==='complete'&&s.towerHp===90;const b2=E.createBattle(E.newRun('fieldworks-muster'),E.defaultDeployment()),m=site(b2,'north-rear');m.kind='muster';m.status='complete';b2.living.lanes.north.friendly[0].x=.5;const muster=musterSpawn(b2,'north')>.25;const r=site(b2,'north-forward');r.kind='relay';r.status='complete';const relay=relayMultiplier(b2,'ridge-cut','north','south')<1;const checks={fieldworksInit:sites(b).length===4,fieldworkCostsTime:started&&partial,fieldworkProgressPersists:preserved,fieldworkCompletes:completed,musterControlledSpawn:muster,relayShortensRoute:relay};return{pass:base.pass&&Object.values(checks).every(Boolean),checks:{...base.checks,...checks}}};
+E.selfTest=()=>{
+  const base=original.selfTest?original.selfTest():{pass:true,checks:{}},b=E.createBattle(E.newRun('fieldworks-regression'),E.defaultDeployment()),s=site(b,'north-rear');
+  b.commander.lane='north';b.commander.pos=s.pos;b.commander.atSite=s.id;
+  const gold=b.gold,started=begin(b,s.id,'tower').ok&&b.gold===gold-KINDS.tower.cost;
+  E.stepBattle(b,1);const partial=s.progress>0&&s.progress<KINDS.tower.time;
+  E.setCommanderPosition(b,'north',.5);const preserved=s.progress>0&&!b.commander.work;
+  b.commander.move=null;b.commander.pos=s.pos;b.commander.atSite=s.id;resume(b,s.id);
+  for(let i=0;i<90&&s.status!=='complete';i++)E.stepBattle(b,.1);
+  const completed=s.status==='complete'&&s.towerHp===90;
+  const b2=E.createBattle(E.newRun('fieldworks-muster'),E.defaultDeployment()),m=site(b2,'north-rear');m.kind='muster';m.status='complete';b2.living.lanes.north.friendly[0].x=.5;
+  const muster=musterSpawn(b2,'north')>.25,r=site(b2,'north-forward');r.kind='relay';r.status='complete';
+  const relay=relayMultiplier(b2,'ridge-cut','north','south')<1;
+  const everySite=LAYOUT.every(d=>{
+    const run=E.newRun(`fieldworks-route-${d.id}`);run.currentNode='A1-B2';
+    const x=E.createBattle(run,E.defaultDeployment()),picked=selectSite(x,d.id).ok;
+    for(let i=0;i<400&&x.commander.atSite!==d.id&&!x.result;i++)E.stepBattle(x,.05);
+    return picked&&x.commander.atSite===d.id&&begin(x,d.id,'relay').ok;
+  });
+  const checks={fieldworksInit:sites(b).length===4,fieldworkCostsTime:started&&partial,fieldworkProgressPersists:preserved,fieldworkCompletes:completed,musterControlledSpawn:muster,relayShortensRoute:relay,fieldworksAllSitesReachable:everySite};
+  return{pass:base.pass&&Object.values(checks).every(Boolean),checks:{...base.checks,...checks}};
+};
 window.LW_FIELDWORKS={build:BUILD,kinds:KINDS,layout:LAYOUT,ensure,sites,site,selectSite,begin,resume,musterSpawn,relayMultiplier,siteControlled};
 })();

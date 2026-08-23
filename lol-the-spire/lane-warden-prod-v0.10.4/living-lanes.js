@@ -2,7 +2,7 @@
 'use strict';
 const E=window.LW_ENGINE,D=window.LW_DATA;
 if(!E||!D)return;
-const BUILD='P2-0.17.0';
+const BUILD='P2-0.17.1';
 const original={createBattle:E.createBattle,stepBattle:E.stepBattle,useAbility:E.useAbility,setCommanderLane:E.setCommanderLane,purchaseStructure:E.purchaseStructure,selfTest:E.selfTest};
 const LANES=['north','south'];
 const CFG=Object.freeze({

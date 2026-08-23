@@ -1,7 +1,7 @@
 (() => {
   'use strict';
-  const CURRENT_BUILD='P2-0.17.0';
-  const EXPECTED_SHELL='P2-0.17.0';
+  const CURRENT_BUILD='P2-0.17.1';
+  const EXPECTED_SHELL='P2-0.17.1';
   const hadControllerAtLoad=!!navigator.serviceWorker?.controller;
   let registration=null,reloading=false,latestAdvertised=CURRENT_BUILD,swBuild=navigator.serviceWorker?.controller?'checking':'installing',updateReady=false,repairTimer=0;
   const shellBuild=()=>document.querySelector('meta[name="lw-shell-build"]')?.content||((document.title.match(/P2-\d+\.\d+\.\d+/)||[])[0]||'legacy');

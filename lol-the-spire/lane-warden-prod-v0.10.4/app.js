@@ -1,6 +1,6 @@
 (() => {
 'use strict';
-const E=window.LW_ENGINE,D=window.LW_DATA,SAVE='lane-warden-production-run-v1',BUILD='P2-0.17.0';
+const E=window.LW_ENGINE,D=window.LW_DATA,SAVE='lane-warden-production-run-v1',BUILD='P2-0.17.1';
 const $=id=>document.getElementById(id);const LANES=['north','south'];
 let run=null,battle=null,raf=0,last=0,lastSaveAt=0,deploy=E.defaultDeployment(),resolutionKind=null,selectedLane='north',pendingTarget=null,reclamationShown=false;
 const camera={x:0,zoom:1,worldW:2100,pointers:new Map(),pinchStart:null};
