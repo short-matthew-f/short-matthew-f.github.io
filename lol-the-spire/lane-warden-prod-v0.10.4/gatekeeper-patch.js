@@ -1,0 +1,37 @@
+(() => {
+'use strict';
+const E=window.LW_ENGINE,F=window.LW_FIELDWORKS,W=window.LW_REWARDS;
+if(!E||!F||!W)return;
+const BUILD='P2-0.21.0',NODE='A1-GK',END='A1-END',LAST_STAND_COST=2;
+const PROFILE=Object.freeze({firstWarning:10,warning:6,surge:9,recovery:12,missedBastionHit:12,missedTowerHit:8,missedMultiplier:1.48,worksMultiplier:1.18,wardenMultiplier:.96,interceptGold:8});
+const original={createBattle:E.createBattle.bind(E),stepBattle:E.stepBattle.bind(E),resolveLastStand:E.resolveLastStand.bind(E),selfTest:E.selfTest?.bind(E)};
+function wardenPresent(b,lane){const c=b.commander;return!!c&&!c.incapacitated&&!c.travel&&!c.move&&!c.siteTravel&&!c.atSite&&!c.work&&c.lane===lane}
+function works(b,lane){return F.sites(b).filter(s=>s.lane===lane&&s.status==='complete').length}
+function chooseLane(b){return Object.values(b.lanes).slice().sort((a,z)=>z.front-a.front||a.id.localeCompare(z.id))[0].id}
+function init(b){
+  if(!b||b.nodeId!==NODE||b.gatekeeper)return b;
+  for(const lane of Object.values(b.lanes)){lane.guard=110;lane.guardPrev=110;lane.bastion=92;lane.status=E.bastionState(lane.bastion);lane.regen*=1.06;lane.baseEnemyPower*=1.04}
+  b.gate=135;b.gold=Math.max(b.gold,64);b.reclamation.trigger=220;b.rewardAffinity=['relic','upgrade'];b.encounterName='The Ironbound Gate';
+  b.gatekeeper={version:1,phase:'recovery',timer:PROFILE.firstWarning,target:null,lastTarget:null,protected:false,source:null,edicts:0,intercepts:0,misses:0,rage:0,lastStandCost:LAST_STAND_COST,message:'The Gatekeeper is reading the field.'};
+  b.events.push({t:b.elapsed||0,type:'encounter-profile',id:'ironbound-gatekeeper',build:BUILD});return b;
+}
+function beginWarning(b){const g=b.gatekeeper;g.phase='warning';g.target=chooseLane(b);g.lastTarget=g.target;g.timer=PROFILE.warning;g.protected=false;g.source=null;g.edicts++;g.message=`IRON EDICT · ${g.target.toUpperCase()} — occupy the lane or trust completed works.`;b.events.push({t:b.elapsed,type:'gatekeeper-warning',lane:g.target,seconds:PROFILE.warning,edict:g.edicts})}
+function beginSurge(b){
+  const g=b.gatekeeper,lane=b.lanes[g.target],warden=wardenPresent(b,g.target),built=works(b,g.target);g.phase='surge';g.timer=PROFILE.surge;g.protected=warden||built>0;g.source=warden?'warden':built?'fieldworks':null;
+  if(g.protected){g.intercepts++;b.gold=Math.min(99,b.gold+PROFILE.interceptGold);lane.front=Math.min(.92,lane.front+(warden ? .016 : .008));g.message=warden?`${g.target.toUpperCase()} EDICT BROKEN — Presence holds the formation together.`:`${g.target.toUpperCase()} WORKS ABSORB THE EDICT — the Warden remains free.`;b.events.push({t:b.elapsed,type:'gatekeeper-intercept',lane:g.target,source:g.source,gold:PROFILE.interceptGold,edict:g.edicts})}
+  else{g.misses++;lane.bastion=Math.max(0,lane.bastion-PROFILE.missedBastionHit);lane.status=E.bastionState(lane.bastion);if(lane.tower?.hp>0)lane.tower.hp=Math.max(0,lane.tower.hp-PROFILE.missedTowerHit);g.message=`${g.target.toUpperCase()} CONDEMNED — the Edict drives the line toward the Core.`;b.events.push({t:b.elapsed,type:'gatekeeper-missed',lane:g.target,bastionDamage:PROFILE.missedBastionHit,edict:g.edicts})}
+}
+function beginRecovery(b){const g=b.gatekeeper;g.phase='recovery';g.timer=PROFILE.recovery;g.target=null;g.protected=false;g.source=null;g.message='The Gatekeeper resets its command. Press the exposed Gate before the next Edict.';b.events.push({t:b.elapsed,type:'gatekeeper-recovery',edict:g.edicts})}
+function brokenGuards(b){return Object.values(b.lanes).filter(l=>l.guard<=0&&l.guardDestroyedEver).length}
+function advance(b,dt,beforeBroken){const g=b.gatekeeper;if(!g||b.result||b.lastStand?.active)return;const nowBroken=brokenGuards(b);if(nowBroken>beforeBroken){const other=Object.values(b.lanes).find(l=>l.guard>0);if(other){other.baseEnemyPower+=.18;g.rage++;b.events.push({t:b.elapsed,type:'gatekeeper-rage',lane:other.id,level:g.rage})}}g.timer=Math.max(0,g.timer-dt);if(g.timer>0)return;if(g.phase==='recovery')beginWarning(b);else if(g.phase==='warning')beginSurge(b);else beginRecovery(b)}
+E.createBattle=(run,deployment)=>init(original.createBattle(run,deployment));
+E.stepBattle=(b,dt)=>{if(b?.nodeId===NODE)init(b);const before=b?.elapsed||0,beforeBroken=b?.nodeId===NODE?brokenGuards(b):0,g=b?.gatekeeper,lane=g?.phase==='surge'&&g.lastTarget?b.lanes[g.lastTarget]:null;let base=null;if(lane){base=lane.baseEnemyPower;lane.baseEnemyPower=base*(g.source==='warden'?PROFILE.wardenMultiplier:g.source==='fieldworks'?PROFILE.worksMultiplier:PROFILE.missedMultiplier)}const out=original.stepBattle(b,dt);if(lane)lane.baseEnemyPower=base;if(b?.nodeId===NODE){if(b.lastStand?.active){b.lastStand.cost=LAST_STAND_COST;b.lastStand.payable=null}advance(b,Math.max(0,(b.elapsed||0)-before),beforeBroken)}return out};
+E.resolveLastStand=(run,b)=>{
+  if(b?.nodeId!==NODE)return original.resolveLastStand(run,b);run=W.ensureRun(run);if(!b.lastStand?.active)return null;b.gate=0;b.gateVulnerable=true;b.gateVulnerabilityLatched=true;const payable=run.embers>=LAST_STAND_COST,now=new Date().toISOString();
+  if(payable){run.embers-=LAST_STAND_COST;run.salvage+=160;if(!run.resolvedNodes.some(x=>x.id===NODE))run.resolvedNodes.push({id:NODE,result:'gatekeeper-last-stand',cost:LAST_STAND_COST,at:now});run.currentNode=END;run.completedAt=now;run.endedAt=now;run.endReason='gatekeeper-last-stand';b.result={kind:'last-stand-advance',at:b.elapsed,gatekeeper:true,cost:LAST_STAND_COST}}
+  else{b.result={kind:'terminal',at:b.elapsed,gatekeeper:true,cost:LAST_STAND_COST};run.endedAt=now;run.endReason='gatekeeper-last-stand-unpaid'}
+  b.lastStand={active:false,phase:'resolved',payable,cost:LAST_STAND_COST};W.persist(run);return b.result;
+};
+E.selfTest=()=>{const base=original.selfTest?original.selfTest():{pass:true,checks:{}},run=E.newRun('gatekeeper-regression');run.currentNode=NODE;const b=E.createBattle(run,E.defaultDeployment()),g=b.gatekeeper;g.phase='warning';g.target='north';g.lastTarget='north';g.timer=.001;b.commander.lane='north';b.commander.travel=null;b.commander.move=null;const before=b.lanes.north.bastion;E.stepBattle(b,.01);const intercept=g.source==='warden'&&b.lanes.north.bastion===before;g.phase='warning';g.target='south';g.lastTarget='south';g.timer=.001;b.commander.lane='north';const beforeMiss=b.lanes.south.bastion;E.stepBattle(b,.01);const miss=g.source===null&&b.lanes.south.bastion<beforeMiss;const payableRun=E.newRun('gk-pay');payableRun.currentNode=NODE;payableRun.embers=2;const payBattle=E.createBattle(payableRun,E.defaultDeployment());payBattle.lastStand={active:true};const paid=E.resolveLastStand(payableRun,payBattle),cost=paid?.kind==='last-stand-advance'&&payableRun.embers===0&&payableRun.currentNode===END;const failRun=E.newRun('gk-fail');failRun.currentNode=NODE;failRun.embers=1;const failBattle=E.createBattle(failRun,E.defaultDeployment());failBattle.lastStand={active:true};const failed=E.resolveLastStand(failRun,failBattle)?.kind==='terminal'&&failRun.embers===1;const checks={gatekeeperProfile:b.encounterName==='The Ironbound Gate'&&b.gate===135,gatekeeperIntercept:intercept,gatekeeperMiss:miss,gatekeeperLastStandCostsTwo:cost,gatekeeperUnpaidTerminal:failed};return{pass:base.pass&&Object.values(checks).every(Boolean),checks:{...base.checks,...checks}}};
+window.LW_GATEKEEPER={build:BUILD,nodeId:NODE,endNode:END,lastStandCost:LAST_STAND_COST,profile:PROFILE,init,wardenPresent,works};
+})();

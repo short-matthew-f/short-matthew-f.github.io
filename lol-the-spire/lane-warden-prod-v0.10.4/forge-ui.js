@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 const F=window.LW_FORGE;if(!F)return;
-const $=id=>document.getElementById(id),screens=['home','map','deployment','battle','resolution','lastStand','reward','forge'];
+const $=id=>document.getElementById(id),screens=['home','map','deployment','battle','resolution','lastStand','reward','forge','rift','actComplete'];
 const esc=s=>String(s??'').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));
 let current=null;
 function hideAll(){for(const id of screens){const el=$(id);if(el)el.hidden=true}}
@@ -21,5 +21,5 @@ function render(){
 window.addEventListener('lw:node-open',e=>{if(e.detail?.nodeId===F.nodeId)render()});
 $('forgeReturn').onclick=()=>{sessionStorage.setItem('lw-forge-return','1');location.reload()};
 if(sessionStorage.getItem('lw-forge-return')==='1'){sessionStorage.removeItem('lw-forge-return');setTimeout(()=>$('continueRun')?.onclick?.(),0)}
-window.LW_FORGE_UI={build:'P2-0.18.0',render};
+window.LW_FORGE_UI={build:'P2-0.21.0',render};
 })();

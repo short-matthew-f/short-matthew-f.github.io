@@ -2,7 +2,7 @@
 'use strict';
 const E=window.LW_ENGINE,D=window.LW_DATA;
 if(!E||!D)return;
-const BUILD='P2-0.18.0';
+const BUILD='P2-0.21.0';
 const original={createBattle:E.createBattle,stepBattle:E.stepBattle,useAbility:E.useAbility,setCommanderLane:E.setCommanderLane,purchaseStructure:E.purchaseStructure,selfTest:E.selfTest};
 const LANES=['north','south'];
 const CFG=Object.freeze({
@@ -61,7 +61,7 @@ function ensureLiving(b){
   window.LW_ACTIVE_BATTLE=b;
   return b;
 }
-function commanderNear(b,lane,x,r=CFG.presenceRadius){const c=b.commander;return !!c&&!c.incapacitated&&!c.travel&&!c.siteTravel&&!c.atSite&&!c.work&&c.lane===lane&&Math.abs((c.pos??.3)-x)<=r}
+function commanderNear(b,lane,x,r=CFG.presenceRadius){const c=b.commander;if(b.runEffects?.rift?.includes('rift-longfire'))r*=1.25;return !!c&&!c.incapacitated&&!c.travel&&!c.siteTravel&&!c.atSite&&!c.work&&c.lane===lane&&Math.abs((c.pos??.3)-x)<=r}
 function towerX(l){return l.tower?.slot==='forward'?.38:.22}
 function towerEffects(b,lane,dt){
   const l=b.lanes[lane],ll=livingLane(b,lane),t=l.tower;if(!t?.id||t.hp<=0)return;

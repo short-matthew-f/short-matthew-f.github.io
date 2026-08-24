@@ -64,5 +64,5 @@ const catalog={
   {id:'log-breach-chit',name:'Breach Salvage Chit',quality:'common',tags:['skip','salvage'],thesis:['siege'],repeatable:true,logistics:{nextSkipBonus:20},description:'The next skipped reward component grants +20 Salvage.'}
  ]
 };
-window.LW_REWARD_DATA=Object.freeze({version:'P2-0.18.0',units,towers,catalog});
+window.LW_REWARD_DATA=Object.freeze({version:'P2-0.21.0',units,towers,catalog});
 })();

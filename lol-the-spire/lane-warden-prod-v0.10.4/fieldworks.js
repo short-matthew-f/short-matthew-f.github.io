@@ -2,7 +2,7 @@
 'use strict';
 const E=window.LW_ENGINE,L=window.LW_LIVING;
 if(!E||!L)return;
-const BUILD='P2-0.18.0';
+const BUILD='P2-0.21.0';
 const original={
   createBattle:E.createBattle.bind(E),stepBattle:E.stepBattle.bind(E),
   setCommanderPosition:E.setCommanderPosition.bind(E),setCommanderLane:E.setCommanderLane.bind(E),

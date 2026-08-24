@@ -1,6 +1,6 @@
 (() => {
 'use strict';
-const BUILD='P2-0.18.0',E=window.LW_ENGINE,F=window.LW_FIELDWORKS;
+const BUILD='P2-0.21.0',E=window.LW_ENGINE,F=window.LW_FIELDWORKS;
 const battle=document.getElementById('battle');if(!battle||!E||!F)return;
 let selected=null,feedback='';
 const panel=document.createElement('section');panel.id='fieldworkPanel';panel.className='fieldwork-panel';panel.hidden=true;panel.setAttribute('aria-label','Strategic fieldworks');

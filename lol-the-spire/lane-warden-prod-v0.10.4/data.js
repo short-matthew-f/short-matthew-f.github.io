@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   window.LW_DATA = Object.freeze({
-    version: 'P2-0.18.0',
+    version: 'P2-0.21.0',
     deployment: { unitCapacity: 6, towerCapacity: 4 },
     encounter: {
       id: 'A1-B1',
@@ -35,11 +35,12 @@
       { id:'pylon', name:'War Pylon', cost:2, role:'Buffs friendly cohorts moving through its local zone', effect:'amplify', power:.18 }
     ],
     nodes: [
-      { id:'A1-B1', kind:'battle', name:'Outer Approach', subtitle:'Easy Pool · concentration · SALVAGE + ?', x:12, y:60 },
-      { id:'A1-B2', kind:'battle', name:'Split Causeway', subtitle:'Easy Pool · rotation · SALVAGE + ?', x:32, y:36 },
-      { id:'A1-F1', kind:'forge', name:'Ruined Forge', subtitle:'Target one owned formation', x:52, y:63 },
-      { id:'A1-B3', kind:'battle', name:'Third Front', subtitle:'Next P2 battle seam', x:71, y:31, placeholder:true },
-      { id:'A1-GK', kind:'gatekeeper', name:'Gatekeeper', subtitle:'SALVAGE + RELIC + ACT GROWTH', x:90, y:55, placeholder:true }
+      { id:'A1-B1', kind:'battle', name:'Outer Approach', subtitle:'Easy Pool · concentration · SALVAGE + ?', x:9, y:61 },
+      { id:'A1-B2', kind:'battle', name:'Split Causeway', subtitle:'Easy Pool · rotation · SALVAGE + ?', x:26, y:35 },
+      { id:'A1-F1', kind:'forge', name:'Ruined Forge', subtitle:'Target one owned formation', x:43, y:64 },
+      { id:'A1-B3', kind:'battle', name:'Broken Switchback', subtitle:'Easy Pool · presence or infrastructure', x:59, y:30 },
+      { id:'A1-R1', kind:'rift', name:'Ashen Rift', subtitle:'EMBER gamble · or SALVAGE', x:75, y:64 },
+      { id:'A1-GK', kind:'gatekeeper', name:'The Ironbound Gate', subtitle:'ACT GATEKEEPER · LAST STAND 2◆', x:91, y:38 }
     ]
   });
 })();

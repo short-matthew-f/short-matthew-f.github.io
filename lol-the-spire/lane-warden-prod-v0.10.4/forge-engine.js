@@ -2,7 +2,7 @@
 'use strict';
 const E=window.LW_ENGINE,RD=window.LW_REWARD_DATA,W=window.LW_REWARDS;
 if(!E||!RD||!W)return;
-const BUILD='P2-0.18.0',NODE='A1-F1',NEXT='A1-B3';
+const BUILD='P2-0.21.0',NODE='A1-F1',NEXT='A1-B3';
 const clone=v=>JSON.parse(JSON.stringify(v));
 function hash(s){let h=2166136261>>>0;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
 function targetOwned(run,item){const list=item.target?.kind==='tower'?run.inventory.towers:run.inventory.units;return!!item.target&&list.includes(item.target.id)}

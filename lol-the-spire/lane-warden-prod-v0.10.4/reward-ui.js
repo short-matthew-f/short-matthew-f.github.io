@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 const W=window.LW_REWARDS;if(!W)return;
-const $=id=>document.getElementById(id),screens=['home','map','deployment','battle','resolution','lastStand','reward'];
+const $=id=>document.getElementById(id),screens=['home','map','deployment','battle','resolution','lastStand','reward','forge','rift','actComplete'];
 let filtering=false,filterQueued=false;
 function run(){return W.readSaved()}
 function hideAll(){for(const id of screens){const el=$(id);if(el)el.hidden=true}cancelAnimationFrame(window.__lwRewardRAF||0)}
