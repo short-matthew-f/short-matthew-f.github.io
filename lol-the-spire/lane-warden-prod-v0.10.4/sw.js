@@ -1,5 +1,5 @@
 const BUILD='P2-0.21.0';
-const CACHE=`lane-warden-prod-live-${BUILD}-r1`;
+const CACHE=`lane-warden-prod-live-${BUILD}-r2`;
 const SHELL_MARKER=`<meta name="lw-shell-build" content="${BUILD}"`;
 const V='0.21.0';
 const ASSETS=[
