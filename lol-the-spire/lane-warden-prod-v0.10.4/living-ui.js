@@ -2,7 +2,7 @@
 'use strict';
 const E=window.LW_ENGINE,L=window.LW_LIVING,M=window.LW_MOVEMENT,T=window.LW_TACTICAL_MODELS,F=window.LW_FIELDWORKS;
 if(!E||!L||!M||!T)return;
-const BUILD='P2-0.17.1',WORLD_MIN=.09,WORLD_MAX=.965,OVERVIEW_ZOOM=.72;
+const BUILD='P2-0.18.0',WORLD_MIN=.09,WORLD_MAX=.965,OVERVIEW_ZOOM=.68;
 const base=document.getElementById('battlefield'),battleEl=document.getElementById('battle');if(!base||!battleEl)return;
 const canvas=document.createElement('canvas');canvas.id='livingBattlefield';canvas.setAttribute('aria-hidden','true');Object.assign(canvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',zIndex:'1',pointerEvents:'none'});base.insertAdjacentElement('afterend',canvas);
 const view={x:0,y:0,zoom:OVERVIEW_ZOOM,worldW:0,worldH:0,pointers:new Map(),pinch:null,tap:null,battleKey:null};
@@ -13,10 +13,10 @@ function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(see
 const random=rng(1601);
 const TERRAIN=Array.from({length:150},(_,i)=>({x:random(),y:.06+random()*.88,r:2+random()*7,type:i%9===0?'rock':i%5===0?'shrub':'grass',tone:random()}));
 const PATCHES=Array.from({length:34},()=>({x:random(),y:.08+random()*.84,rx:45+random()*105,ry:22+random()*65,tone:random()}));
-function worldMetrics(r){view.worldW=Math.max(1700,r.width*2.55);view.worldH=Math.max(1,r.height*1.38);const leftW=120,rightW=view.worldW-120;clampView(r);return{worldW:view.worldW,worldH:view.worldH,leftW,rightW,spanW:rightW-leftW}}
+function worldMetrics(r){view.worldW=Math.max(1700,r.width*2.55);view.worldH=Math.max(1,r.height*1.82);const leftW=120,rightW=view.worldW-120;clampView(r);return{worldW:view.worldW,worldH:view.worldH,leftW,rightW,spanW:rightW-leftW}}
 function clampView(r){const visibleW=r.width/view.zoom,visibleH=r.height/view.zoom;view.x=clamp(view.x,0,Math.max(0,view.worldW-visibleW));view.y=clamp(view.y,0,Math.max(0,view.worldH-visibleH))}
 function worldX(m,pos){return m.leftW+m.spanW*((pos-WORLD_MIN)/(WORLD_MAX-WORLD_MIN))}
-function laneWorldY(m,id,pos){const wave=id==='north'?Math.sin(pos*Math.PI*2.15+.35)*14+Math.sin(pos*Math.PI*5.2)*5:Math.sin(pos*Math.PI*1.82+2.2)*17+Math.sin(pos*Math.PI*4.4+.8)*5;return m.worldH*(id==='north'?.34:.67)+wave}
+function laneWorldY(m,id,pos){const wave=id==='north'?Math.sin(pos*Math.PI*2.15+.35)*14+Math.sin(pos*Math.PI*5.2)*5:Math.sin(pos*Math.PI*1.82+2.2)*17+Math.sin(pos*Math.PI*4.4+.8)*5;return m.worldH*(id==='north'?.31:.69)+wave}
 function worldToScreen(x,y){return{x:(x-view.x)*view.zoom,y:(y-view.y)*view.zoom}}
 function lanePoint(m,id,pos){return worldToScreen(worldX(m,pos),laneWorldY(m,id,pos))}
 function siteWorldPoint(m,s){return{x:worldX(m,s.pos),y:laneWorldY(m,s.lane,s.pos)+s.offset*m.worldH}}

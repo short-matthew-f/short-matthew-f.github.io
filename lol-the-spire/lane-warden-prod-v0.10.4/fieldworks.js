@@ -2,7 +2,7 @@
 'use strict';
 const E=window.LW_ENGINE,L=window.LW_LIVING;
 if(!E||!L)return;
-const BUILD='P2-0.17.1';
+const BUILD='P2-0.18.0';
 const original={
   createBattle:E.createBattle.bind(E),stepBattle:E.stepBattle.bind(E),
   setCommanderPosition:E.setCommanderPosition.bind(E),setCommanderLane:E.setCommanderLane.bind(E),
@@ -14,10 +14,10 @@ const KINDS=Object.freeze({
   relay:Object.freeze({id:'relay',name:'FIELD RELAY',cost:28,time:7,description:'Shortens travel through the paired cut-through.'})
 });
 const LAYOUT=Object.freeze([
-  Object.freeze({id:'north-rear',lane:'north',role:'rear',pos:.31,offset:-.17,name:'NORTH RIDGEWORKS'}),
-  Object.freeze({id:'north-forward',lane:'north',role:'forward',pos:.68,offset:-.17,name:'NORTH FORWARD WORKS'}),
-  Object.freeze({id:'south-rear',lane:'south',role:'rear',pos:.31,offset:.17,name:'SOUTH CREEKWORKS'}),
-  Object.freeze({id:'south-forward',lane:'south',role:'forward',pos:.68,offset:.17,name:'SOUTH FORWARD WORKS'})
+  Object.freeze({id:'north-rear',lane:'north',role:'rear',pos:.31,offset:-.11,name:'NORTH RIDGEWORKS'}),
+  Object.freeze({id:'north-forward',lane:'north',role:'forward',pos:.68,offset:-.11,name:'NORTH FORWARD WORKS'}),
+  Object.freeze({id:'south-rear',lane:'south',role:'rear',pos:.31,offset:.11,name:'SOUTH CREEKWORKS'}),
+  Object.freeze({id:'south-forward',lane:'south',role:'forward',pos:.68,offset:.11,name:'SOUTH FORWARD WORKS'})
 ]);
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function freshSite(d){return{...d,kind:null,status:'empty',progress:0,costPaid:false,completedAt:null,towerHp:0,towerMaxHp:0}}

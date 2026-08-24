@@ -45,11 +45,11 @@ const catalog={
   {id:'relic-reclamation-clock',name:'Reclamation Clock',quality:'rare',tags:['reclamation','tempo'],thesis:['siege','hold'],description:'Reclamation begins 15 seconds later.'}
  ],
  upgrade:[
-  {id:'upgrade-ram-hook',name:'Siege Ram · Hooked Yoke',quality:'common',tags:['ram','sunder','breach'],thesis:['siege'],target:{kind:'unit',id:'ram'},description:'If a Siege Ram is deployed, Sunder hits an exposed Gate harder.'},
-  {id:'upgrade-pylon-relay',name:'War Pylon · Relay Sigil',quality:'uncommon',tags:['pylon','waypoint','rally'],thesis:['rotation'],target:{kind:'tower',id:'pylon'},description:'Waypointing into a War Pylon lane grants a short Rally effect.'},
-  {id:'upgrade-frost-condenser',name:'Frost Coil · Condenser',quality:'common',tags:['frost','overcharge'],thesis:['tower','hold'],target:{kind:'tower',id:'frost'},description:'Overcharging a Frost Coil also suppresses that lane’s enemy pressure.'},
-  {id:'upgrade-slingline-drums',name:'Slingline · Cadence Drums',quality:'common',tags:['slingline','pulse'],thesis:['pulse'],target:{kind:'unit',id:'slingline'},description:'Every third pulse in a lane with Slinglines gains a small front shove.'},
-  {id:'upgrade-bulwark-entrench',name:'Bulwark · Entrench Kit',quality:'uncommon',tags:['bulwark','bastion','reinforce'],thesis:['hold'],target:{kind:'unit',id:'bulwark'},description:'Buying Reinforce in a lane with a Bulwark also repairs its Bastion.'}
+  {id:'upgrade-ram-hook',name:'Siege Ram · Hooked Yoke',quality:'common',tags:['ram','sunder','breach'],thesis:['siege'],target:{kind:'unit',id:'ram'},forge:{cost:120,preview:'Sunder gains +4 exposed-Gate damage while a Ram is deployed in the lane.'},description:'If a Siege Ram is deployed, Sunder hits an exposed Gate harder.'},
+  {id:'upgrade-pylon-relay',name:'War Pylon · Relay Sigil',quality:'uncommon',tags:['pylon','waypoint','rally'],thesis:['rotation'],target:{kind:'tower',id:'pylon'},forge:{cost:150,preview:'Waypointing into a War Pylon lane immediately grants 4 seconds of Rally.'},description:'Waypointing into a War Pylon lane grants a short Rally effect.'},
+  {id:'upgrade-frost-condenser',name:'Frost Coil · Condenser',quality:'common',tags:['frost','overcharge'],thesis:['tower','hold'],target:{kind:'tower',id:'frost'},forge:{cost:120,preview:'Each Frost Coil Overcharge permanently cuts that lane’s enemy pressure by 5% for the battle.'},description:'Overcharging a Frost Coil also suppresses that lane’s enemy pressure.'},
+  {id:'upgrade-slingline-drums',name:'Slingline · Cadence Drums',quality:'common',tags:['slingline','pulse'],thesis:['pulse'],target:{kind:'unit',id:'slingline'},forge:{cost:120,preview:'Every third allied pulse with Slinglines adds an immediate +1.8% front shove.'},description:'Every third pulse in a lane with Slinglines gains a small front shove.'},
+  {id:'upgrade-bulwark-entrench',name:'Bulwark · Entrench Kit',quality:'uncommon',tags:['bulwark','bastion','reinforce'],thesis:['hold'],target:{kind:'unit',id:'bulwark'},forge:{cost:150,preview:'Buying Reinforce with a Bulwark in lane also repairs 8% Bastion integrity.'},description:'Buying Reinforce in a lane with a Bulwark also repairs its Bastion.'}
  ],
  capacity:[
   {id:'capacity-muster-license',name:'Muster License',quality:'common',tags:['unit','capacity'],thesis:['siege','pulse'],capacity:{unit:1,tower:0},description:'Permanent this run: +1 Unit point.'},
@@ -64,5 +64,5 @@ const catalog={
   {id:'log-breach-chit',name:'Breach Salvage Chit',quality:'common',tags:['skip','salvage'],thesis:['siege'],repeatable:true,logistics:{nextSkipBonus:20},description:'The next skipped reward component grants +20 Salvage.'}
  ]
 };
-window.LW_REWARD_DATA=Object.freeze({version:'P2-0.13.0',units,towers,catalog});
+window.LW_REWARD_DATA=Object.freeze({version:'P2-0.18.0',units,towers,catalog});
 })();

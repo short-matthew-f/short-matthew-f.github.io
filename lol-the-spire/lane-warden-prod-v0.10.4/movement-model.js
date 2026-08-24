@@ -2,7 +2,7 @@
 'use strict';
 const E=window.LW_ENGINE,L=window.LW_LIVING,D=window.LW_DATA;
 if(!E||!L||!D)return;
-const BUILD='P2-0.17.1',VERTICAL_EQUIV=.24,EPS=.0001;
+const BUILD='P2-0.18.0',VERTICAL_EQUIV=.24,EPS=.0001;
 const CROSSINGS=Object.freeze([
   Object.freeze({id:'old-gate-steps',x:.265,bend:.018,label:'OLD GATE STEPS',kind:'steps'}),
   Object.freeze({id:'dry-creek-ford',x:.505,bend:-.024,label:'DRY CREEK FORD',kind:'ford'}),

@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   window.LW_DATA = Object.freeze({
-    version: 'P2-0.17.1',
+    version: 'P2-0.18.0',
     deployment: { unitCapacity: 6, towerCapacity: 4 },
     encounter: {
       id: 'A1-B1',
@@ -35,10 +35,11 @@
       { id:'pylon', name:'War Pylon', cost:2, role:'Buffs friendly cohorts moving through its local zone', effect:'amplify', power:.18 }
     ],
     nodes: [
-      { id:'A1-B1', kind:'battle', name:'Outer Approach', subtitle:'Easy Pool · living-lane concentration · SALVAGE + ?', x:16, y:55 },
-      { id:'A1-F1', kind:'forge', name:'Ruined Forge', subtitle:'Build shaping · next P2 seam', x:43, y:29, placeholder:true },
-      { id:'A1-B2', kind:'battle', name:'Split Causeway', subtitle:'Easy Pool · living-lane rotation · SALVAGE + ?', x:54, y:62 },
-      { id:'A1-GK', kind:'gatekeeper', name:'Gatekeeper', subtitle:'SALVAGE + RELIC + ACT GROWTH', x:87, y:35, placeholder:true }
+      { id:'A1-B1', kind:'battle', name:'Outer Approach', subtitle:'Easy Pool · concentration · SALVAGE + ?', x:12, y:60 },
+      { id:'A1-B2', kind:'battle', name:'Split Causeway', subtitle:'Easy Pool · rotation · SALVAGE + ?', x:32, y:36 },
+      { id:'A1-F1', kind:'forge', name:'Ruined Forge', subtitle:'Target one owned formation', x:52, y:63 },
+      { id:'A1-B3', kind:'battle', name:'Third Front', subtitle:'Next P2 battle seam', x:71, y:31, placeholder:true },
+      { id:'A1-GK', kind:'gatekeeper', name:'Gatekeeper', subtitle:'SALVAGE + RELIC + ACT GROWTH', x:90, y:55, placeholder:true }
     ]
   });
 })();

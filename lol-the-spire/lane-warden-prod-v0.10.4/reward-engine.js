@@ -2,7 +2,7 @@
 'use strict';
 const E=window.LW_ENGINE,D=window.LW_DATA,RD=window.LW_REWARD_DATA;
 if(!E||!D||!RD)return;
-const BUILD='P2-0.13.0',SAVE='lane-warden-production-run-v1';
+const BUILD='P2-0.18.0',SAVE='lane-warden-production-run-v1';
 const BASE_UNITS=['ironjack','slingline','bulwark','zealot','ram'];
 const BASE_TOWERS=['bolt','frost','scatter','pylon'];
 for(const u of RD.units)if(!D.units.some(x=>x.id===u.id))D.units.push(u);
