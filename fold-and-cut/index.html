@@ -10,14 +10,11 @@
 <body>
   <main class="app-shell">
     <header class="topbar">
-      <div>
-        <div class="eyebrow">FOLD &amp; CUT THEOREM</div>
-        <h1>One Cut</h1>
-      </div>
+      <div><div class="eyebrow">FOLD &amp; CUT THEOREM</div><h1>One Cut</h1></div>
       <button id="infoBtn" class="icon-btn" aria-label="About this demo">?</button>
     </header>
 
-    <section class="stage-wrap" aria-label="3D fold and cut demonstration">
+    <section class="stage-wrap" aria-label="Fold and cut demonstration">
       <canvas id="stage"></canvas>
       <div id="hint" class="hint">Tap the paper to place your first vertex.</div>
       <div id="badge" class="badge hidden"></div>
@@ -31,10 +28,7 @@
 
     <section id="demoControls" class="demo-panel hidden">
       <div class="step-row">
-        <div>
-          <div id="stepCount" class="step-count">Step 1 of 1</div>
-          <div id="stepTitle" class="step-title">Your shape</div>
-        </div>
+        <div><div id="stepCount" class="step-count">Step 1 of 1</div><div id="stepTitle" class="step-title">Your shape</div></div>
         <button id="speedBtn" class="speed-btn" aria-label="Change animation speed">1×</button>
       </div>
       <div id="stepText" class="step-text"></div>
@@ -51,8 +45,8 @@
     <button id="closeInfo" class="dialog-close" aria-label="Close">×</button>
     <h2>What is happening?</h2>
     <p>The fold-and-cut theorem says any straight-line shape can be made by folding one sheet of paper flat and making one complete straight cut.</p>
-    <p>This version treats the sheet as a real 3D hinged model. The crease solver divides the paper into rigid faces; neighboring faces rotate around shared crease axes until they reach the solver’s computed flat state. The final blade then passes through the aligned cut edges, and the fold sequence reverses to reveal the result.</p>
-    <p>The displayed hinge order is chosen to make the construction understandable and to reach the computed flat state. It is not guaranteed to be an optimal or collision-free set of real-world hand-folding instructions.</p>
+    <p>This version no longer invents a fold order from an arbitrary face tree. It uses the theorem solver’s ordered corridor reflections: each crease carries the entire remaining packet of faces, and independent corridor operations are grouped into compound folds.</p>
+    <p>The paper is rendered as rigid faces rotating about crease hinges in 3D. If the geometry solver cannot produce a usable construction, the app reports that instead of substituting an illustrative fake.</p>
     <p class="small">Geometry foundation: Danielle Wang’s MIT-licensed 2017 Fold &amp; Cut implementation for MIT 6.849, based on the straight-skeleton method of Demaine, Demaine &amp; Lubiw.</p>
   </dialog>
 
@@ -64,28 +58,14 @@
   </div>
 
   <script>
-    var canvas = document.getElementById('myCanvas');
-    var ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'white'; ctx.fillRect(0,0,canvas.width,canvas.height);
-    var download = document.getElementById('download');
+    var canvas=document.getElementById('myCanvas');
+    var ctx=canvas.getContext('2d');
+    ctx.fillStyle='white';ctx.fillRect(0,0,canvas.width,canvas.height);
+    var download=document.getElementById('download');
   </script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
   <script src="https://edemaine.github.io/fold/dist/fold.js"></script>
   <script src="https://6849-2020.github.io/fold-and-cut-2017/huh.js"></script>
-  <script>
-    // The original editor stores closed polygons with a trailing marker, while
-    // its solver expects that editor representation to be normalized first.
-    // Keep the modern touch UI compatible with that contract.
-    if (typeof window.foldAndCut === 'function' && typeof window.removeMarkers === 'function') {
-      const originalFoldAndCut = window.foldAndCut;
-      window.foldAndCut = function(sequence) {
-        const clean = Array.isArray(sequence) && sequence.includes('marker')
-          ? window.removeMarkers(sequence)
-          : sequence;
-        return originalFoldAndCut(clean);
-      };
-    }
-  </script>
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>
