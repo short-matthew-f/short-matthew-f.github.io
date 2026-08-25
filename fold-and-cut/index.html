@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#f5efe2" />
+  <title>One Cut — Fold & Cut Theorem</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">FOLD &amp; CUT THEOREM</div>
+        <h1>One Cut</h1>
+      </div>
+      <button id="infoBtn" class="icon-btn" aria-label="About this demo">?</button>
+    </header>
+
+    <section class="stage-wrap" aria-label="Fold and cut demonstration">
+      <canvas id="stage"></canvas>
+      <div id="hint" class="hint">Tap the paper to place your first vertex.</div>
+      <div id="badge" class="badge hidden"></div>
+      <div id="loading" class="loading hidden"><span></span> Computing folds…</div>
+    </section>
+
+    <section id="drawControls" class="controls draw-controls">
+      <button id="undoBtn" class="secondary" disabled>Undo</button>
+      <button id="finishBtn" class="primary" disabled>Finish shape</button>
+    </section>
+
+    <section id="demoControls" class="demo-panel hidden">
+      <div class="step-row">
+        <div>
+          <div id="stepCount" class="step-count">Step 1 of 1</div>
+          <div id="stepTitle" class="step-title">Your shape</div>
+        </div>
+        <button id="speedBtn" class="speed-btn" aria-label="Change animation speed">1×</button>
+      </div>
+      <div id="stepText" class="step-text"></div>
+      <div class="transport">
+        <button id="backBtn" class="transport-btn" aria-label="Previous step">‹</button>
+        <button id="playBtn" class="play-btn" aria-label="Play demonstration">▶</button>
+        <button id="nextBtn" class="transport-btn" aria-label="Next step">›</button>
+      </div>
+      <button id="restartBtn" class="text-btn">Draw another shape</button>
+    </section>
+  </main>
+
+  <dialog id="infoDialog">
+    <button id="closeInfo" class="dialog-close" aria-label="Close">×</button>
+    <h2>What is happening?</h2>
+    <p>The fold-and-cut theorem says any straight-line shape can be made by folding one sheet of paper flat and making one complete straight cut.</p>
+    <p>This demo computes a straight-skeleton crease construction for a simple polygon, then animates the flattening and the final cut. The playback is a schematic interpolation between the crease pattern and its computed flat state; it is not intended as hand-folding instructions.</p>
+    <p class="small">Geometry foundation: Danielle Wang’s MIT-licensed 2017 Fold &amp; Cut implementation for MIT 6.849, based on the straight-skeleton method of Demaine, Demaine &amp; Lubiw.</p>
+  </dialog>
+
+  <div id="legacy" aria-hidden="true">
+    <canvas id="myCanvas" width="726" height="561"></canvas>
+    <button id="toggle"></button><button id="live"></button><button id="skeleton"></button><button id="download"></button>
+    <div id="coords"></div><div id="clicks"></div>
+    <input name="manualClickSeq" /><button id="manual"></button><a id="programatically"></a>
+  </div>
+
+  <script>
+    var canvas = document.getElementById('myCanvas');
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'white'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    var download = document.getElementById('download');
+  </script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+  <script src="https://edemaine.github.io/fold/dist/fold.js"></script>
+  <script src="https://6849-2020.github.io/fold-and-cut-2017/huh.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
