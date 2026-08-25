@@ -45,8 +45,8 @@
     <button id="closeInfo" class="dialog-close" aria-label="Close">×</button>
     <h2>What is happening?</h2>
     <p>The fold-and-cut theorem says any straight-line shape can be made by folding one sheet of paper flat and making one complete straight cut.</p>
-    <p>The app first looks for a simple packet-by-packet sequence whose hinges remain connected throughout the motion. When that stronger test succeeds, it shows those packet folds directly.</p>
-    <p>Some valid crease patterns require a coordinated compound fold instead. In that case the connected hinge angles move together in 3D and the final part of the motion settles onto the theorem solver’s exact flat-folded state before the cut. The app no longer rejects an otherwise valid construction just because it is not a sequence of simple hand folds.</p>
+    <p>The theorem solver is authoritative for the crease pattern and the exact flat-folded vertex positions. The app uses solver corridor data when it can prove a simple packet sequence, otherwise it animates the construction as a coordinated compound fold.</p>
+    <p>Legacy solver diagnostics and missing packet metadata no longer cause a valid crease construction to be rejected. The final cut line is derived directly from the solver’s folded target-edge coordinates.</p>
     <p class="small">Geometry foundation: Danielle Wang’s MIT-licensed 2017 Fold &amp; Cut implementation for MIT 6.849, based on the straight-skeleton method of Demaine, Demaine &amp; Lubiw.</p>
   </dialog>
 
@@ -66,6 +66,6 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
   <script src="https://edemaine.github.io/fold/dist/fold.js"></script>
   <script src="https://6849-2020.github.io/fold-and-cut-2017/huh.js"></script>
-  <script src="onecut-bootstrap.js?v=7"></script>
+  <script src="onecut-bootstrap.js?v=8"></script>
 </body>
 </html>
