@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#f5efe2" />
   <title>One Cut — Fold & Cut Theorem</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=2" />
 </head>
 <body>
   <main class="app-shell">
@@ -17,7 +17,7 @@
       <button id="infoBtn" class="icon-btn" aria-label="About this demo">?</button>
     </header>
 
-    <section class="stage-wrap" aria-label="Fold and cut demonstration">
+    <section class="stage-wrap" aria-label="3D fold and cut demonstration">
       <canvas id="stage"></canvas>
       <div id="hint" class="hint">Tap the paper to place your first vertex.</div>
       <div id="badge" class="badge hidden"></div>
@@ -51,7 +51,8 @@
     <button id="closeInfo" class="dialog-close" aria-label="Close">×</button>
     <h2>What is happening?</h2>
     <p>The fold-and-cut theorem says any straight-line shape can be made by folding one sheet of paper flat and making one complete straight cut.</p>
-    <p>This demo computes a straight-skeleton crease construction for a simple polygon, then animates the flattening and the final cut. The playback is a schematic interpolation between the crease pattern and its computed flat state; it is not intended as hand-folding instructions.</p>
+    <p>This version treats the sheet as a real 3D hinged model. The crease solver divides the paper into rigid faces; neighboring faces rotate around shared crease axes until they reach the solver’s computed flat state. The final blade then passes through the aligned cut edges, and the fold sequence reverses to reveal the result.</p>
+    <p>The displayed hinge order is chosen to make the construction understandable and to reach the computed flat state. It is not guaranteed to be an optimal or collision-free set of real-world hand-folding instructions.</p>
     <p class="small">Geometry foundation: Danielle Wang’s MIT-licensed 2017 Fold &amp; Cut implementation for MIT 6.849, based on the straight-skeleton method of Demaine, Demaine &amp; Lubiw.</p>
   </dialog>
 
@@ -71,6 +72,6 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
   <script src="https://edemaine.github.io/fold/dist/fold.js"></script>
   <script src="https://6849-2020.github.io/fold-and-cut-2017/huh.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>
