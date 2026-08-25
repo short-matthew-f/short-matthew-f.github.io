@@ -45,8 +45,8 @@
     <button id="closeInfo" class="dialog-close" aria-label="Close">×</button>
     <h2>What is happening?</h2>
     <p>The fold-and-cut theorem says any straight-line shape can be made by folding one sheet of paper flat and making one complete straight cut.</p>
-    <p>This version no longer invents a fold order from an arbitrary face tree. It uses the theorem solver’s ordered corridor reflections: each crease carries the entire remaining packet of faces, and independent corridor operations are grouped into compound folds.</p>
-    <p>The paper is rendered as rigid faces rotating about crease hinges in 3D. If the geometry solver cannot produce a usable construction, the app reports that instead of substituting an illustrative fake.</p>
+    <p>This build uses the theorem solver’s ordered corridor reflections, then searches possible interleavings of those packet folds. Candidate simple and compound folds are sampled through their 3D motion and rejected if a shared crease pulls apart.</p>
+    <p>A sequence is shown only if it also reaches the solver’s computed flat state closely enough and gathers the target edges onto one cut line. If that validation fails, the app reports a geometry limitation instead of inventing a fold.</p>
     <p class="small">Geometry foundation: Danielle Wang’s MIT-licensed 2017 Fold &amp; Cut implementation for MIT 6.849, based on the straight-skeleton method of Demaine, Demaine &amp; Lubiw.</p>
   </dialog>
 
@@ -66,6 +66,8 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
   <script src="https://edemaine.github.io/fold/dist/fold.js"></script>
   <script src="https://6849-2020.github.io/fold-and-cut-2017/huh.js"></script>
-  <script src="app.js?v=4"></script>
+  <script src="onecut-core.js?v=5"></script>
+  <script src="onecut-sequence.js?v=5"></script>
+  <script src="onecut-ui.js?v=5"></script>
 </body>
 </html>
