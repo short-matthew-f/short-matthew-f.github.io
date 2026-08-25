@@ -41,7 +41,7 @@
     stepIndex=i;
     const s=steps[i];
     updateStepUI();
-    const focus=i===0?1:(s.reveal?.85:0);
+    const focus=i===0?1:(s.reveal?0.85:0);
     const end={foldStage:s.foldStage,creases:s.creases,cut:s.cut,reveal:s.reveal,frameFocus:focus};
     if(instant){Object.assign(visual,end);render();return;}
     const foldMotion=solution?.mode==='compound'&&Math.abs((end.foldStage||0)-(visual.foldStage||0))>.001;
