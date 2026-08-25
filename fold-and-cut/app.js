@@ -72,7 +72,7 @@
 
   function solveWithMIT(pts){
     if(typeof window.Point!=='function'||typeof window.foldAndCut!=='function') throw new Error('Geometry library not loaded');
-    const raw=toSolverPoints(pts); const seq=raw.map(p=>new window.Point(p.x,p.y)); seq.push(seq[0]); seq.push('marker');
+    const raw=toSolverPoints(pts); const seq=raw.map(p=>new window.Point(p.x,p.y)); seq.push(seq[0]);
     const oldAlert=window.alert; let solverAlert=''; window.alert=(m)=>{solverAlert=String(m)}; let out; try{out=window.foldAndCut(seq)} finally{window.alert=oldAlert} if(solverAlert) throw new Error(solverAlert); const CP=out[0];
     if(!CP||!CP.cPVs||!CP.cPEs||out[4]) throw new Error('Solver did not produce a usable crease pattern');
     try{ const fs=window.foldedState(CP); window.fold(CP,fs[2],fs[3]); }catch(e){ console.warn('Flat-state computation issue',e); }
