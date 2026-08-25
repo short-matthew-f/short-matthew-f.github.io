@@ -45,8 +45,8 @@
     <button id="closeInfo" class="dialog-close" aria-label="Close">×</button>
     <h2>What is happening?</h2>
     <p>The fold-and-cut theorem says any straight-line shape can be made by folding one sheet of paper flat and making one complete straight cut.</p>
-    <p>The theorem solver is authoritative for the crease pattern and the exact flat-folded vertex positions. The app uses solver corridor data when it can prove a simple packet sequence, otherwise it animates the construction as a coordinated compound fold.</p>
-    <p>The target cut edges remain attached to the same rendered paper through folding, cutting, and unfolding. On the final reveal the camera returns overhead; there is no separate screen-space shape overlay.</p>
+    <p>The theorem solver is authoritative for the crease pattern and exact flat-folded vertex positions. The app uses solver corridor data when it can prove a simple packet sequence, otherwise it animates the construction as a coordinated compound fold.</p>
+    <p>The cutting stroke now enters from outside the folded packet and exits beyond the opposite side. During the unfold, the result is shown as a physical slit/seam in the same paper rather than a colored shape painted over it.</p>
     <p class="small">Geometry foundation: Danielle Wang’s MIT-licensed 2017 Fold &amp; Cut implementation for MIT 6.849, based on the straight-skeleton method of Demaine, Demaine &amp; Lubiw.</p>
   </dialog>
 
@@ -66,6 +66,6 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
   <script src="https://edemaine.github.io/fold/dist/fold.js"></script>
   <script src="https://6849-2020.github.io/fold-and-cut-2017/huh.js"></script>
-  <script src="onecut-bootstrap.js?v=10"></script>
+  <script src="onecut-bootstrap.js?v=11"></script>
 </body>
 </html>
