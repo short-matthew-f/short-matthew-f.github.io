@@ -72,6 +72,20 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
   <script src="https://edemaine.github.io/fold/dist/fold.js"></script>
   <script src="https://6849-2020.github.io/fold-and-cut-2017/huh.js"></script>
-  <script src="app.js?v=2"></script>
+  <script>
+    // The original editor stores closed polygons with a trailing marker, while
+    // its solver expects that editor representation to be normalized first.
+    // Keep the modern touch UI compatible with that contract.
+    if (typeof window.foldAndCut === 'function' && typeof window.removeMarkers === 'function') {
+      const originalFoldAndCut = window.foldAndCut;
+      window.foldAndCut = function(sequence) {
+        const clean = Array.isArray(sequence) && sequence.includes('marker')
+          ? window.removeMarkers(sequence)
+          : sequence;
+        return originalFoldAndCut(clean);
+      };
+    }
+  </script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
