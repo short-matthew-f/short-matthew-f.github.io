@@ -4,7 +4,7 @@
       {title:'Crease construction',text:'The theorem solver builds the straight-skeleton crease network and divides the paper into connected faces.',foldStage:0,creases:1,cut:0,reveal:0,group:-1}
     ];
     if(solution.mode==='compound'){
-      steps.push({title:'Compound fold',text:'This crease pattern does not admit the simple packet order our strict validator was looking for. Instead, the connected hinge angles move together toward the solver’s exact flat-folded state.',foldStage:1,creases:1,cut:0,reveal:0,group:0});
+      steps.push({title:'Compound fold',text:'The connected hinge angles move together toward the solver’s exact flat-folded state.',foldStage:1,creases:1,cut:0,reveal:0,group:0});
     }else{
       solution.groups.forEach((group,g)=>{
         const packets=group.length,faces=new Set(group.flatMap(op=>op.moving)).size;
@@ -15,7 +15,7 @@
     const q=solution.mode==='compound'?'The coordinated fold settles onto the solver’s exact flat state, where every target edge lies on one line.':'The validated packet sequence reaches the solver’s computed flat state.';
     steps.push({title:'One flat stack',text:q,foldStage:finalStage,creases:1,cut:0,reveal:0,group:-1});
     steps.push({title:'Make one straight cut',text:'The blade passes once through the folded stack along the line shared by the target edges.',foldStage:finalStage,creases:1,cut:1,reveal:0,group:-1});
-    steps.push({title:'Unfold the result',text:'Open the fold back out. The one straight cut becomes the complete shape you drew.',foldStage:0,creases:0,cut:0,reveal:1,group:-1});
+    steps.push({title:'Unfold the result',text:'The same paper opens back out while the camera returns overhead. The cut edges on the paper reveal the complete shape you drew.',foldStage:0,creases:0,cut:0,reveal:1,group:-1});
   }
 
   function goStep(i,instant=false){
@@ -29,7 +29,11 @@
   function stopPlay(){playing=false;ui.play.textContent='▶';}const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
   function project(p){
-    const c=solution?.center||[360,280,0],d=V.sub(p,c),yaw=-.34,pitch=.72,cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+    const c=solution?.center||[360,280,0],d=V.sub(p,c),reveal=Math.max(0,Math.min(1,visual.reveal||0));
+    // During the final unfold, return the camera to a true overhead view.
+    // This keeps the result in the same physical coordinate system as the paper
+    // instead of overlaying the user's original screen-space taps.
+    const yaw=-.34*(1-reveal),pitch=.72*(1-reveal),cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
     const x=cy*d[0]-sy*d[1],y=sy*d[0]+cy*d[1],z=d[2],yy=cp*y-sp*z,zz=sp*y+cp*z,span=Math.max(solution.bounds.maxX-solution.bounds.minX,solution.bounds.maxY-solution.bounds.minY),scale=Math.min(W,H)*.72/Math.max(1,span),cam=850,persp=cam/(cam-zz);
     return{x:W/2+x*scale*persp,y:H*.53-yy*scale*persp,depth:zz,z:p[2],persp};
   }
@@ -56,18 +60,17 @@
 
   function draw3D(){
     const Ts=computeTransformsFor(solution,visual.foldStage);const faceDraw=solution.faces.map((f,i)=>{const world=faceWorld(f,Ts[i],Ts),avg=world.reduce((s,p)=>s+project(p).depth,0)/world.length,raise=world.reduce((s,p)=>s+Math.abs(p[2]),0)/world.length;return{f,i,world,avg,raise};}).sort((a,b)=>a.avg-b.avg);
-    faceDraw.forEach(o=>{if(o.raise<.2)return;const pp=o.world.map(p=>project([p[0],p[1],0]));ctx.save();ctx.globalAlpha=Math.min(.13,.025+o.raise/650);ctx.fillStyle='#51483d';ctx.beginPath();pp.forEach((p,i)=>i?ctx.lineTo(p.x+5,p.y+8):ctx.moveTo(p.x+5,p.y+8));ctx.closePath();ctx.fill();ctx.restore();});
+    faceDraw.forEach(o=>{if(o.raise<.2)return;const pp=o.world.map(p=>project([p[0],p[1],0]));ctx.save();ctx.globalAlpha=Math.min(.13,.025+o.raise/650)*(1-(visual.reveal||0));ctx.fillStyle='#51483d';ctx.beginPath();pp.forEach((p,i)=>i?ctx.lineTo(p.x+5,p.y+8):ctx.moveTo(p.x+5,p.y+8));ctx.closePath();ctx.fill();ctx.restore();});
     faceDraw.forEach(o=>{pathProjected(o.world);const nz=faceNormal(o.world)[2];ctx.save();ctx.fillStyle=nz>=0?'#fffdf7':'#f1e6d2';ctx.globalAlpha=.985;ctx.fill();ctx.strokeStyle=solution.mode==='compound'?'rgba(83,72,56,.10)':'rgba(83,72,56,.22)';ctx.lineWidth=1;ctx.stroke();ctx.restore();});
-    solution.edges.forEach(e=>{if(edgeKind(e)!=='target')return;const[a,b]=edgeWorld(e,Ts),pa=project(a),pb=project(b);ctx.save();ctx.strokeStyle='#25231f';ctx.lineWidth=3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();ctx.restore();});
+    // Target edges are part of the physical paper. They remain attached during
+    // every fold and become the highlighted cut only as the sheet opens again.
+    solution.edges.forEach(e=>{if(edgeKind(e)!=='target')return;const[a,b]=edgeWorld(e,Ts),pa=project(a),pb=project(b);ctx.save();ctx.lineCap='round';ctx.strokeStyle='#25231f';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();if((visual.reveal||0)>.001){ctx.globalAlpha=visual.reveal;ctx.strokeStyle='#9f3026';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();}ctx.restore();});
     if(visual.creases>.02){
       const s=steps[stepIndex]||{},active=s.group>=0&&solution.groups[s.group]?new Set(solution.groups[s.group].map(op=>op.edgeIndex)):new Set();
       solution.edges.forEach((e,ei)=>{if(edgeKind(e)!=='crease')return;const[a,b]=edgeWorld(e,Ts),pa=project(a),pb=project(b),on=solution.mode==='compound'&&s.group===0?true:active.has(ei);ctx.save();ctx.globalAlpha=Math.max(.15,visual.creases*(on?1:.48));ctx.strokeStyle=e.assignment==='m'?'#bd4a3d':e.assignment==='v'?'#3d718e':'#948c80';ctx.lineWidth=on?2.7:1.15;ctx.setLineDash(on?[]:[5,5]);ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();ctx.restore();});
     }
     if(visual.cut>.01&&solution.cutLine){
       const a=project(solution.cutLine.start),b=project(solution.cutLine.end),t=visual.cut,bladeX=a.x+(b.x-a.x)*t,bladeY=a.y+(b.y-a.y)*t;ctx.save();ctx.strokeStyle='rgba(187,63,49,.28)';ctx.lineWidth=9;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(bladeX,bladeY);ctx.stroke();ctx.strokeStyle='#8c261f';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(bladeX,bladeY);ctx.stroke();ctx.translate(bladeX,bladeY);ctx.rotate(Math.atan2(b.y-a.y,b.x-a.x));ctx.fillStyle='#25231f';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-18,-7);ctx.lineTo(-13,7);ctx.closePath();ctx.fill();ctx.restore();
-    }
-    if(visual.reveal>.01){
-      ctx.save();ctx.globalAlpha=visual.reveal*.18;ctx.fillStyle='#bb3f31';ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);for(let i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);ctx.closePath();ctx.fill();ctx.globalAlpha=visual.reveal;ctx.strokeStyle='#8c261f';ctx.lineWidth=4;ctx.stroke();ctx.restore();
     }
   }
   function faceNormal(world){if(world.length<3)return[0,0,1];return V.norm(V.cross(V.sub(world[1],world[0]),V.sub(world[2],world[0])));}
