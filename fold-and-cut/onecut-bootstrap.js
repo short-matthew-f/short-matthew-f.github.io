@@ -1,6 +1,6 @@
 (async()=>{
   try{
-    const names=['onecut-core.js?v=12','onecut-sequence.js?v=12','onecut-ui.js?v=12','onecut-hotfix.js?v=12','onecut-targetfix.js?v=12','onecut-payoff.js?v=12','onecut-tuning.js?v=12'];
+    const names=['onecut-core.js?v=13','onecut-sequence.js?v=13','onecut-ui.js?v=13','onecut-hotfix.js?v=13','onecut-targetfix.js?v=13','onecut-payoff.js?v=13','onecut-tuning.js?v=13','onecut-staging.js?v=13','onecut-coordinate.js?v=13'];
     const parts=await Promise.all(names.map(async name=>{
       const r=await fetch(name,{cache:'no-store'});
       if(!r.ok) throw new Error(`Could not load ${name}`);
