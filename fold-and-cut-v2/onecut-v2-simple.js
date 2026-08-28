@@ -277,22 +277,43 @@
     if(chain.length!==2)return{eligible:true,valid:false,reason:'The simple-fold construction did not reduce to one edge.'};
 
     const a=chain[0],b=chain[1],dir=v2Norm(v2Sub(b,a)),perp=v2Perp(dir),L=v2Dist(a,b);
-    // Fold only the excess beyond each cut endpoint.  Place the crease halfway
-    // between the current paper extent and the endpoint, so the farthest excess
-    // lands exactly at the endpoint instead of overshooting across the cut span.
-    const tuckSide=(which)=>{
+    // Finish the paper with the successive-halving idea from the simple-fold
+    // construction.  Halve a long excess tail until it is shorter than the
+    // target segment, then fold the remaining tail exactly at the endpoint.
+    // That last fold puts every point of the tail inside the target interval.
+    const paperRange=()=>{
       const ts=pieces.flat().map(p=>v2Dot(v2Sub(p,a),dir));
-      const mn=Math.min(...ts),mx=Math.max(...ts);
-      if(which==='start'&&mn<-1e-4){
+      return{mn:Math.min(...ts),mx:Math.max(...ts)};
+    };
+    const foldStartTail=()=>{
+      let g=0;
+      while(g++<16){
+        const {mn}=paperRange(),excess=-mn;
+        if(excess<=1e-4)break;
+        if(excess<=L*.82){
+          const line={p:a.slice(),d:perp},probe=v2Add(a,v2Mul(dir,mn));
+          addOp({kind:'tuck',label:'Tuck the first cut end',detail:'Fold the remaining short tail exactly at the cut endpoint.',line,movingSign:Math.sign(v2LineSide(line,probe))||1});
+          break;
+        }
         const creaseT=mn/2,p=v2Add(a,v2Mul(dir,creaseT)),line={p,d:perp},probe=v2Add(a,v2Mul(dir,mn));
-        addOp({kind:'tuck',label:'Tuck the first cut end',detail:'Fold only the paper extending past the first cut endpoint back into the stack.',line,movingSign:Math.sign(v2LineSide(line,probe))||1});
-      }
-      if(which==='end'&&mx>L+1e-4){
-        const creaseT=(mx+L)/2,p=v2Add(a,v2Mul(dir,creaseT)),line={p,d:perp},probe=v2Add(a,v2Mul(dir,mx));
-        addOp({kind:'tuck',label:'Tuck the second cut end',detail:'Fold only the paper extending past the opposite cut endpoint back into the stack.',line,movingSign:Math.sign(v2LineSide(line,probe))||1});
+        addOp({kind:'halve',label:'Halve excess paper',detail:'A successive-halving fold shortens the paper tail without touching the target edge.',line,movingSign:Math.sign(v2LineSide(line,probe))||1});
       }
     };
-    tuckSide('start');tuckSide('end');tuckSide('start');
+    const foldEndTail=()=>{
+      let g=0;
+      while(g++<16){
+        const {mx}=paperRange(),excess=mx-L;
+        if(excess<=1e-4)break;
+        if(excess<=L*.82){
+          const line={p:b.slice(),d:perp},probe=v2Add(a,v2Mul(dir,mx));
+          addOp({kind:'tuck',label:'Tuck the second cut end',detail:'Fold the remaining short tail exactly at the opposite cut endpoint.',line,movingSign:Math.sign(v2LineSide(line,probe))||1});
+          break;
+        }
+        const creaseT=L+excess/2,p=v2Add(a,v2Mul(dir,creaseT)),line={p,d:perp},probe=v2Add(a,v2Mul(dir,mx));
+        addOp({kind:'halve',label:'Halve excess paper',detail:'A successive-halving fold shortens the opposite paper tail.',line,movingSign:Math.sign(v2LineSide(line,probe))||1});
+      }
+    };
+    foldStartTail();foldEndTail();foldStartTail();
 
     const cutLine={p:a.slice(),d:dir,a:a.slice(),b:b.slice()};
     let maxOff=0;
