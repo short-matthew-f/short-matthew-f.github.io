@@ -302,14 +302,14 @@
     // Approximate the paper-on-cut condition. This is deliberately conservative:
     // if excess paper still crosses the cut line outside the target interval, use
     // the general theorem solver instead of claiming a simple-fold solution.
-    const L=v2Dist(a,b),samples=120;
+    const cutLen=v2Dist(a,b),samples=120;
     let excess=false;
     const allPts=pieces.flat(),ts=allPts.map(p=>v2Dot(v2Sub(p,a),dir));
     const mn=Math.min(...ts),mx=Math.max(...ts);
     for(let i=0;i<=samples;i++){
       const t=mn+(mx-mn)*i/samples,q=v2Add(a,v2Mul(dir,t));
       const inPaper=pieces.some(poly=>v2PointInPoly(q,poly));
-      if(inPaper&&(t<-1e-3||t>L+1e-3)){excess=true;break;}
+      if(inPaper&&(t<-1e-3||t>cutLen+1e-3)){excess=true;break;}
     }
     if(excess)return{eligible:true,valid:false,reason:'The explicit sequence still leaves excess paper on the cut line.'};
 
