@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#f5efe2" />
+  <title>One Cut V2 — Sequence-First Fold & Cut</title>
+  <link rel="stylesheet" href="styles.css?v=2" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div><div class="eyebrow">FOLD &amp; CUT THEOREM · V2</div><h1>One Cut</h1></div>
+      <div class="top-actions">
+        <a class="version-link" href="../fold-and-cut/?v=14" aria-label="Open version 1">V1</a>
+        <button id="infoBtn" class="icon-btn" aria-label="About this demo">?</button>
+      </div>
+    </header>
+
+    <section class="stage-wrap" aria-label="Fold and cut demonstration">
+      <canvas id="stage"></canvas>
+      <div id="hint" class="hint">Tap the paper to place your first vertex.</div>
+      <div id="badge" class="badge hidden"></div>
+      <div id="loading" class="loading hidden"><span></span> Computing folds…</div>
+    </section>
+
+    <section id="drawControls" class="controls draw-controls">
+      <button id="undoBtn" class="secondary" disabled>Undo</button>
+      <button id="finishBtn" class="primary" disabled>Finish shape</button>
+      <button id="coordsBtn" class="coordinate-launch" type="button">Enter coordinates</button>
+    </section>
+
+    <section id="demoControls" class="demo-panel hidden">
+      <div class="step-row">
+        <div><div id="stepCount" class="step-count">Step 1 of 1</div><div id="stepTitle" class="step-title">Your shape</div></div>
+        <button id="speedBtn" class="speed-btn" aria-label="Change animation speed">1×</button>
+      </div>
+      <div id="stepText" class="step-text"></div>
+      <div class="transport">
+        <button id="backBtn" class="transport-btn" aria-label="Previous step">‹</button>
+        <button id="playBtn" class="play-btn" aria-label="Play demonstration">▶</button>
+        <button id="nextBtn" class="transport-btn" aria-label="Next step">›</button>
+      </div>
+      <button id="restartBtn" class="text-btn">Draw another shape</button>
+    </section>
+  </main>
+
+  <dialog id="infoDialog">
+    <button id="closeInfo" class="dialog-close" aria-label="Close">×</button>
+    <h2>What is happening?</h2>
+    <p>The fold-and-cut theorem says any straight-line shape can be made by folding one sheet of paper flat and making one complete straight cut.</p>
+    <p><strong>V2 is sequence-first.</strong> For a convex polygon with reflectional symmetry, it first attempts an explicit all-layers simple-fold construction: symmetry fold, successive end-edge halving, angle-bisector folds, and final paper tucks.</p>
+    <p>If that explicit construction cannot be validated cleanly, V2 falls back to the general straight-skeleton theorem solver and its staged compound fold. It does not invent a simple sequence for shapes that the secondary solver cannot support.</p>
+    <p>You can draw by tapping or enter exact coordinates, one <strong>x, y</strong> pair per line.</p>
+    <p class="small">Geometry foundation: Danielle Wang’s MIT-licensed 2017 Fold &amp; Cut implementation for MIT 6.849, based on the straight-skeleton method of Demaine, Demaine &amp; Lubiw.</p>
+  </dialog>
+
+  <dialog id="coordsDialog" class="coords-dialog">
+    <button id="coordsCancel" class="dialog-close" aria-label="Close">×</button>
+    <h2>Enter coordinates</h2>
+    <p>One point per line, in order around the shape. Use <strong>x, y</strong>; negative values and decimals are fine. The last point connects back to the first automatically.</p>
+    <textarea id="coordsInput" inputmode="text" spellcheck="false" autocapitalize="off" placeholder="0, 0&#10;4, 0&#10;4, 3&#10;0, 3"></textarea>
+    <div id="coordsError" class="coords-error" aria-live="polite"></div>
+    <div class="dialog-actions">
+      <button id="coordsApply" class="primary" type="button">Use these points</button>
+    </div>
+  </dialog>
+
+  <div id="legacy" aria-hidden="true">
+    <canvas id="myCanvas" width="726" height="561"></canvas>
+    <button id="toggle"></button><button id="live"></button><button id="skeleton"></button><button id="download"></button>
+    <div id="coords"></div><div id="clicks"></div>
+    <input name="manualClickSeq" /><button id="manual"></button><a id="programatically"></a>
+  </div>
+
+  <script>
+    var canvas=document.getElementById('myCanvas');
+    var ctx=canvas.getContext('2d');
+    ctx.fillStyle='white';ctx.fillRect(0,0,canvas.width,canvas.height);
+    var download=document.getElementById('download');
+  </script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+  <script src="https://edemaine.github.io/fold/dist/fold.js"></script>
+  <script src="https://6849-2020.github.io/fold-and-cut-2017/huh.js"></script>
+  <script src="bootstrap.js?v=2"></script>
+</body>
+</html>
