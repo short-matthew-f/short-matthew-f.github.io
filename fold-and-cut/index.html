@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#f5efe2" />
   <title>One Cut — Fold & Cut Theorem</title>
-  <link rel="stylesheet" href="styles.css?v=2" />
+  <link rel="stylesheet" href="styles.css?v=13" />
 </head>
 <body>
   <main class="app-shell">
@@ -24,6 +24,7 @@
     <section id="drawControls" class="controls draw-controls">
       <button id="undoBtn" class="secondary" disabled>Undo</button>
       <button id="finishBtn" class="primary" disabled>Finish shape</button>
+      <button id="coordsBtn" class="coordinate-launch" type="button">Enter coordinates</button>
     </section>
 
     <section id="demoControls" class="demo-panel hidden">
@@ -46,8 +47,20 @@
     <h2>What is happening?</h2>
     <p>The fold-and-cut theorem says any straight-line shape can be made by folding one sheet of paper flat and making one complete straight cut.</p>
     <p>The theorem solver is authoritative for the crease pattern and exact flat-folded vertex positions. The app uses solver corridor data when it can prove a simple packet sequence, otherwise it animates the construction as a coordinated compound fold.</p>
-    <p>The first demonstration step automatically frames the target shape so small drawings remain legible, then eases back out to show the full crease construction. Compound folding is paced slightly more slowly so the 3D motion is easier to follow.</p>
+    <p>When the solver can validate a packet-by-packet sequence, the app shows those folds separately. Otherwise the general compound fold is staged as a parent-to-child cascade so fewer parts move at once before the paper settles onto the solver’s exact flat state.</p>
+    <p>You can draw by tapping, or enter exact point coordinates as a secondary input mode.</p>
     <p class="small">Geometry foundation: Danielle Wang’s MIT-licensed 2017 Fold &amp; Cut implementation for MIT 6.849, based on the straight-skeleton method of Demaine, Demaine &amp; Lubiw.</p>
+  </dialog>
+
+  <dialog id="coordsDialog" class="coords-dialog">
+    <button id="coordsCancel" class="dialog-close" aria-label="Close">×</button>
+    <h2>Enter coordinates</h2>
+    <p>One point per line, in order around the shape. Use <strong>x, y</strong>; negative values and decimals are fine. The last point connects back to the first automatically.</p>
+    <textarea id="coordsInput" inputmode="decimal" spellcheck="false" autocapitalize="off" placeholder="0, 0&#10;4, 0&#10;4, 3&#10;0, 3"></textarea>
+    <div id="coordsError" class="coords-error" aria-live="polite"></div>
+    <div class="dialog-actions">
+      <button id="coordsApply" class="primary" type="button">Use these points</button>
+    </div>
   </dialog>
 
   <div id="legacy" aria-hidden="true">
@@ -66,6 +79,6 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
   <script src="https://edemaine.github.io/fold/dist/fold.js"></script>
   <script src="https://6849-2020.github.io/fold-and-cut-2017/huh.js"></script>
-  <script src="onecut-bootstrap.js?v=12"></script>
+  <script src="onecut-bootstrap.js?v=13"></script>
 </body>
 </html>
