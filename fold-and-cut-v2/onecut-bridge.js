@@ -116,7 +116,7 @@
       showCompareToast('Carried the same '+(payload.inputMode==='coordinates'?'coordinate polygon':'drawn polygon')+' from '+payload.source.toUpperCase()+'.','same',2600);
       if(payload.finished&&points.length>=3){
         setTimeout(async()=>{
-          await finishShape();
+          await finishBeforeBridge();
           if(mode==='demo'){
             const m=destinationComparisonMessage();if(m)showCompareToast(m.text,m.kind,6200);
           }else{
