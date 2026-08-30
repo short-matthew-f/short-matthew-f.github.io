@@ -39,10 +39,11 @@ button,textarea{font:inherit}.app{max-width:1100px;margin:auto}.top{display:flex
 </head>
 <body>
 <div class="app">
-<header class="top"><div><div class="eyebrow">EVERYTHING IDLE / VISUAL LAB</div><h1>Kenney Colony A/B</h1></div><div class="badge">v0.3 · explicit sprite loading</div></header>
+<header class="top"><div><div class="eyebrow">EVERYTHING IDLE / VISUAL LAB</div><h1>Kenney Colony A/B</h1></div><div class="badge">v0.4 · mobile JS fix</div></header>
 <nav class="tabs" id="tabs"></nav>
 <div class="toolbar"><div class="viewbar"><button data-view="a" class="on">A</button><button data-view="b">B</button><button data-view="split">A/B</button></div><button class="ghost" id="sources">Asset sources</button></div>
 <div class="sourcebox" id="sourcebox"><b>Actual Kenney source art.</b> This preview uses small locally hosted crops derived from Kenney's CC0 Pixel Platformer family so iPhone/Safari does not depend on sandbox files or giant data URIs. Packs: <a href="https://kenney.nl/assets/pixel-platformer" target="_blank">Pixel Platformer</a>, <a href="https://kenney.nl/assets/pixel-platformer-industrial-expansion" target="_blank">Industrial Expansion</a>, and <a href="https://kenney.nl/assets/pixel-platformer-farm-expansion" target="_blank">Farm Expansion</a>. Layout, rooms, lighting and interaction chrome are CSS.</div>
+<div id="runtimeStatus" style="margin:0 0 8px;padding:8px 10px;border:1px solid #2d4052;border-radius:10px;background:#111b25;color:#9eb2bc;font-size:10px">Runtime: starting…</div>
 <section class="assetcheck" aria-label="Kenney asset load check">
   <div class="assetitem"><img src="https://raw.githubusercontent.com/short-matthew-f/short-matthew-f.github.io/master/everything-idle/kenney-visual-lab/assets/terrain.png?v=3" alt="Kenney terrain sprite crop" onload="this.nextElementSibling.textContent='Terrain ✓ loaded'" onerror="this.nextElementSibling.textContent='Terrain ✕ failed'"><span>Terrain loading…</span></div>
   <div class="assetitem"><img src="https://raw.githubusercontent.com/short-matthew-f/short-matthew-f.github.io/master/everything-idle/kenney-visual-lab/assets/industrial.png?v=3" alt="Kenney industrial sprite crop" onload="this.nextElementSibling.textContent='Industrial ✓ loaded'" onerror="this.nextElementSibling.textContent='Industrial ✕ failed'"><span>Industrial loading…</span></div>
@@ -59,6 +60,15 @@ eng:{name:"Engineering",q:"What is Engineering visually about?",body:"A embeds p
 };
 let area=localStorage.eiKenneyArea||"hub", view=localStorage.eiKenneyView||"a";
 const state=JSON.parse(localStorage.eiKenneyVotes||"{}");
+const tabsEl=document.getElementById("tabs");
+const stageEl=document.getElementById("stage");
+const qtitleEl=document.getElementById("qtitle");
+const qbodyEl=document.getElementById("qbody");
+const notesEl=document.getElementById("notes");
+const savedEl=document.getElementById("saved");
+const sourcesBtn=document.getElementById("sources");
+const sourceboxEl=document.getElementById("sourcebox");
+const exportBtn=document.getElementById("export");
 function hud(title){return '<div class="hud"><div class="avatar">✦</div><div class="title"><b>STARFALL COLONY</b><small>'+title.toUpperCase()+'</small></div><div class="resource">◈ 1.3K</div><div class="resource">● 4.2K</div></div>'}
 function bottom(){return '<div class="bottom"><span>COLONY</span><span>CREW</span><span>MISSIONS</span><span>RESEARCH</span></div>'}
 function phone(cls,title,variant,inner){return '<section class="phone"><div class="tag">'+variant+'</div><div class="label">'+title+'</div>'+hud(title)+'<div class="world '+cls+'">'+inner+'</div>'+bottom()+'</section>'}
@@ -68,12 +78,12 @@ function hydro(v){if(v==="A")return phone("hydroA","Hydroponics","A",'<div class
 function eng(v){if(v==="A")return phone("engA","Engineering","A",'<div class="shop"></div><div class="queue"><div class="q">LIFE SUPPORT<div class="bar"><i style="width:72%"></i></div></div><div class="q">MINE LIFT<div class="bar"><i style="width:43%"></i></div></div><div class="q">HARVEST BOT<div class="bar"><i style="width:18%"></i></div></div></div><i class="spark"></i>');return phone("engB","Engineering","B",'<img class="sheetstamp" style="right:10px;top:62px" src="https://raw.githubusercontent.com/short-matthew-f/short-matthew-f.github.io/master/everything-idle/kenney-visual-lab/assets/industrial.png?v=3" alt="Kenney industrial sprites"><div class="hull"></div><div class="choices"><div class="choice hot"><b>RESTORE FABRICATION</b>More machine capacity</div><div class="choice"><b>RESTORE SCANNERS</b>Find more opportunities</div><div class="choice"><b>RESTORE STORAGE</b>Raise passive limits</div><div class="choice"><b>RESTORE DEFENSES</b>Improve launch prep</div></div>')}
 function renderPhone(v){return area==="hub"?hub(v):area==="mining"?mining(v):area==="hydro"?hydro(v):eng(v)}
 function render(){
- tabs.innerHTML=Object.entries(areas).map(([k,a])=>'<button data-area="'+k+'" class="'+(k===area?"on":"")+'">'+a.name+'</button>').join("");
+ tabsEl.innerHTML=Object.entries(areas).map(([k,a])=>'<button data-area="'+k+'" class="'+(k===area?"on":"")+'">'+a.name+'</button>').join("");
  document.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("on",b.dataset.view===view));
- stage.className="stage"+(view==="split"?" split":"");
- stage.innerHTML=view==="split"?renderPhone("A")+renderPhone("B"):renderPhone(view.toUpperCase());
- qtitle.textContent=areas[area].q;qbody.textContent=areas[area].body;
- notes.value=(state[area]&&state[area].notes)||"";
+ stageEl.className="stage"+(view==="split"?" split":"");
+ stageEl.innerHTML=view==="split"?renderPhone("A")+renderPhone("B"):renderPhone(view.toUpperCase());
+ qtitleEl.textContent=areas[area].q;qbodyEl.textContent=areas[area].body;
+ notesEl.value=(state[area]&&state[area].notes)||"";
  document.querySelectorAll("[data-vote]").forEach(b=>b.classList.toggle("sel",state[area]&&state[area].vote===b.dataset.vote));
  localStorage.eiKenneyArea=area;localStorage.eiKenneyView=view;
 }
@@ -82,10 +92,11 @@ document.addEventListener("click",e=>{
  const v=e.target.closest("[data-view]");if(v){view=v.dataset.view;render()}
  const vote=e.target.closest("[data-vote]");if(vote){state[area]=state[area]||{};state[area].vote=vote.dataset.vote;save();render()}
 });
-notes.addEventListener("input",()=>{state[area]=state[area]||{};state[area].notes=notes.value;save()});
-function save(){localStorage.eiKenneyVotes=JSON.stringify(state);saved.textContent="Saved · "+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}
-sources.onclick=()=>sourcebox.classList.toggle("open");
-export.onclick=()=>{const data={project:"Everything Idle — Kenney Colony A/B",exported:new Date().toISOString(),decisions:state};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="kenney-colony-ab-decisions.json";a.click();URL.revokeObjectURL(a.href)};
+notesEl.addEventListener("input",()=>{state[area]=state[area]||{};state[area].notes=notesEl.value;save()});
+function save(){localStorage.eiKenneyVotes=JSON.stringify(state);savedEl.textContent="Saved · "+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}
+sourcesBtn.onclick=()=>sourceboxEl.classList.toggle("open");
+exportBtn.onclick=()=>{const data={project:"Everything Idle — Kenney Colony A/B",exported:new Date().toISOString(),decisions:state};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="kenney-colony-ab-decisions.json";a.click();URL.revokeObjectURL(a.href)};
 render();
+document.getElementById("runtimeStatus").textContent="Runtime ✓ interactive";
 </script>
 </body></html>
