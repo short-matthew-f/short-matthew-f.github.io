@@ -9,6 +9,8 @@ import {
   EPS,
   SHIP_RADIUS,
   PREDICT_SAMPLE_DT,
+  WORMHOLE_COOLDOWN,
+  WORMHOLE_RADIUS,
   killRadius,
   cloneLevel,
   bodyIsLethal,
@@ -440,4 +442,175 @@ test('predict samples every 1/20 s and reports the closest approach', function (
   assert.equal(doomed.reason, 'well');
   assert.equal(doomed.closestApproach.id, 'well0');
   assert.equal(doomed.closestApproach.dist, 0);
+});
+
+// --- wormholes -------------------------------------------------------------
+
+/** A wormhole level with the ship flying +x along y = 600 at 120 u/s. */
+function whLevel(hole, over) {
+  const base = {
+    target: { x: 10000, y: 10000, r: 10 }, // unreachable: let the flight play out
+    fixtures: [hole]
+  };
+  return level(Object.assign(base, over || {}));
+}
+
+test('a ship entering mouth a leaves mouth b along b.angle at the same speed', function () {
+  const l = whLevel({
+    type: 'wormhole',
+    id: 'wh',
+    a: { x: 400, y: 600, angle: Math.PI },
+    b: { x: 400, y: 200, angle: -Math.PI / 2 }, // faces up (y grows down)
+    r: 26
+  });
+  const state = createState(l, []);
+  const hole = byId(state, 'wh');
+  assert.equal(hole.type, 'wormhole');
+  assert.equal(hole.static, true);
+  assert.equal(hole.zone, true);
+  assert.equal(hole.lethal, false, 'wormholes are not lethal');
+  assert.equal(bodyIsLethal(hole), false);
+  assert.deepEqual(state.wormholes, [hole], 'also listed on state.wormholes');
+
+  advance(state, 3);
+  const ev = state.events.find(function (e) { return e.kind === 'teleport'; });
+  assert.ok(ev, 'teleport event emitted');
+  assert.equal(ev.id, 'ship');
+  assert.equal(ev.wormhole, 'wh');
+  assert.equal(ev.from, 'a');
+  // Mouth a sits at x = 400 with r = 26, so the ship enters at x = 374.
+  near(ev.t, (374 - 100) / 120, 1e-9, 'entry time');
+
+  // Placed just outside mouth b, along b.angle, keeping its speed.
+  near(state.ship.x, 400, 1e-9, 'exit x');
+  near(state.ship.y, 200 - (26 + SHIP_RADIUS + 2), 1e-9, 'exit y is r + shipR + 2 outside the mouth');
+  near(state.ship.vx, 0, 1e-9, 'exit vx');
+  near(state.ship.vy, -120, 1e-9, 'exits along b.angle, not along the entry heading');
+  near(Math.hypot(state.ship.vx, state.ship.vy), 120, 1e-9, 'speed preserved');
+  assert.equal(state.outcome, null);
+
+  // Gravity does not reach through the mouths: a well parked on mouth b has no
+  // pull on the ship while it is still on the other side of the hole.
+  const far = fieldAt([{ x: 400, y: 200, charges: 3 }], 100, 600);
+  const plain = fieldAt([{ x: 400, y: 200, charges: 3 }], 100, 600);
+  assert.deepEqual(far, plain);
+});
+
+test('a two-way wormhole sends a body back again once the cooldown expires', function () {
+  const l = whLevel({
+    type: 'wormhole',
+    id: 'wh',
+    a: { x: 400, y: 600, angle: 0 },
+    b: { x: 700, y: 600, angle: Math.PI },
+    r: 26
+  });
+  const res = run(l, [], {});
+  const jumps = res.events.filter(function (e) { return e.kind === 'teleport'; });
+  assert.ok(jumps.length >= 6, 'the ship shuttles between the mouths, got ' + jumps.length);
+  for (let i = 0; i < jumps.length; i++) {
+    assert.equal(jumps[i].from, i % 2 === 0 ? 'a' : 'b', 'jump ' + i + ' direction alternates');
+    assert.equal(jumps[i].id, 'ship');
+  }
+  // Both exits put it at x = 438 (38 units outside the far mouth, heading +x).
+  assert.ok(jumps[1].t - jumps[0].t > WORMHOLE_COOLDOWN, 'return trip happens after the cooldown');
+  near(jumps[1].t - jumps[0].t, (674 - 438) / 120, 1e-9, 'shuttle period');
+  assert.equal(res.outcome, 'fail');
+  assert.equal(res.reason, 'drift', 'it never escapes the loop');
+});
+
+test('a one-way wormhole refuses the b -> a direction', function () {
+  const l = whLevel({
+    type: 'wormhole',
+    id: 'wh',
+    oneWay: true,
+    a: { x: 400, y: 600, angle: 0 },
+    b: { x: 700, y: 600, angle: Math.PI },
+    r: 26
+  });
+  const res = run(l, [], {});
+  const jumps = res.events.filter(function (e) { return e.kind === 'teleport'; });
+  assert.equal(jumps.length, 1, 'only the a -> b jump fires');
+  assert.equal(jumps[0].from, 'a');
+  // It then sails straight through mouth b and off the board.
+  assert.equal(res.outcome, 'fail');
+  assert.equal(res.reason, 'lost');
+  const end = res.trace[res.trace.length - 1];
+  assert.ok(end.x > 900, 'left through the right edge: ' + end.x);
+  near(end.vx, 120, 1e-9, 'never redirected by mouth b');
+});
+
+test('the cooldown stops overlapping mouths from ping-ponging a body', function () {
+  // Mouth b exits 38 units to the left, which lands inside mouth a: without the
+  // per-(body, wormhole) lockout the ship would jump on every single step.
+  const l = whLevel({
+    type: 'wormhole',
+    id: 'wh',
+    a: { x: 400, y: 600, angle: 0 },
+    b: { x: 440, y: 600, angle: Math.PI },
+    r: 26
+  });
+  const res = run(l, [], {});
+  const jumps = res.events.filter(function (e) { return e.kind === 'teleport'; });
+  assert.equal(jumps.length, 1, 'exactly one jump');
+  near(res.state.ship.vx, -120, 1e-9, 'thrown back the way it came');
+  assert.equal(res.reason, 'lost');
+  assert.ok(res.t < 6, 'it drives straight back out of the left edge');
+});
+
+test('drones jump but kinematic patrol asteroids do not', function () {
+  const l = level({
+    ship: { x: 100, y: 1100, vx: 0, vy: 0 },
+    target: { x: 10000, y: 10000, r: 10 },
+    fixtures: [
+      { type: 'drone', id: 'd', r: 12, x: 100, y: 600, vx: 100, vy: 0 },
+      { type: 'asteroid', id: 'rock', r: 20, speed: 100, loop: true, path: [{ x: 100, y: 200 }, { x: 700, y: 200 }] },
+      { type: 'wormhole', id: 'whA', a: { x: 400, y: 600, angle: 0 }, b: { x: 400, y: 900, angle: 0 }, r: 26 },
+      { type: 'wormhole', id: 'whB', a: { x: 400, y: 200, angle: 0 }, b: { x: 800, y: 200, angle: 0 }, r: 26 }
+    ]
+  });
+  const state = createState(l, []);
+  assert.equal(state.wormholes.length, 2);
+  advance(state, 6);
+
+  const drone = byId(state, 'd');
+  const jump = state.events.find(function (e) { return e.kind === 'teleport' && e.id === 'd'; });
+  assert.ok(jump, 'the drone went through');
+  assert.equal(jump.wormhole, 'whA');
+  assert.equal(jump.from, 'a');
+  near(jump.t, (374 - 100) / 100, 1e-9, 'drone entry time');
+  near(drone.y, 900, 1e-9, 'came out of mouth b');
+  assert.ok(drone.x > 438, 'and kept flying along b.angle: ' + drone.x);
+
+  const rock = byId(state, 'rock');
+  assert.ok(!state.events.some(function (e) { return e.kind === 'teleport' && e.id === 'rock'; }),
+    'a kinematic patrol ignores wormholes');
+  near(rock.y, 200, 1e-9, 'still on its polyline');
+  near(rock.x, 700, 1e-9, 'and on schedule (600 units in 6 s) despite crossing a mouth');
+});
+
+test('prediction keeps sampling across a teleport', function () {
+  const l = whLevel({
+    type: 'wormhole',
+    id: 'wh',
+    a: { x: 400, y: 600, angle: Math.PI },
+    b: { x: 400, y: 200, angle: -Math.PI / 2 },
+    r: 26
+  });
+  const p = predict(l, [], 3);
+  assert.equal(p.outcome, null, 'still alive at the horizon');
+  near(p.ship[p.ship.length - 1].t, 3, 1e-9, 'samples run to the horizon');
+  assert.equal(p.ship.length, 61, 'a sample every 1/20 s, t = 0 .. 3');
+  for (let i = 1; i < p.ship.length; i++) {
+    near(p.ship[i].t - p.ship[i - 1].t, PREDICT_SAMPLE_DT, 1e-9, 'sample spacing across the jump');
+  }
+  // Exactly one sample-to-sample discontinuity: the jump itself.
+  let jumps = 0;
+  for (let i = 1; i < p.ship.length; i++) {
+    const d = Math.hypot(p.ship[i].x - p.ship[i - 1].x, p.ship[i].y - p.ship[i - 1].y);
+    if (d > 100) jumps += 1;
+  }
+  assert.equal(jumps, 1, 'the path teleports once and stays continuous otherwise');
+  const end = p.ship[p.ship.length - 1];
+  near(end.x, 400, 1e-9, 'prediction continues from the far mouth');
+  assert.ok(end.y < 200, 'heading up and away: ' + end.y);
 });

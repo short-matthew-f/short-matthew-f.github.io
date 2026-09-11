@@ -159,36 +159,40 @@ export function drawBounds(ctx, view, bounds) {
 // ------------------------------------------------------------- field arrows
 
 // samples: [{x, y, ax, ay}] in world space (caller skips kill radii).
-export function drawFieldArrows(ctx, view, samples) {
+// opts.spacing is the sampling grid pitch in world units; arrows are sized as a
+// fraction of it so they read the same at any letterbox scale.
+export function drawFieldArrows(ctx, view, samples, opts) {
   if (!samples || !samples.length) return;
+  var spacing = (opts && opts.spacing) || 60;
+  var maxLen = spacing * view.scale * 0.92;
   ctx.save();
   ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   for (var i = 0; i < samples.length; i++) {
     var s = samples[i];
     var mag = Math.sqrt(s.ax * s.ax + s.ay * s.ay);
     if (mag < 1e-3) continue;
-    // log-scaled length so weak far-field is still visible but never huge
+    // log-scaled so the weak far field still reads but never runs off the grid
     var strength = Math.min(1, Math.log10(1 + mag) / 2.6);
-    if (strength < 0.06) continue;
-    var len = (8 + strength * 26) * view.scale;
+    if (strength < 0.05) continue;
+    var len = maxLen * (0.32 + 0.68 * strength);
     var ux = s.ax / mag, uy = s.ay / mag;
     var x0 = wx2sx(view, s.x) - ux * len * 0.5;
     var y0 = wy2sy(view, s.y) - uy * len * 0.5;
     var x1 = x0 + ux * len, y1 = y0 + uy * len;
-    ctx.globalAlpha = 0.14 + strength * 0.55;
+    ctx.globalAlpha = 0.22 + strength * 0.58;
     ctx.strokeStyle = COLORS.field;
-    ctx.lineWidth = Math.max(0.8, 1.1 * view.scale * 1.2);
+    ctx.lineWidth = 1 + strength * 1.1;
     ctx.beginPath();
     ctx.moveTo(x0, y0);
     ctx.lineTo(x1, y1);
     ctx.stroke();
     // head
-    var hs = Math.max(2.5, len * 0.3);
+    var hs = Math.max(3, len * 0.34);
     ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x1 - ux * hs - uy * hs * 0.45, y1 - uy * hs + ux * hs * 0.45);
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x1 - ux * hs + uy * hs * 0.45, y1 - uy * hs - ux * hs * 0.45);
+    ctx.moveTo(x1 - ux * hs - uy * hs * 0.42, y1 - uy * hs + ux * hs * 0.42);
+    ctx.lineTo(x1, y1);
+    ctx.lineTo(x1 - ux * hs + uy * hs * 0.42, y1 - uy * hs - ux * hs * 0.42);
     ctx.stroke();
   }
   ctx.restore();

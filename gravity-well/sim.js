@@ -37,8 +37,26 @@
 // EPS also flattens the force inside r < EPS, which is why very small impact
 // parameters bend *less* than mid-range ones.
 //
+// Wormholes
+// ---------
+// A `wormhole` fixture is a linked pair of mouths, each with an outward facing
+// `angle`. A mover whose centre comes within the mouth radius is relocated to
+// the far mouth, just outside it, and ALWAYS leaves along that mouth's angle
+// with its speed preserved (deliberately simple: the player reads the exit tick
+// on the ring and knows exactly which way the body will come out). Two-way
+// unless `oneWay`, in which case only a -> b works. Each (body, wormhole) pair
+// then ignores that wormhole for WORMHOLE_COOLDOWN seconds, which is what stops
+// mouths that sit close together from ping-ponging a body every step.
+// Gravity does not pass through: the field is always plain distance in ordinary
+// space. Wormholes are zones — never lethal, never consumed, never collided
+// with — and kinematic patrol asteroids ignore them (their motion is a pure
+// function of path time, so they cannot be displaced).
+// They live in `state.bodies` (static: true, zone: true) AND are listed by
+// reference in `state.wormholes` so the renderer can find them without a scan.
+//
 // PHYSICS_VERSION keys shared solutions to these constants: if G, EPS, DT,
-// killRadius or the integration order change, bump it.
+// killRadius or the integration order change, bump it. Wormholes added no
+// change to any pre-existing behaviour, so 'gw-1' still stands.
 
 export const PHYSICS_VERSION = 'gw-1';
 
@@ -59,6 +77,12 @@ export const RESTITUTION = 1;
 export const HUNTER_ACCEL = 60;
 export const HUNTER_MAX_SPEED = 140;
 
+// Wormhole mouth radius (per-fixture `r` overrides), the per-(body, wormhole)
+// lockout after a jump, and how far outside the far mouth a body is placed.
+export const WORMHOLE_RADIUS = 26;
+export const WORMHOLE_COOLDOWN = 0.5;
+export const WORMHOLE_EXIT_GAP = 2;
+
 // Reference density for mass: mass = r^2 / 100, so the ship (r = 10) has mass 1.
 const MASS_SCALE = 1 / 100;
 
@@ -66,8 +90,9 @@ const MASS_SCALE = 1 / 100;
 // also makes it deadly (see bodyIsLethal).
 const LETHAL_TYPES = { obstacle: 1, asteroid: 1, drone: 1, hunter: 1 };
 
-// Types that never take part in the collision pass (pure zones).
-const ZONE_TYPES = { oreReceiver: 1 };
+// Types that never take part in the collision pass (pure zones): they are not
+// lethal, are never consumed by wells and never bounce anything.
+const ZONE_TYPES = { oreReceiver: 1, wormhole: 1 };
 
 // Types that feel the gravity field.
 const RESPONSIVE_TYPES = { drone: 1, hunter: 1, ore: 1 };
@@ -231,10 +256,30 @@ function makeBody(fx, index) {
     body.r = 0.5 * Math.sqrt(body.w * body.w + body.h * body.h); // bounding radius
   }
 
-  if (type === 'obstacle' || type === 'oreReceiver') {
+  if (type === 'obstacle' || type === 'oreReceiver' || type === 'wormhole') {
     body.static = true;
     body.vx = 0;
     body.vy = 0;
+  }
+
+  if (type === 'wormhole') {
+    // Two linked mouths; `angle` (radians) is the outward facing direction a
+    // body travels when it exits there. Entry works from any direction.
+    const a = fx.a || { x: 0, y: 0, angle: 0 };
+    const b = fx.b || { x: 0, y: 0, angle: 0 };
+    body.zone = true;
+    body.r = fx.r != null ? fx.r : WORMHOLE_RADIUS;
+    body.oneWay = !!fx.oneWay;
+    body.color = fx.color != null ? fx.color : 0;
+    body.mouths = [
+      { key: 'a', x: a.x, y: a.y, angle: a.angle || 0 },
+      { key: 'b', x: b.x, y: b.y, angle: b.angle || 0 }
+    ];
+    body.a = body.mouths[0];
+    body.b = body.mouths[1];
+    // Nominal position (mouth a) so generic code has something sane to read.
+    body.x = body.a.x;
+    body.y = body.a.y;
   }
 
   if (type === 'asteroid' && fx.path && fx.path.length > 0) {
@@ -259,6 +304,7 @@ function makeBody(fx, index) {
 
   body.mass = body.static || body.kinematic ? Infinity : Math.max(0.0001, body.r * body.r * MASS_SCALE);
   body.lethal = bodyIsLethal(body);
+  body.wormholeCooldown = {}; // wormhole id -> seconds left before it works again
   return body;
 }
 
@@ -301,10 +347,14 @@ export function createState(level, wells) {
       static: false,
       kinematic: false,
       responsive: true,
-      lethal: false
+      lethal: false,
+      wormholeCooldown: {}
     },
     target: src.target ? { x: src.target.x, y: src.target.y, r: src.target.r } : null,
     bodies: bodies,
+    // Same objects as the matching entries in `bodies`, listed for the
+    // renderer and for the teleport pass.
+    wormholes: bodies.filter(function (b) { return b.type === 'wormhole'; }),
     wells: placed,
     oreDelivered: 0,
     oreLost: 0,
@@ -377,6 +427,66 @@ function integrate(state) {
       // Inert mover: constant velocity.
       b.x += b.vx * DT;
       b.y += b.vy * DT;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Wormholes (runs after integration, before well consumption)
+// ---------------------------------------------------------------------------
+
+function tickWormholeCooldowns(body) {
+  const cd = body.wormholeCooldown;
+  for (const key in cd) {
+    const left = cd[key] - DT;
+    if (left <= 1e-9) delete cd[key];
+    else cd[key] = left;
+  }
+}
+
+/** Relocate `body` to `other`, leaving along that mouth's outward angle. */
+function teleport(state, body, hole, mouth, other) {
+  const ux = Math.cos(other.angle);
+  const uy = Math.sin(other.angle);
+  const out = hole.r + body.r + WORMHOLE_EXIT_GAP;
+  body.x = other.x + ux * out;
+  body.y = other.y + uy * out;
+  const speed = Math.sqrt(body.vx * body.vx + body.vy * body.vy);
+  body.vx = ux * speed;
+  body.vy = uy * speed;
+  body.wormholeCooldown[hole.id] = WORMHOLE_COOLDOWN;
+  pushEvent(state, 'teleport', body.id, { wormhole: hole.id, from: mouth.key });
+}
+
+function wormholePass(state) {
+  if (state.wormholes.length === 0) return;
+
+  const movers = [];
+  if (state.ship.alive) movers.push(state.ship);
+  for (let i = 0; i < state.bodies.length; i++) {
+    const b = state.bodies[i];
+    // Static fixtures have nothing to move, and a kinematic patrol's position
+    // is a pure function of its path time, so neither can be displaced.
+    if (b.alive && !b.static && !b.kinematic) movers.push(b);
+  }
+
+  for (let i = 0; i < movers.length; i++) {
+    const m = movers[i];
+    tickWormholeCooldowns(m);
+    for (let j = 0; j < state.wormholes.length; j++) {
+      const hole = state.wormholes[j];
+      if (m.wormholeCooldown[hole.id]) continue;
+      let hit = -1;
+      for (let k = 0; k < 2; k++) {
+        if (k === 1 && hole.oneWay) continue; // one-way runs a -> b only
+        const mouth = hole.mouths[k];
+        const dx = m.x - mouth.x;
+        const dy = m.y - mouth.y;
+        if (dx * dx + dy * dy <= hole.r * hole.r) { hit = k; break; }
+      }
+      if (hit < 0) continue;
+      teleport(state, m, hole, hole.mouths[hit], hole.mouths[1 - hit]);
+      break; // at most one jump per body per step
     }
   }
 }
@@ -616,6 +726,7 @@ export function step(state) {
   state.t = state.steps * DT;
 
   integrate(state);
+  wormholePass(state);
 
   wellPass(state);
   if (state.outcome) return state;

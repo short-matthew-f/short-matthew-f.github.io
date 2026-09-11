@@ -145,6 +145,8 @@ async function runViewport(browser, vp, baseURL) {
   // ---- menu -> level 1
   const rows = page.locator('.level-row');
   assert(await rows.count() > 0, 'level select lists levels');
+  assert(await page.locator('.phase-head').count() > 0, 'level select groups levels by world');
+  await page.screenshot({ path: path.join(SHOT_DIR, 'gw-' + vp.name + '-menu.png') });
   await rows.first().click();
   await page.waitForFunction(() => window.GW.mode === 'plan', null, { timeout: 5000 });
   assert(await page.isVisible('#game'), 'canvas is visible in plan state');

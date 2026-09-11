@@ -626,7 +626,7 @@ function draw() {
 
   ctx.save();
   if (flying) ctx.globalAlpha = 0.55;
-  R.drawFieldArrows(ctx, view, app.arrows);
+  R.drawFieldArrows(ctx, view, app.arrows, { spacing: ARROW_SPACING });
   ctx.restore();
 
   R.drawBodies(ctx, view, s.bodies, app.clock, s.ship);

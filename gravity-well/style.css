@@ -39,15 +39,16 @@ html, body {
   overscroll-behavior: none;
 }
 
-body { position: fixed; inset: 0; }
+body { position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; }
 
-.view { position: absolute; inset: 0; }
+.view { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; }
 [hidden] { display: none !important; }
 
 /* ------------------------------------------------------------------ canvas */
 
 #game {
   position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -120,6 +121,14 @@ body { position: fixed; inset: 0; }
   white-space: nowrap;
 }
 .charges .sep { color: var(--text-dim); margin: 0 2px; }
+.charges .chg-label {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-right: 6px;
+  vertical-align: 1px;
+}
 .charges.full { color: var(--target); border-color: rgba(255, 179, 71, 0.45); background: rgba(255, 179, 71, 0.10); }
 
 /* ----------------------------------------------------------------- buttons */
@@ -215,6 +224,7 @@ body { position: fixed; inset: 0; }
 
 .overlay {
   position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
   inset: 0;
   z-index: 4;
   display: flex;
