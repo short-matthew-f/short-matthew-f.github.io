@@ -425,7 +425,7 @@ function enterPlan(fresh) {
 function launch() {
   if (app.mode !== 'plan') return;
   var v = validateWells(app.level, app.wells);
-  if (!v.ok) { toast(v.reason || 'Invalid placement'); return; }
+  if (!v.ok) { toast(v.message || v.reason || 'Invalid placement'); return; }
   app.sim = createState(app.level, app.wells);
   app.trails = { ship: [], byId: {} };
   app.flightT = 0;
@@ -571,7 +571,7 @@ function pasteSolution() {
     wells.push({ x: x, y: y, charges: n });
   }
   var v = validateWells(app.level, wells);
-  if (!v.ok) { toast(v.reason || 'Invalid solution'); return; }
+  if (!v.ok) { toast(v.message || v.reason || 'Invalid solution'); return; }
   app.wells = wells;
   markWellsChanged();
   toast('Solution loaded');
@@ -629,9 +629,22 @@ function drawPlanPreview(view, lv) {
   R.drawTrajectory(ctx, view, pred.ship, { bright: true, endMark: end });
 
   var ca = pred.closestApproach;
-  if (ca && pred.bodies && pred.bodies[ca.id]) {
-    R.drawClosestApproach(ctx, view, pred.ship, pred.bodies[ca.id], ca);
+  if (ca) {
+    var other = pathForId(pred, ca);
+    if (other) R.drawClosestApproach(ctx, view, pred.ship, other, ca);
   }
+}
+
+// The closest approach may be to a well (id 'wellN'), which has no sampled
+// path because it never moves — synthesise a one-point path for it.
+function pathForId(pred, ca) {
+  if (pred.bodies && pred.bodies[ca.id]) return pred.bodies[ca.id];
+  var m = /^well(\d+)$/.exec(ca.id);
+  if (m) {
+    var w = app.wells[parseInt(m[1], 10)];
+    if (w) return [{ t: ca.t, x: w.x, y: w.y }];
+  }
+  return null;
 }
 
 function drawFlightTrails(view) {

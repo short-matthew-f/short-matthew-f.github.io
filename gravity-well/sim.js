@@ -157,7 +157,11 @@ function buildPath(points, loop) {
   }
   const segs = [];
   let total = 0;
-  const last = loop && pts.length > 2 ? pts.length : pts.length - 1;
+  // A looping path is a closed circuit: the last point is joined back to the
+  // first. For a two-point path that closing leg is the return trip, i.e. the
+  // body patrols A -> B -> A. Zero-length legs (e.g. an author-repeated first
+  // point) drop out below.
+  const last = loop && pts.length > 1 ? pts.length : pts.length - 1;
   for (let i = 0; i < last; i++) {
     const a = pts[i];
     const b = pts[(i + 1) % pts.length];

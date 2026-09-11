@@ -125,10 +125,13 @@ test('determinism: identical inputs give byte-identical traces', function () {
   const p1 = predict(l, wells, 3);
   const p2 = predict(l, wells, 3);
   assert.deepStrictEqual(p1, p2);
-  const at3 = a.trace.find(function (s) { return Math.abs(s.t - 3) < 1e-9; });
-  const pAt3 = p1.ship[p1.ship.length - 1];
-  near(pAt3.x, at3.x, 1e-9, 'predict x matches run x');
-  near(pAt3.y, at3.y, 1e-9, 'predict y matches run y');
+  const shared = Math.min(p1.ship.length, a.trace.length);
+  assert.ok(shared > 20, 'predict and run overlap');
+  for (let i = 0; i < shared; i++) {
+    near(p1.ship[i].t, a.trace[i].t, 1e-12, 'sample ' + i + ' time');
+    near(p1.ship[i].x, a.trace[i].x, 1e-12, 'sample ' + i + ' x');
+    near(p1.ship[i].y, a.trace[i].y, 1e-12, 'sample ' + i + ' y');
+  }
 
   // run() must not mutate the level it was handed.
   assert.equal(l.fixtures.length, 7);
@@ -219,7 +222,9 @@ test('a patrolling asteroid follows its polyline on schedule and loops', functio
   near(a.x, 100, 1e-9, 'starts at the first path point');
   near(a.y, 100, 1e-9, 'path y');
 
-  const expect = [[1, 160, 60], [2, 220, 60], [4, 340, -60], [5, 280, -60], [7, 160, -60], [8, 100, 60]];
+  // t = 4 is the turn-around instant (exactly at the far point): the reported
+  // direction there is still the outbound leg's.
+  const expect = [[1, 160, 60], [2, 220, 60], [4, 340, 60], [5, 280, -60], [7, 160, -60], [8, 100, 60]];
   for (const row of expect) {
     advance(state, row[0]);
     near(state.t, row[0], 1e-9, 'sim time');
@@ -313,7 +318,8 @@ test('an immune body passes through a well that would eat an ordinary one', func
       target: { x: 800, y: 100, r: 28 },
       fixtures: [{ type: 'asteroid', id: 'rock', r: 16, x: 100, y: 600, vx: 100, vy: 0, immune: immune }]
     });
-    const state = createState(l, []);
+    // The asteroid flies straight through a well sitting on its track.
+    const state = createState(l, [{ x: 400, y: 600, charges: 1 }]);
     advance(state, 5);
     return state;
   }
