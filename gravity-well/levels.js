@@ -3,11 +3,28 @@
 // Two minimal levels in the SPEC.md level format so the stage-2 UI has
 // something to load, render and smoke-test against.
 
+// One line per world; the menu reads this for its group headings.
+export const WORLDS = [
+  { phase: 1, title: 'One well' },
+  { phase: 2, title: 'Two wells' },
+  { phase: 3, title: 'Stacking' },
+  { phase: 4, title: 'Static obstacles' },
+  { phase: 5, title: 'Asteroids' },
+  { phase: 6, title: 'Drones' },
+  { phase: 7, title: 'Redirection' },
+  { phase: 8, title: 'Mixed systems' },
+  { phase: 9, title: 'Hunters' },
+  { phase: 10, title: 'Ore runs' },
+  { phase: 11, title: 'Wormholes' },
+  { phase: 12, title: 'Expert gauntlet' }
+];
+
 export const LEVELS = [
   {
-    id: 'p1-01',
+    id: 'w1-1',
     name: 'First Light',
     phase: 1,
+    optional: false,
     bounds: { w: 900, h: 1200 },
     charges: 3,
     stackLimit: 3,
@@ -26,9 +43,10 @@ export const LEVELS = [
     solution: [{ x: 360, y: 960, charges: 1 }]
   },
   {
-    id: 'p4-01',
+    id: 'w4-1',
     name: 'The Gate',
     phase: 4,
+    optional: false,
     bounds: { w: 900, h: 1200 },
     charges: 4,
     stackLimit: 3,

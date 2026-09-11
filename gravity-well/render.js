@@ -520,6 +520,33 @@ export function drawOreReceiver(ctx, view, b, t) {
   ctx.restore();
 }
 
+// Wormhole (world 11) and any fixture type this renderer does not know yet:
+// a dashed swirl so the level is never silently missing a piece.
+export function drawWormhole(ctx, view, b, t) {
+  var cx = wx2sx(view, b.x), cy = wy2sy(view, b.y), r = (b.r || 22) * view.scale;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(t * 0.6);
+  ctx.strokeStyle = '#7fd8ff';
+  ctx.lineWidth = 1.6;
+  for (var k = 0; k < 3; k++) {
+    ctx.globalAlpha = 0.75 - k * 0.2;
+    ctx.setLineDash([5, 7]);
+    ctx.beginPath();
+    ctx.arc(0, 0, r * (1 - k * 0.26), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 0.35;
+  var g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+  g.addColorStop(0, 'rgba(127,216,255,0.45)');
+  g.addColorStop(1, 'rgba(127,216,255,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  if (b.immune) { hatch(ctx, cx, cy, r); immuneOutline(ctx, cx, cy, r); }
+}
+
 // Dispatch over a body list (state.bodies).
 export function drawBodies(ctx, view, bodies, t, ship) {
   if (!bodies) return;
@@ -539,7 +566,7 @@ export function drawBodies(ctx, view, bodies, t, ship) {
       case 'drone': drawDrone(ctx, view, b, t); break;
       case 'hunter': drawHunter(ctx, view, b, ship); break;
       case 'ore': drawOre(ctx, view, b, t); break;
-      default: break;
+      default: drawWormhole(ctx, view, b, t); break;
     }
   }
 }

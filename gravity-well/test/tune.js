@@ -40,6 +40,10 @@ function probe(b, charges) {
   };
 }
 
+// Node's test runner sweeps up every .js file under test/, so stay quiet when
+// it does; this file only has something to say when it is run on purpose.
+if (process.env.NODE_TEST_CONTEXT) process.exit(0);
+
 const rows = [];
 for (const n of [1, 2, 3]) {
   for (const b of [60, 80, 100, 150, 200, 300]) rows.push(probe(b, n));

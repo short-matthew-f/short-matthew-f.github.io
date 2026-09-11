@@ -336,6 +336,8 @@ body { position: fixed; inset: 0; }
 .level-row .lv-name { flex: 1 1 auto; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .level-row .lv-mark { font-size: 16px; min-width: 22px; text-align: right; }
 .level-row.done .lv-mark { color: var(--good); }
+.level-row.optional { border-style: dashed; }
+.level-row.optional .lv-index { color: var(--target); font-size: 14px; }
 .level-row.locked .lv-mark { color: var(--text-dim); }
 
 .menu-foot {

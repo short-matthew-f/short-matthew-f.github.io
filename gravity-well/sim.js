@@ -520,8 +520,10 @@ function collisionPass(state) {
     for (let j = i + 1; j < list.length; j++) {
       const b = list[j];
       if (!a.alive || !b.alive) continue;
-      if (a.static && b.static) continue;
-      if (a.kinematic && b.kinematic) continue;
+      // Two immovable bodies (static/kinematic) cannot react to each other, so
+      // skip the pair outright rather than reporting a contact every step.
+      // The ship always has finite mass, so ship pairs are never skipped here.
+      if (invMass(a) === 0 && invMass(b) === 0) continue;
       const c = contactBetween(a, b);
       if (!c) continue;
 

@@ -6,9 +6,14 @@ import {
   PHYSICS_VERSION, DT, SHIP_RADIUS,
   killRadius, createState, step, predict, fieldAt, validateWells
 } from './sim.js';
-import { LEVELS } from './levels.js';
+import * as levelsModule from './levels.js';
 import { createInput } from './input.js';
 import * as R from './render.js';
+
+// levels.js is authored in a later stage; read it through the namespace so a
+// missing optional export (WORLDS) is a fallback rather than a load failure.
+var LEVELS = levelsModule.LEVELS || [];
+var WORLDS = levelsModule.WORLDS || null;
 
 // ------------------------------------------------------------------ storage
 
@@ -154,26 +159,46 @@ function updateView() {
 
 // ------------------------------------------------------------------- menu
 
-function phaseLabel(phase) {
-  var names = {
-    1: 'Phase 1 — Bend a trajectory',
-    2: 'Phase 2 — Multiple wells',
-    3: 'Phase 3 — Stacking',
-    4: 'Phase 4 — Static constraints',
-    5: 'Phase 5 — Moving hazards',
-    6: 'Phase 6 — Responsive movers',
-    7: 'Phase 7 — Deliberate redirection',
-    8: 'Phase 8 — Mixed systems',
-    9: 'Phase 9 — Hunters',
-    10: 'Phase 10 — Secondary objectives'
-  };
-  return names[phase] || ('Phase ' + phase);
+function worldTitle(phase) {
+  if (WORLDS) {
+    for (var i = 0; i < WORLDS.length; i++) {
+      if (WORLDS[i] && WORLDS[i].phase === phase) {
+        return 'World ' + phase + ' — ' + WORLDS[i].title;
+      }
+    }
+  }
+  return 'World ' + phase;
 }
 
+function isOptional(lv) { return !!(lv && lv.optional); }
+
+// A required level unlocks when the previous REQUIRED level is complete (or it
+// is the first one). An optional level unlocks when every required level in its
+// own world is complete.
 function isUnlocked(index) {
-  if (index <= 0) return true;
-  var prev = LEVELS[index - 1];
-  return !!(prev && progress.completed[prev.id]);
+  var lv = LEVELS[index];
+  if (!lv) return false;
+  if (isOptional(lv)) {
+    for (var j = 0; j < LEVELS.length; j++) {
+      var o = LEVELS[j];
+      if (o.phase !== lv.phase || isOptional(o)) continue;
+      if (!progress.completed[o.id]) return false;
+    }
+    return true;
+  }
+  for (var k = index - 1; k >= 0; k--) {
+    if (isOptional(LEVELS[k])) continue;
+    return !!progress.completed[LEVELS[k].id];
+  }
+  return true; // first required level
+}
+
+// Index of the next REQUIRED level after `index`, or -1.
+function nextRequiredIndex(index) {
+  for (var i = index + 1; i < LEVELS.length; i++) {
+    if (!isOptional(LEVELS[i])) return i;
+  }
+  return -1;
 }
 
 function buildMenu() {
@@ -186,34 +211,44 @@ function buildMenu() {
     return;
   }
   var lastPhase = null;
+  var nInWorld = 0;
   for (var i = 0; i < LEVELS.length; i++) {
     var lv = LEVELS[i];
     if (lv.phase !== lastPhase) {
       lastPhase = lv.phase;
+      nInWorld = 0;
       var h = document.createElement('div');
       h.className = 'phase-head';
-      h.textContent = phaseLabel(lv.phase);
+      h.textContent = worldTitle(lv.phase);
       el.menuList.appendChild(h);
     }
+    nInWorld++;
+    var optional = isOptional(lv);
     var unlocked = isUnlocked(i);
     var done = !!progress.completed[lv.id];
+
     var row = document.createElement('button');
     row.type = 'button';
-    row.className = 'level-row' + (done ? ' done' : '') + (unlocked ? '' : ' locked');
+    row.className = 'level-row' + (done ? ' done' : '') + (unlocked ? '' : ' locked') +
+      (optional ? ' optional' : '');
     row.setAttribute('data-index', String(i));
     if (!unlocked) row.disabled = true;
 
     var idx = document.createElement('span');
     idx.className = 'lv-index';
-    idx.textContent = (i + 1 < 10 ? '0' : '') + (i + 1);
+    idx.textContent = optional ? '\u2605' : String(nInWorld);
+
     var name = document.createElement('span');
     name.className = 'lv-name';
     name.textContent = unlocked ? lv.name : 'Locked';
+
     var mark = document.createElement('span');
     mark.className = 'lv-mark';
-    mark.textContent = done ? '✓' : (unlocked ? '' : '•');
+    mark.textContent = done ? '\u2713' : (unlocked ? '' : '\u2022');
 
-    row.appendChild(idx); row.appendChild(name); row.appendChild(mark);
+    row.appendChild(idx);
+    row.appendChild(name);
+    row.appendChild(mark);
     row.addEventListener('click', onLevelRowClick);
     el.menuList.appendChild(row);
   }
@@ -520,7 +555,7 @@ function showResult() {
     el.resultBonus.hidden = true;
   }
 
-  el.btnNext.hidden = !win || app.levelIndex + 1 >= LEVELS.length;
+  el.btnNext.hidden = !win || nextRequiredIndex(app.levelIndex) < 0;
 
   if (win) {
     progress.completed[app.level.id] = true;
@@ -718,7 +753,8 @@ el.btnSpeed.addEventListener('click', toggleSpeed);
 el.btnAdjust.addEventListener('click', function () { enterPlan(true); });
 el.btnCopy.addEventListener('click', copySolution);
 el.btnNext.addEventListener('click', function () {
-  if (app.levelIndex + 1 < LEVELS.length) openLevel(app.levelIndex + 1);
+  var n = nextRequiredIndex(app.levelIndex);
+  if (n >= 0) openLevel(n);
   else showMenu();
 });
 el.radio.addEventListener('click', hideRadio);

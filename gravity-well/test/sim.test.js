@@ -306,8 +306,14 @@ test('ore is delivered to the receiver and the ship may bounce off it', function
   const s2 = createState(l2, []);
   advance(s2, 4);
   assert.equal(s2.outcome, null, 'still flying');
+  const rock2 = byId(s2, 'rock');
   assert.ok(s2.ship.vx < 120, 'ship lost speed in the bounce: ' + s2.ship.vx);
-  assert.ok(byId(s2, 'rock').vx > 0, 'ore was knocked along');
+  assert.ok(rock2.vx > 0, 'ore was knocked along');
+  // Elastic with masses: momentum is conserved (equal masses here, so the
+  // head-on hit swaps their velocities).
+  near(s2.ship.vx * s2.ship.mass + rock2.vx * rock2.mass, 120 * s2.ship.mass, 1e-9, 'momentum');
+  near(s2.ship.vx, 0, 1e-9, 'ship stops dead');
+  near(rock2.vx, 120, 1e-9, 'ore takes the ship speed');
   assert.ok(s2.events.some(function (e) { return e.kind === 'collision' && e.id === 'ship' && e.other === 'rock'; }));
 });
 
