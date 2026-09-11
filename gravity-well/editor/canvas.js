@@ -7,12 +7,13 @@
 //
 // Everything a player sees is drawn with the GAME's renderer (render.js) from a
 // real sim state built by sim.js `createState`, so a level looks in the editor
-// exactly as it will look in the game. The only local painters are for fixtures
-// render.js does not know about yet (dead / allowed zones, waypoints, fixed
-// wells, repulsors, a moving target's patrol path) and for editor-only chrome
-// (handles, hot-zone overlay, ghost trail, tutorial markers). Those are marked
-// PLACEHOLDER: when render.js grows a real drawing function for one of them,
-// delete the local painter and call through.
+// exactly as it will look in the game: drawBodies() for the movers and rock,
+// drawLevelFixtures() for the phase-2 fixtures (zones, waypoints, fixed wells,
+// repulsors, a moving target's path), drawShip / drawTarget / drawWells for the
+// rest. The only local painters are editor chrome (selection handles, hot-zone
+// overlay, ghost trail, tutorial markers, in-progress drafts) plus ONE
+// PLACEHOLDER: a polygon obstacle, which render.js and the sim both still treat
+// as a circle — see drawPolyObstacle.
 //
 // The camera is a plain {scale, ox, oy} view object in render.js's own format
 // (screenX = worldX * scale + ox), so every render.js helper works unchanged.
@@ -27,11 +28,6 @@ var HANDLE_R = 7;         // drawn radius, CSS px
 var HANDLE_HIT = 18;      // generous thumb target
 var MIN_SCALE = 0.08;
 var MAX_SCALE = 6;
-
-var ZONE_BAD = '#ff6b6b';
-var ZONE_GOOD = '#7cf6b0';
-var REPULSOR = '#ff9d4d';
-var WAYPOINT = '#ffce7a';
 
 // Types whose body is a circle with a draggable radius handle.
 var RADIUS_TYPES = {
@@ -117,167 +113,19 @@ export function isPolyTool(tool) {
 }
 
 // ---------------------------------------------------------------------------
-// Local painters (PLACEHOLDER until render.js owns these fixtures)
+// Polygon obstacle — the one PLACEHOLDER painter
+//
+// sim.js collides an `obstacle` as a circle or an axis-aligned rect; a polygon
+// obstacle therefore falls back to the circle given by its `x, y, r` fields,
+// which the polygon tool writes alongside `points`. The editor draws BOTH the
+// polygon the designer sees and, dashed, the circle the physics actually uses,
+// so the gap is visible rather than a nasty surprise at launch. When sim.js
+// and render.js learn polygon obstacles, delete this and let drawBodies() and
+// drawLevelFixtures() handle it.
 // ---------------------------------------------------------------------------
 
-function zonePath(ctx, view, f) {
-  ctx.beginPath();
-  if (f.shape === 'rect') {
-    ctx.rect(R.wx2sx(view, f.x), R.wy2sy(view, f.y), (f.w || 0) * view.scale, (f.h || 0) * view.scale);
-  } else if (f.shape === 'poly') {
-    var pts = f.points || [];
-    if (!pts.length) return false;
-    ctx.moveTo(R.wx2sx(view, pts[0].x), R.wy2sy(view, pts[0].y));
-    for (var i = 1; i < pts.length; i++) ctx.lineTo(R.wx2sx(view, pts[i].x), R.wy2sy(view, pts[i].y));
-    ctx.closePath();
-  } else {
-    ctx.arc(R.wx2sx(view, f.x), R.wy2sy(view, f.y), Math.max(2, (f.r || 0) * view.scale), 0, Math.PI * 2);
-  }
-  return true;
-}
-
-function drawZone(ctx, view, f) {
-  var dead = f.type === 'deadZone';
-  var color = dead ? ZONE_BAD : ZONE_GOOD;
-  ctx.save();
-  if (!zonePath(ctx, view, f)) { ctx.restore(); return; }
-  ctx.globalAlpha = dead ? 0.12 : 0.10;
-  ctx.fillStyle = color;
-  ctx.fill();
-
-  // hatching, clipped to the zone
-  ctx.save();
-  ctx.clip();
-  var bb = T.fixtureBBox(f);
-  var x0 = R.wx2sx(view, bb.x) - 400;
-  var y0 = R.wy2sy(view, bb.y) - 400;
-  var x1 = R.wx2sx(view, bb.x + bb.w) + 400;
-  var y1 = R.wy2sy(view, bb.y + bb.h) + 400;
-  ctx.globalAlpha = dead ? 0.30 : 0.18;
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  for (var s = x0 - (y1 - y0); s < x1; s += 14) {
-    ctx.moveTo(s, y0);
-    ctx.lineTo(s + (y1 - y0), y1);
-  }
-  ctx.stroke();
-  ctx.restore();
-
-  ctx.globalAlpha = 0.85;
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.6;
-  ctx.setLineDash([7, 6]);
-  zonePath(ctx, view, f);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
-}
-
-function drawWaypoint(ctx, view, f) {
-  var cx = R.wx2sx(view, f.x);
-  var cy = R.wy2sy(view, f.y);
-  var r = Math.max(6, (f.r != null ? f.r : 34) * view.scale);
-  ctx.save();
-  ctx.strokeStyle = WAYPOINT;
-  ctx.globalAlpha = 0.9;
-  ctx.lineWidth = 1.6;
-  ctx.setLineDash([6, 5]);
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle = WAYPOINT;
-  ctx.globalAlpha = 0.95;
-  ctx.font = '700 ' + Math.max(11, Math.round(r * 0.62)) + 'px ui-monospace, Menlo, monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(String(f.order != null ? f.order : '?'), cx, cy + 0.5);
-  ctx.restore();
-}
-
-function drawFixedWell(ctx, view, f) {
-  R.drawWells(ctx, view, [{ x: f.x, y: f.y, charges: f.charges || 1 }], Sim.killRadius, { dim: true });
-  var cx = R.wx2sx(view, f.x);
-  var cy = R.wy2sy(view, f.y);
-  var kr = Sim.killRadius(f.charges || 1) * view.scale;
-  ctx.save();
-  // steel rim + padlock glyph: this well is the designer's, not the player's
-  ctx.strokeStyle = '#b8c4dc';
-  ctx.lineWidth = 2;
-  ctx.globalAlpha = 0.9;
-  ctx.beginPath();
-  ctx.arc(cx, cy, kr, 0, Math.PI * 2);
-  ctx.stroke();
-  var s = Math.max(4, kr * 0.42);
-  ctx.lineWidth = 1.6;
-  ctx.beginPath();
-  ctx.rect(cx - s * 0.5, cy + kr * 0.55, s, s * 0.8);
-  ctx.moveTo(cx - s * 0.26, cy + kr * 0.55);
-  ctx.arc(cx, cy + kr * 0.55, s * 0.26, Math.PI, 0);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawRepulsor(ctx, view, f) {
-  var cx = R.wx2sx(view, f.x);
-  var cy = R.wy2sy(view, f.y);
-  var n = f.charges || 1;
-  var core = Sim.killRadius(n) * view.scale * 0.7;
-  var reach = R.WELL_REACH * view.scale;
-  ctx.save();
-  ctx.strokeStyle = REPULSOR;
-  ctx.globalAlpha = 0.22;
-  ctx.setLineDash([5, 9]);
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(cx, cy, reach, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  for (var k = 1; k <= 3; k++) {
-    ctx.globalAlpha = 0.10 + 0.06 * (4 - k);
-    ctx.beginPath();
-    ctx.arc(cx, cy, core * (1 + k * 0.9), 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = '#2a1405';
-  ctx.beginPath();
-  ctx.arc(cx, cy, core, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 1.8;
-  ctx.stroke();
-  // outward ticks: the field pushes
-  ctx.lineWidth = 1.4;
-  for (var a = 0; a < 8; a++) {
-    var ang = (a / 8) * Math.PI * 2;
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(ang) * core * 1.25, cy + Math.sin(ang) * core * 1.25);
-    ctx.lineTo(cx + Math.cos(ang) * core * 1.9, cy + Math.sin(ang) * core * 1.9);
-    ctx.stroke();
-  }
-  ctx.fillStyle = REPULSOR;
-  ctx.font = '600 ' + Math.max(9, Math.round(core * 0.9)) + 'px ui-monospace, Menlo, monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(String(n), cx, cy + 0.5);
-  ctx.restore();
-}
-
-function drawPatrolPath(ctx, view, pts, loop, color) {
-  if (!pts || pts.length < 2) return;
-  ctx.save();
-  ctx.strokeStyle = color;
-  ctx.globalAlpha = 0.4;
-  ctx.lineWidth = 1.2;
-  ctx.setLineDash([4, 6]);
-  ctx.beginPath();
-  ctx.moveTo(R.wx2sx(view, pts[0].x), R.wy2sy(view, pts[0].y));
-  for (var i = 1; i < pts.length; i++) ctx.lineTo(R.wx2sx(view, pts[i].x), R.wy2sy(view, pts[i].y));
-  if (loop) ctx.closePath();
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
+function isPolyObstacle(f) {
+  return f && f.type === 'obstacle' && f.shape === 'poly';
 }
 
 // ---------------------------------------------------------------------------
@@ -369,9 +217,19 @@ export function createEditorCanvas(app, canvasEl) {
   // -------------------------------------------------------------- display
 
   // A real sim state, so bodies carry exactly the fields render.js expects.
+  // Polygon obstacles are dropped first: the sim would fall back to their
+  // circle, which the editor draws itself (dashed) next to the polygon.
   function displayState(lv) {
+    var copy = { };
+    for (var k in lv) {
+      if (Object.prototype.hasOwnProperty.call(lv, k)) copy[k] = lv[k];
+    }
+    var keep = [];
+    var fixtures = lv.fixtures || [];
+    for (var i = 0; i < fixtures.length; i++) if (!isPolyObstacle(fixtures[i])) keep.push(fixtures[i]);
+    copy.fixtures = keep;
     try {
-      return Sim.createState(lv, []);
+      return Sim.createState(copy, []);
     } catch (e) {
       return null;
     }
@@ -386,51 +244,38 @@ export function createEditorCanvas(app, canvasEl) {
     R.drawBounds(ctx, view, lv.bounds);
 
     var fixtures = lv.fixtures || [];
-    var st = displayState(lv);
-    var bodies = st ? st.bodies : null;
-    var i, f;
+    var i;
 
-    // 1. zones sit under everything
-    for (i = 0; i < fixtures.length; i++) {
-      f = fixtures[i];
-      if (f.type === 'deadZone' || f.type === 'allowedZone') drawZone(ctx, view, f);
-    }
-
-    // 2. hot-zone overlay (under the fixtures so the level stays readable)
+    // 1. the hot-zone overlay sits under the level so the level stays readable
     drawHotzone();
 
-    // 3. fixtures the game renderer knows
-    if (bodies) {
-      var known = [];
-      for (i = 0; i < bodies.length; i++) {
-        var type = bodies[i].type;
-        if (type === 'obstacle' || type === 'asteroid' || type === 'drone' || type === 'hunter' ||
-            type === 'ore' || type === 'oreReceiver' || type === 'wormhole') {
-          if (type === 'obstacle' && fixtures[i] && fixtures[i].shape === 'poly') continue;
-          known.push(bodies[i]);
-        }
-      }
-      R.drawBodies(ctx, view, known, t, st.ship);
-    }
+    // 2. zones, waypoints, fixed wells, repulsors, a moving target's path —
+    //    all straight from the game's renderer, so they read identically.
+    R.drawLevelFixtures(ctx, view, lv, t, {
+      flight: false,
+      killRadiusFn: Sim.killRadius,
+      reach: Sim.WELL_REACH,
+      waypointsPassed: 0
+    });
 
-    // 4. the ones render.js has no painter for yet
+    // 3. movers and rock, via a real sim state so every body carries the
+    //    fields render.js expects. Polygon obstacles are held back (see the
+    //    PLACEHOLDER note at the top) and drawn below.
+    var st = displayState(lv);
+    if (st) R.drawBodies(ctx, view, st.bodies, t, st.ship);
     for (i = 0; i < fixtures.length; i++) {
-      f = fixtures[i];
-      if (f.type === 'waypoint') drawWaypoint(ctx, view, f);
-      else if (f.type === 'well') drawFixedWell(ctx, view, f);
-      else if (f.type === 'repulsor') drawRepulsor(ctx, view, f);
-      else if (f.type === 'obstacle' && f.shape === 'poly') drawPolyObstacle(f);
-      else if (f.type === 'asteroid' && f.path) drawPatrolPath(ctx, view, f.path, f.loop !== false, R.COLORS.asteroid);
+      if (isPolyObstacle(fixtures[i])) drawPolyObstacle(fixtures[i]);
     }
 
-    // 5. target (+ its patrol path) and ship, drawn by the game's renderer
-    if (lv.target) {
-      if (lv.target.path) drawPatrolPath(ctx, view, lv.target.path, lv.target.loop !== false, R.COLORS.target);
-      R.drawTarget(ctx, view, targetNow(lv), t);
+    // 4. target and ship
+    if (lv.target) R.drawTarget(ctx, view, lv.target, t, { dimmed: false });
+    if (lv.ship) {
+      R.drawShip(ctx, view, {
+        x: lv.ship.x, y: lv.ship.y, vx: lv.ship.vx || 0, vy: lv.ship.vy || 0, alive: true
+      }, Sim.SHIP_RADIUS, { showVelocity: true });
     }
-    if (lv.ship) R.drawShip(ctx, view, { x: lv.ship.x, y: lv.ship.y, vx: lv.ship.vx || 0, vy: lv.ship.vy || 0, alive: true }, Sim.SHIP_RADIUS, { showVelocity: true });
 
-    // 6. authored solution / test wells
+    // 5. the authored solution
     var wells = app.displayWells();
     if (wells && wells.length) R.drawWells(ctx, view, wells, Sim.killRadius, { dim: true });
 
@@ -438,10 +283,6 @@ export function createEditorCanvas(app, canvasEl) {
     drawTutorialMarkers(t);
     drawDrafts();
     drawSelection();
-  }
-
-  function targetNow(lv) {
-    return { x: lv.target.x, y: lv.target.y, r: lv.target.r };
   }
 
   function drawPolyObstacle(f) {
@@ -459,6 +300,16 @@ export function createEditorCanvas(app, canvasEl) {
     ctx.strokeStyle = R.COLORS.obstacleEdge;
     ctx.lineWidth = 1.4;
     ctx.stroke();
+    // the circle the sim will actually collide against
+    if (f.r) {
+      ctx.setLineDash([4, 5]);
+      ctx.globalAlpha = 0.7;
+      ctx.strokeStyle = R.COLORS.bad;
+      ctx.beginPath();
+      ctx.arc(R.wx2sx(view, f.x), R.wy2sy(view, f.y), Math.max(2, f.r * view.scale), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
     ctx.restore();
   }
 
@@ -948,6 +799,32 @@ export function createEditorCanvas(app, canvasEl) {
     draw();
   }
 
+  // A polygon obstacle also carries the circle the sim collides against; keep
+  // it at the polygon's centroid with the radius of the largest circle that
+  // stays inside (approximated by the nearest edge distance).
+  function polyCircleFallback(f) {
+    var pts = f.points || [];
+    if (pts.length < 3) return;
+    var cx = 0, cy = 0, i;
+    for (i = 0; i < pts.length; i++) { cx += pts[i].x; cy += pts[i].y; }
+    cx /= pts.length;
+    cy /= pts.length;
+    var best = Infinity;
+    for (i = 0; i < pts.length; i++) {
+      var a = pts[i];
+      var b = pts[(i + 1) % pts.length];
+      var dx = b.x - a.x, dy = b.y - a.y;
+      var len2 = dx * dx + dy * dy;
+      var u = len2 > 1e-9 ? ((cx - a.x) * dx + (cy - a.y) * dy) / len2 : 0;
+      u = u < 0 ? 0 : u > 1 ? 1 : u;
+      var d = Math.hypot(cx - (a.x + dx * u), cy - (a.y + dy * u));
+      if (d < best) best = d;
+    }
+    f.x = Math.round(cx);
+    f.y = Math.round(cy);
+    f.r = Math.max(4, Math.round(isFinite(best) ? best : 20));
+  }
+
   function finishPoly() {
     if (!polyDraft) return;
     var pts = polyDraft.points;
@@ -962,6 +839,7 @@ export function createEditorCanvas(app, canvasEl) {
     var lv = app.level();
     var fx = makeFixture(tool, 0, 0, lv);
     fx.points = pts;
+    if (fx.type === 'obstacle') polyCircleFallback(fx);
     if (!lv.fixtures) lv.fixtures = [];
     lv.fixtures.push(fx);
     app.setSel([{ kind: 'fixture', index: lv.fixtures.length - 1 }]);

@@ -1,0 +1,7 @@
+editor.html
+editor/editor.css
+editor/editor.js
+editor/canvas.js
+editor/panel.js
+editor/tools.js
+editor/analyse.worker.js

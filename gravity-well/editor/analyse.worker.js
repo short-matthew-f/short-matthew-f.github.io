@@ -21,14 +21,12 @@
 // running), and checks the cancel flag on the way back in. Stale jobs are
 // dropped by id, so a result from an abandoned run can never paint.
 
-import {
-  run, validateWells, killRadius, SHIP_RADIUS, MIN_WELL_DISTANCE, PHYSICS_VERSION
-} from '../sim.js';
+import { run, validateWells, killRadius, SHIP_RADIUS, PHYSICS_VERSION } from '../sim.js';
 import {
   classifyPoint, countRegions, toleranceRadius, randomWinRate,
   CELL_FAIL, CELL_WIN, CELL_OBSTACLE, CELL_SHIP, CELL_TARGET, floorFor
 } from '../tools/hotzone.js';
-import { mulberry32, hashSeed, pointInZone } from './tools.js';
+import { mulberry32, hashSeed } from './tools.js';
 
 var MAX_SECONDS = 40;     // a flight that has not resolved by here is a fail
 var jobId = 0;            // the job we are currently allowed to report on
@@ -54,35 +52,11 @@ function wins(level, wells) {
   return res.outcome === 'win';
 }
 
-// Zone rules live in the editor until the sim owns them: a well may not sit
-// inside a deadZone, and if the level has any allowedZone it must sit in one.
-function zoneOk(level, w) {
-  var fixtures = level.fixtures || [];
-  var hasAllowed = false;
-  var inAllowed = false;
-  for (var i = 0; i < fixtures.length; i++) {
-    var f = fixtures[i];
-    if (f.type === 'deadZone' && pointInZone(f, w.x, w.y)) return false;
-    if (f.type === 'allowedZone') {
-      hasAllowed = true;
-      if (pointInZone(f, w.x, w.y)) inAllowed = true;
-    }
-  }
-  return hasAllowed ? inAllowed : true;
-}
-
-function spacingOk(level, w) {
-  var fixtures = level.fixtures || [];
-  for (var i = 0; i < fixtures.length; i++) {
-    var f = fixtures[i];
-    if (f.type !== 'well' && f.type !== 'repulsor') continue;
-    if (Math.hypot(f.x - w.x, f.y - w.y) < MIN_WELL_DISTANCE) return false;
-  }
-  return true;
-}
-
+// sim.js owns every placement rule now (budget, stack limit, bounds, dead and
+// allowed zones, spacing from other wells / fixed wells / repulsors), so the
+// analyser asks it rather than keeping a second copy that could drift.
 function legalWell(level, w) {
-  return zoneOk(level, w) && spacingOk(level, w);
+  return validateWells(level, [w]).ok;
 }
 
 // ---------------------------------------------------------------------------
@@ -348,10 +322,12 @@ async function lint(id, level, opts) {
     add('warn', 'No authored solution.');
   } else {
     var v = validateWells(level, sol);
-    if (!v.ok) add('error', 'Solution is not a legal placement: ' + v.message);
+    if (!v.ok) add('error', 'Solution is not a legal placement (' + v.reason + '): ' + v.message);
     for (i = 0; i < sol.length; i++) {
-      if (!zoneOk(level, sol[i])) add('error', 'Solution well ' + (i + 1) + ' is in a dead zone (or outside every allowed zone).');
-      if (!spacingOk(level, sol[i])) add('error', 'Solution well ' + (i + 1) + ' is too close to a fixed well or repulsor.');
+      var one = validateWells(level, [sol[i]]);
+      if (!one.ok && one.reason !== 'budget') {
+        add('error', 'Solution well ' + (i + 1) + ': ' + one.message + ' (' + one.reason + ').');
+      }
     }
     progress(id, 'lint', 0.1, 'running the authored solution');
     await yieldToQueue();
