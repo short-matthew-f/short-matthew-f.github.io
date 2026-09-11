@@ -1,0 +1,372 @@
+/* Gravity Well — style.css
+   Dark space palette, mobile-first, safe-area aware, nothing scrolls except the
+   level list. Touch targets are >= 48px tall. */
+
+:root {
+  --bg: #05070f;
+  --bg-panel: rgba(10, 16, 32, 0.82);
+  --bg-panel-solid: #0a1020;
+  --line: rgba(120, 150, 210, 0.20);
+  --text: #dfe7ff;
+  --text-dim: #8ea2c6;
+  --ship: #4fe3d0;
+  --target: #ffb347;
+  --well: #9b6cff;
+  --hunter: #ff4d4d;
+  --ore: #f0c060;
+  --good: #7cf6b0;
+  --bad: #ff6b6b;
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+body { position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; }
+
+.view { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; }
+[hidden] { display: none !important; }
+
+/* ------------------------------------------------------------------ canvas */
+
+#game {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* -------------------------------------------------------------------- bars */
+
+.bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(180deg, rgba(5, 7, 15, 0.92), rgba(5, 7, 15, 0.55));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2;
+}
+
+.bar-top {
+  top: 0;
+  min-height: 52px;
+  padding: calc(6px + var(--sat)) calc(10px + var(--sar)) 6px calc(10px + var(--sal));
+  border-bottom: 1px solid var(--line);
+}
+
+.bar-bottom {
+  bottom: 0;
+  padding: 8px calc(10px + var(--sar)) calc(8px + var(--sab)) calc(10px + var(--sal));
+  border-top: 1px solid var(--line);
+  background: linear-gradient(0deg, rgba(5, 7, 15, 0.94), rgba(5, 7, 15, 0.55));
+}
+
+.top-mid { flex: 1 1 auto; min-width: 0; }
+
+.level-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.closest {
+  font-size: 11px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  color: var(--bad);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.closest.safe { color: var(--text-dim); }
+
+.charges {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--well);
+  padding: 4px 10px;
+  border: 1px solid rgba(155, 108, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(155, 108, 255, 0.10);
+  white-space: nowrap;
+}
+.charges .sep { color: var(--text-dim); margin: 0 2px; }
+.charges .chg-label {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+.charges.full { color: var(--target); border-color: rgba(255, 179, 71, 0.45); background: rgba(255, 179, 71, 0.10); }
+
+/* ----------------------------------------------------------------- buttons */
+
+.btn {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(26, 38, 66, 0.85);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.btn:active { transform: translateY(1px); background: rgba(38, 54, 92, 0.95); }
+.btn:focus-visible { outline: 2px solid var(--ship); outline-offset: 2px; }
+
+.btn-primary {
+  background: linear-gradient(180deg, #1d6f66, #12564f);
+  border-color: rgba(79, 227, 208, 0.55);
+  color: #e6fffb;
+  flex: 1 1 auto;
+}
+.btn-ghost { background: transparent; color: var(--text-dim); }
+.btn-icon { padding: 0; font-size: 26px; line-height: 1; background: transparent; border-color: transparent; color: var(--text-dim); }
+
+.btn-attention {
+  animation: attention 1.2s ease-in-out infinite;
+}
+@keyframes attention {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 212, 121, 0.0); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 212, 121, 0.28); }
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.flight-time {
+  flex: 1 1 auto;
+  text-align: center;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 15px;
+  color: var(--text-dim);
+}
+
+/* -------------------------------------------------------------- radio card */
+
+.radio-card {
+  position: absolute;
+  left: calc(10px + var(--sal));
+  right: calc(10px + var(--sar));
+  top: calc(60px + var(--sat));
+  z-index: 3;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 10px 13px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(79, 227, 208, 0.30);
+  background: var(--bg-panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  animation: slideIn 220ms ease-out;
+  cursor: pointer;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+
+.radio-head { display: flex; align-items: center; gap: 6px; }
+.radio-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--ship);
+  box-shadow: 0 0 8px var(--ship);
+  animation: blink 1.4s ease-in-out infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.radio-who {
+  font-size: 10px; letter-spacing: 0.14em; font-weight: 700;
+  color: var(--ship); text-transform: uppercase;
+}
+.radio-text { margin: 6px 0 0; font-size: 14px; line-height: 1.45; color: var(--text); }
+
+/* ---------------------------------------------------------------- overlays */
+
+.overlay {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(16px + var(--sat)) calc(16px + var(--sar)) calc(16px + var(--sab)) calc(16px + var(--sal));
+  background: rgba(2, 4, 10, 0.62);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.result-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 20px 18px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--bg-panel-solid);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  animation: slideIn 200ms ease-out;
+}
+.result-card h2 { margin: 0 0 6px; font-size: 21px; letter-spacing: 0.01em; }
+.result-card.win h2 { color: var(--good); }
+.result-card.fail h2 { color: var(--bad); }
+.result-body { margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-dim); }
+.result-bonus { margin: 10px 0 0; font-size: 13px; color: var(--ore); }
+.result-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.result-actions .btn { flex: 1 1 40%; }
+
+/* ------------------------------------------------------------------- toast */
+
+.toast {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(84px + var(--sab));
+  z-index: 5;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(10, 16, 32, 0.94);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+  animation: slideIn 160ms ease-out;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------- menu view */
+
+#view-menu {
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(60, 40, 130, 0.35), transparent 70%),
+    var(--bg);
+}
+
+.menu-head {
+  padding: calc(28px + var(--sat)) calc(18px + var(--sar)) 10px calc(18px + var(--sal));
+  flex: 0 0 auto;
+}
+.menu-head h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(100deg, var(--ship), var(--well));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.tagline { margin: 6px 0 0; font-size: 13px; color: var(--text-dim); }
+
+.menu-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px calc(14px + var(--sar)) 12px calc(14px + var(--sal));
+}
+
+.phase-head {
+  margin: 16px 4px 8px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+.level-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  margin-bottom: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(16, 24, 44, 0.8);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.level-row:active { background: rgba(28, 40, 72, 0.9); }
+.level-row[disabled] { opacity: 0.42; cursor: default; }
+.level-row .lv-index {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  min-width: 26px;
+}
+.level-row .lv-name { flex: 1 1 auto; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.level-row .lv-mark { font-size: 16px; min-width: 22px; text-align: right; }
+.level-row.done .lv-mark { color: var(--good); }
+.level-row.optional { border-style: dashed; }
+.level-row.optional .lv-index { color: var(--target); font-size: 14px; }
+.level-row.locked .lv-mark { color: var(--text-dim); }
+
+.menu-foot {
+  flex: 0 0 auto;
+  padding: 6px calc(14px + var(--sar)) calc(10px + var(--sab)) calc(14px + var(--sal));
+  display: flex;
+  justify-content: center;
+}
+
+.menu-empty { padding: 24px 6px; color: var(--text-dim); font-size: 14px; }
+
+/* Wider screens: keep the controls comfortably centred. */
+@media (min-width: 760px) {
+  .bar-top, .bar-bottom { padding-left: calc(20px + var(--sal)); padding-right: calc(20px + var(--sar)); }
+  .controls { max-width: 620px; margin: 0 auto; }
+  .menu-list { max-width: 720px; width: 100%; margin: 0 auto; }
+  .menu-head { max-width: 720px; width: 100%; margin: 0 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
