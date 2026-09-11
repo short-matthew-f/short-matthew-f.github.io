@@ -269,8 +269,8 @@ export const LEVELS = [
 
   // design: develop — the loop. The ship STARTS inside the reach of where the
   // 3-stack has to go, moving across it, so the well captures it into an orbit
-  // instead of bending it once; the target is a full lap away, 40 units from
-  // the launch point.
+  // instead of bending it once; the target is a full lap away — 56 units from
+  // the launch point, reached at t=5.8 s.
   {
     id: 'w3-2',
     name: 'Full Circle',
@@ -1212,7 +1212,8 @@ export const LEVELS = [
 
   // design: expert — the loop again, with a hunter on the board while you fly
   // it. The ship starts inside the reach of where the 3-stack has to go, so it
-  // is captured rather than bent, and the target is a lap and a half away.
+  // is captured rather than bent, and the target is most of two laps away, at
+  // t=7.1 s.
   {
     id: 'w12-3',
     name: 'Closed Orbit',
