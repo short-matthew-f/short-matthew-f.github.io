@@ -110,6 +110,9 @@ var app = {
 };
 
 var ARROW_SPACING = 60;   // world units
+var CAM_PAD = 80;         // world units of breathing room around out-of-bounds content
+var CAM_MAX_ZOOM_OUT = 2.2; // never zoom out further than this vs. the base fit
+var CAM_EASE = 5;         // exponential smoothing rate (1 - exp(-dt*CAM_EASE))
 var TRAIL_MAX = 260;
 var RESULT_DELAY = 0.6;   // seconds between outcome and overlay
 
@@ -153,9 +156,64 @@ function updateView() {
   if (!app.level) return;
   var top = el.topbar.getBoundingClientRect().height || 52;
   var bottom = el.bottombar.getBoundingClientRect().height || 70;
-  app.view = R.computeView(app.cssW, app.cssH, app.level.bounds, {
-    top: top + 10, bottom: bottom + 10, left: 10, right: 10
-  });
+  app.pad = { top: top + 10, bottom: bottom + 10, left: 10, right: 10 };
+  app.baseView = R.computeView(app.cssW, app.cssH, app.level.bounds, app.pad);
+  // A resize snaps the camera rather than animating from a stale geometry.
+  app.view = R.computeViewForRect(app.cssW, app.cssH, cameraRect(), app.pad, null);
+  clampViewScale(app.view);
+}
+
+// ---------------------------------------------------------------- camera
+//
+// The camera rests on the base letterbox fit of the level bounds and only ever
+// grows: in flight it opens up to keep a ship that has swung off the board in
+// frame, and in planning it opens up to show the parts of the predicted path
+// that leave the board. The zoom-out is capped, after which the edge chevron
+// takes over.
+
+function cameraRect() {
+  var b = app.level.bounds;
+  var x0 = 0, y0 = 0, x1 = b.w, y1 = b.h;
+  function include(x, y) {
+    if (x >= 0 && x <= b.w && y >= 0 && y <= b.h) return; // inside: no growth
+    if (x - CAM_PAD < x0) x0 = x - CAM_PAD;
+    if (x + CAM_PAD > x1) x1 = x + CAM_PAD;
+    if (y - CAM_PAD < y0) y0 = y - CAM_PAD;
+    if (y + CAM_PAD > y1) y1 = y + CAM_PAD;
+  }
+
+  if (app.mode === 'flight' || (app.mode === 'result' && app.sim)) {
+    var sh = app.sim && app.sim.ship;
+    if (sh && sh.alive !== false) include(sh.x, sh.y);
+  } else if (app.pred && app.pred.ship) {
+    var pts = app.pred.ship;
+    for (var i = 0; i < pts.length; i++) include(pts[i].x, pts[i].y);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
+function clampViewScale(v) {
+  if (!app.baseView) return v;
+  var minScale = app.baseView.scale / CAM_MAX_ZOOM_OUT;
+  if (v.scale < minScale) {
+    var fixed = R.computeViewForRect(app.cssW, app.cssH, cameraRect(), app.pad, minScale);
+    v.scale = fixed.scale; v.ox = fixed.ox; v.oy = fixed.oy;
+  }
+  return v;
+}
+
+function updateCamera(dt) {
+  if (!app.level || !app.view || !app.baseView) return;
+  var target = clampViewScale(R.computeViewForRect(app.cssW, app.cssH, cameraRect(), app.pad, null));
+  // Frame-rate independent exponential smoothing (~8%/frame at 60fps).
+  var k = dt > 0 ? 1 - Math.exp(-dt * CAM_EASE) : 1;
+  if (!(k > 0)) return;
+  if (k > 1) k = 1;
+  var v = app.view;
+  v.scale += (target.scale - v.scale) * k;
+  v.ox += (target.ox - v.ox) * k;
+  v.oy += (target.oy - v.oy) * k;
+  v.area = target.area;
 }
 
 // ------------------------------------------------------------------- menu
@@ -274,7 +332,11 @@ function showMenu() {
 // -------------------------------------------------------------- level load
 
 function openLevel(index) {
-  var lv = LEVELS[index];
+  startLevel(LEVELS[index], index);
+}
+
+// `index` is -1 for a level that is not part of the campaign (test fixtures).
+function startLevel(lv, index) {
   if (!lv) return;
   app.level = lv;
   app.levelIndex = index;
@@ -737,6 +799,7 @@ function frame(nowMs) {
     }
   }
 
+  updateCamera(dt);
   draw();
 }
 
@@ -839,7 +902,10 @@ window.GW = {
   get wells() { return app.wells; },
   get level() { return app.level; },
   get view() { return app.view; },
-  openLevel: openLevel
+  get baseView() { return app.baseView; },
+  openLevel: openLevel,
+  // Load a level object directly, for tests and debugging.
+  loadLevel: function (lv) { startLevel(lv, -1); }
 };
 
 showMenu();

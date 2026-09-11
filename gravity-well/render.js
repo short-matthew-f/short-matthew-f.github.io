@@ -42,17 +42,40 @@ export const COLORS = {
 
 // ---------------------------------------------------------------- transform
 
-// Fit world bounds into the canvas area, leaving `pad` (CSS px) on each edge.
-// Returns {scale, ox, oy} such that screenX = worldX * scale + ox.
-export function computeView(cssW, cssH, bounds, pad) {
+// Fit an arbitrary world rect into the canvas area, leaving `pad` (CSS px) on
+// each edge. Returns {scale, ox, oy, area} such that screenX = worldX*scale+ox;
+// `area` is the padded CSS-pixel box the world is fitted into, which is what
+// lets callers ask what part of the world is currently on screen.
+// `forceScale` skips the fit and centres the rect at that scale instead — used
+// to clamp how far the camera may zoom out.
+export function computeViewForRect(cssW, cssH, rect, pad, forceScale) {
   var p = pad || {};
   var top = p.top || 0, bottom = p.bottom || 0, left = p.left || 0, right = p.right || 0;
   var availW = Math.max(20, cssW - left - right);
   var availH = Math.max(20, cssH - top - bottom);
-  var scale = Math.min(availW / bounds.w, availH / bounds.h);
-  var ox = left + (availW - bounds.w * scale) / 2;
-  var oy = top + (availH - bounds.h * scale) / 2;
-  return { scale: scale, ox: ox, oy: oy, cssW: cssW, cssH: cssH };
+  var scale = forceScale != null ? forceScale : Math.min(availW / rect.w, availH / rect.h);
+  var ox = left + (availW - rect.w * scale) / 2 - rect.x * scale;
+  var oy = top + (availH - rect.h * scale) / 2 - rect.y * scale;
+  return {
+    scale: scale, ox: ox, oy: oy, cssW: cssW, cssH: cssH,
+    area: { x: left, y: top, w: availW, h: availH }
+  };
+}
+
+// Static letterbox fit of the whole level — the camera's base/rest state.
+export function computeView(cssW, cssH, bounds, pad) {
+  return computeViewForRect(cssW, cssH, { x: 0, y: 0, w: bounds.w, h: bounds.h }, pad);
+}
+
+// The world rect currently on screen (inside the padded area).
+export function visibleWorldRect(view) {
+  var a = view.area || { x: 0, y: 0, w: view.cssW, h: view.cssH };
+  return {
+    x: (a.x - view.ox) / view.scale,
+    y: (a.y - view.oy) / view.scale,
+    w: a.w / view.scale,
+    h: a.h / view.scale
+  };
 }
 
 export function wx2sx(view, x) { return x * view.scale + view.ox; }
@@ -359,24 +382,36 @@ export function drawShip(ctx, view, ship, shipRadius, opts) {
   ctx.restore();
 }
 
-// The ship may stray up to BOUNDS_MARGIN outside the bounds rect and still come
-// back, so when it is out there (and still alive) we pin a chevron to the
-// nearest point on the edge, pointing at it, labelled with how far out it is.
-// Nothing else is clipped to the rect — paths and trails run past it freely.
+// The camera follows a ship that swings outside the board, so the chevron only
+// appears once the ship has left the *visible* area. It is pinned to the edge
+// of what is on screen, points at the ship, and is labelled with how far
+// outside the playfield bounds the ship actually is (the number that matters
+// for the lost rule). Nothing is ever clipped to the bounds rect — paths and
+// trails run past it freely.
 export function drawOutOfBoundsMarker(ctx, view, ship, bounds) {
   if (!ship || ship.alive === false) return;
-  var ex = Math.max(0, Math.min(bounds.w, ship.x));
-  var ey = Math.max(0, Math.min(bounds.h, ship.y));
+  var vis = visibleWorldRect(view);
+  var inset = 16 / view.scale;
+  var vx0 = vis.x + inset, vx1 = vis.x + vis.w - inset;
+  var vy0 = vis.y + inset, vy1 = vis.y + vis.h - inset;
+  if (vx1 < vx0) { vx0 = vx1 = vis.x + vis.w / 2; }
+  if (vy1 < vy0) { vy0 = vy1 = vis.y + vis.h / 2; }
+
+  var ex = Math.max(vx0, Math.min(vx1, ship.x));
+  var ey = Math.max(vy0, Math.min(vy1, ship.y));
   var dx = ship.x - ex, dy = ship.y - ey;
-  var dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist < 0.5) return; // still inside
+  if ((dx * dx + dy * dy) < 1) return; // still on screen
+
+  // Label the distance outside the playfield, not outside the viewport.
+  var bx = Math.max(0, Math.min(bounds.w, ship.x));
+  var by = Math.max(0, Math.min(bounds.h, ship.y));
+  var odx = ship.x - bx, ody = ship.y - by;
+  var outside = Math.sqrt(odx * odx + ody * ody);
 
   var ang = Math.atan2(dy, dx);
   var ux = Math.cos(ang), uy = Math.sin(ang);
-  var sx = wx2sx(view, ex) + ux * 7;
-  var sy = wy2sy(view, ey) + uy * 7;
-  // Closer to the margin limit = more insistent.
-  var urgency = Math.min(1, dist / (BOUNDS_MARGIN || 120));
+  var sx = wx2sx(view, ex), sy = wy2sy(view, ey);
+  var urgency = Math.min(1, outside / (BOUNDS_MARGIN || 120));
 
   ctx.save();
   ctx.translate(sx, sy);
@@ -394,14 +429,16 @@ export function drawOutOfBoundsMarker(ctx, view, ship, bounds) {
   ctx.stroke();
   ctx.restore();
 
-  ctx.save();
-  ctx.globalAlpha = 0.9;
-  ctx.fillStyle = COLORS.ship;
-  ctx.font = '600 10px ui-monospace, Menlo, monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(Math.round(dist) + 'u', sx - ux * 18, sy - uy * 18);
-  ctx.restore();
+  if (outside >= 1) {
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = COLORS.ship;
+    ctx.font = '600 10px ui-monospace, Menlo, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(Math.round(outside) + 'u', sx - ux * 18, sy - uy * 18);
+    ctx.restore();
+  }
 }
 
 // ----------------------------------------------------------------- fixtures
