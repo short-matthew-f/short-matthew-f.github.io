@@ -146,10 +146,10 @@ export const LEVELS = [
   // separated wells, and every placement has to account for the other one.
   // =========================================================================
 
-  // design: introduce cooperation — 890 units of coast from the bottom left to
-  // the top right, far more turn than one charge can give. The two charges sit
-  // side by side across the path so the field between them is deeper than
-  // either alone. Tolerance 80.
+  // design: introduce cooperation — a flat entry off the left edge that needs
+  // far more turn than one charge can give. The two charges sit 185 units apart
+  // down the outside of the curve: the low one starts the turn, the near one
+  // finishes it. Tolerance 72.
   {
     id: 'w2-1',
     name: 'Both Hands',
@@ -160,19 +160,19 @@ export const LEVELS = [
     stackLimit: 1,
     previewSeconds: 30,
     showBodyPreview: true,
-    ship: { x: 160, y: 1090, vx: 80, vy: -95 },
-    target: { x: 678, y: 330, r: 28 },
+    ship: { x: 110, y: 760, vx: 119, vy: -46 },
+    target: { x: 566, y: 690, r: 28 },
     fixtures: [],
     radio: [
-      { when: 'start', text: 'Two charges this run, and they will not stack. Set them apart: the first starts the turn, the second finishes it.', once: true },
-      { when: 'fail', text: 'Both charges, Pilot. One will never bend you that far.', once: false }
+      { when: 'start', text: 'Two charges this run, and they will not stack — and they will not sit on top of each other either. Set them apart: the first starts the turn, the second finishes it.', once: true },
+      { when: 'fail', text: 'Both charges, Pilot, and well apart. One will never bend you that far.', once: false }
     ],
     hint: null,
-    solution: [{ x: 569, y: 292, charges: 1 }, { x: 481, y: 305, charges: 1 }]
+    solution: [{ x: 473, y: 941, charges: 1 }, { x: 547, y: 771, charges: 1 }]
   },
 
-  // design: develop — a dive from the top right hauled back across the middle,
-  // with the pair stacked one above the other ahead of the ship.
+  // design: develop — the mirror of w2-1 flown right to left and downhill, with
+  // the pair strung out 180 units along the far side of the arc.
   {
     id: 'w2-2',
     name: 'Handover',
@@ -183,17 +183,17 @@ export const LEVELS = [
     stackLimit: 1,
     previewSeconds: 30,
     showBodyPreview: true,
-    ship: { x: 740, y: 210, vx: -80, vy: 95 },
-    target: { x: 306, y: 566, r: 28 },
+    ship: { x: 790, y: 440, vx: -120, vy: 45 },
+    target: { x: 322, y: 726, r: 28 },
     fixtures: [],
     radio: [],
     hint: null,
-    solution: [{ x: 251, y: 419, charges: 1 }, { x: 272, y: 465, charges: 1 }]
+    solution: [{ x: 371, y: 759, charges: 1 }, { x: 538, y: 827, charges: 1 }]
   },
 
-  // design: combine — a climb from the bottom right stopped and turned back on
-  // itself; both charges sit above the target so the ship falls into it from
-  // below.
+  // design: combine — the same left-edge entry lifted instead of dropped, and
+  // this time both charges are high and ahead, so the ship is pulled up through
+  // the gap between them.
   {
     id: 'w2-3',
     name: 'Relay',
@@ -204,33 +204,36 @@ export const LEVELS = [
     stackLimit: 1,
     previewSeconds: 30,
     showBodyPreview: true,
-    ship: { x: 740, y: 1090, vx: -80, vy: -95 },
-    target: { x: 450, y: 628, r: 28 },
+    ship: { x: 110, y: 760, vx: 120, vy: -45 },
+    target: { x: 734, y: 438, r: 28 },
     fixtures: [],
     radio: [],
     hint: null,
-    solution: [{ x: 492, y: 576, charges: 1 }, { x: 542, y: 554, charges: 1 }]
+    solution: [{ x: 649, y: 332, charges: 1 }, { x: 481, y: 305, charges: 1 }]
   },
 
-  // design: optional challenge — the longest fall in the world, 850 units from
-  // the top left corner to the bottom right, with the pair laid flat across the
-  // far end of the run.
+  // design: optional challenge — 930 units from the bottom right corner to the
+  // top middle on two charges 240 units apart, one deep in the turn and one
+  // right under the target. minTolerance 45: deliberately tighter than the
+  // phase floor, and the tightest two-well placement the retuned field allows
+  // over a full-board run.
   {
     id: 'w2-4',
     name: 'Scissors',
     phase: 2,
     optional: true,
+    minTolerance: 45,
     bounds: BOUNDS,
     charges: 2,
     stackLimit: 1,
     previewSeconds: 30,
     showBodyPreview: true,
-    ship: { x: 160, y: 210, vx: 80, vy: 95 },
-    target: { x: 654, y: 942, r: 28 },
+    ship: { x: 740, y: 1090, vx: -80, vy: -95 },
+    target: { x: 494, y: 178, r: 28 },
     fixtures: [],
     radio: [],
     hint: null,
-    solution: [{ x: 424, y: 964, charges: 1 }, { x: 493, y: 968, charges: 1 }]
+    solution: [{ x: 473, y: 258, charges: 1 }, { x: 366, y: 474, charges: 1 }]
   },
 
   // =========================================================================
@@ -387,8 +390,8 @@ export const LEVELS = [
   },
 
   // design: combine — a standing post and a boulder, solved with World 2 pair
-  // work: two 2-stacks in depth lift the ship up the right-hand side of the
-  // post.
+  // work: a trim charge low on the right and a 3-stack above the post walk the
+  // ship 1100 units round both of them to the far corner.
   {
     id: 'w4-3',
     name: 'Threadwork',
@@ -400,14 +403,14 @@ export const LEVELS = [
     previewSeconds: 6,
     showBodyPreview: true,
     ship: { x: 820, y: 1090, vx: -55, vy: -100 },
-    target: { x: 696, y: 280, r: 28 },
+    target: { x: 258, y: 150, r: 28 },
     fixtures: [
       { type: "obstacle", id: "post", shape: "rect", x: 420, y: 320, w: 44, h: 420 },
       { type: "obstacle", id: "lump", shape: "circle", x: 250, y: 880, r: 90 }
     ],
     radio: [],
     hint: null,
-    solution: [{ x: 752, y: 370, charges: 2 }, { x: 644, y: 366, charges: 2 }]
+    solution: [{ x: 711, y: 616, charges: 1 }, { x: 566, y: 281, charges: 3 }]
   },
 
   // design: optional challenge — the same room as w4-3 taken the long way: ten
@@ -490,8 +493,8 @@ export const LEVELS = [
   },
 
   // design: combine — World 4 rock plus a moving one: the ledge forbids the
-  // wide outside line, so the ship has to go up the inside and the timing is
-  // the whole problem. Tolerance 88.
+  // wide outside line, so the ship goes up the inside past the sweeping rock on
+  // a trim charge and a 3-stack stacked 300 units apart up the left.
   {
     id: 'w5-3',
     name: 'Traffic',
@@ -503,14 +506,14 @@ export const LEVELS = [
     previewSeconds: 5,
     showBodyPreview: true,
     ship: { x: 160, y: 1090, vx: 70, vy: -105 },
-    target: { x: 440, y: 552, r: 28 },
+    target: { x: 246, y: 318, r: 28 },
     fixtures: [
       { type: "obstacle", id: "ledge", shape: "rect", x: 420, y: 880, w: 480, h: 40 },
       { type: "asteroid", id: "rock", x: 876, y: 620, r: 36, vx: -90, vy: 0 }
     ],
     radio: [],
     hint: null,
-    solution: [{ x: 420, y: 483, charges: 2 }, { x: 316, y: 471, charges: 2 }]
+    solution: [{ x: 203, y: 647, charges: 1 }, { x: 203, y: 349, charges: 3 }]
   },
 
   // design: optional challenge — the same patrol as w5-2 crossed the other way,
@@ -797,8 +800,8 @@ export const LEVELS = [
   },
 
   // design: combine — a flat entry across the whole board with a slab
-  // underneath, a rock crossing high and a drone in the middle; two 2-stacks to
-  // lift out of all three.
+  // underneath, a rock crossing high and a drone in the middle; a far trim
+  // charge behind the ship and a 3-stack under the target.
   {
     id: 'w8-3',
     name: 'Crosstown',
@@ -810,7 +813,7 @@ export const LEVELS = [
     previewSeconds: 4,
     showBodyPreview: true,
     ship: { x: 130, y: 640, vx: 115, vy: -45 },
-    target: { x: 392, y: 290, r: 28 },
+    target: { x: 594, y: 654, r: 28 },
     fixtures: [
       { type: "obstacle", id: "slab", shape: "rect", x: 380, y: 760, w: 420, h: 40 },
       { type: "asteroid", id: "rock", x: 1250, y: 400, r: 34, vx: -95, vy: 0 },
@@ -818,7 +821,7 @@ export const LEVELS = [
     ],
     radio: [],
     hint: null,
-    solution: [{ x: 324, y: 331, charges: 2 }, { x: 231, y: 285, charges: 2 }]
+    solution: [{ x: 109, y: 857, charges: 1 }, { x: 597, y: 721, charges: 3 }]
   },
 
   // design: optional challenge — entered from the top with a slab across the
