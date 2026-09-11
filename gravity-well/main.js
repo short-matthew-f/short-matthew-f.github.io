@@ -665,6 +665,7 @@ function draw() {
 
   if (s.ship && s.ship.alive !== false) {
     R.drawShip(ctx, view, s.ship, SHIP_RADIUS, { showVelocity: !flying });
+    if (flying) R.drawOutOfBoundsMarker(ctx, view, s.ship, lv.bounds);
   }
 
   if (!flying && lv.hint && lv.hint.well && app.wells.length === 0) {

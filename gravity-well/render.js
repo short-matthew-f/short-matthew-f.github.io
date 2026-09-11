@@ -10,6 +10,9 @@ import * as Sim from './sim.js';
 // spec value and keeps the ring correct while the retune is still landing.
 export var WELL_REACH = Sim.WELL_REACH != null ? Sim.WELL_REACH : 360;
 
+// How far a body may stray outside the bounds rect and still come back.
+export var BOUNDS_MARGIN = Sim.BOUNDS_MARGIN != null ? Sim.BOUNDS_MARGIN : 120;
+
 export const COLORS = {
   bg: '#05070f',
   bgDeep: '#02030a',
@@ -353,6 +356,51 @@ export function drawShip(ctx, view, ship, shipRadius, opts) {
   ctx.strokeStyle = COLORS.ship;
   ctx.lineWidth = 1.8;
   ctx.stroke();
+  ctx.restore();
+}
+
+// The ship may stray up to BOUNDS_MARGIN outside the bounds rect and still come
+// back, so when it is out there (and still alive) we pin a chevron to the
+// nearest point on the edge, pointing at it, labelled with how far out it is.
+// Nothing else is clipped to the rect — paths and trails run past it freely.
+export function drawOutOfBoundsMarker(ctx, view, ship, bounds) {
+  if (!ship || ship.alive === false) return;
+  var ex = Math.max(0, Math.min(bounds.w, ship.x));
+  var ey = Math.max(0, Math.min(bounds.h, ship.y));
+  var dx = ship.x - ex, dy = ship.y - ey;
+  var dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < 0.5) return; // still inside
+
+  var ang = Math.atan2(dy, dx);
+  var ux = Math.cos(ang), uy = Math.sin(ang);
+  var sx = wx2sx(view, ex) + ux * 7;
+  var sy = wy2sy(view, ey) + uy * 7;
+  // Closer to the margin limit = more insistent.
+  var urgency = Math.min(1, dist / (BOUNDS_MARGIN || 120));
+
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(ang);
+  ctx.strokeStyle = COLORS.ship;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.globalAlpha = 0.55 + 0.45 * urgency;
+  ctx.lineWidth = 2 + urgency;
+  var h = 7, d = 6;
+  ctx.beginPath();
+  ctx.moveTo(-d, -h);
+  ctx.lineTo(d, 0);
+  ctx.lineTo(-d, h);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = COLORS.ship;
+  ctx.font = '600 10px ui-monospace, Menlo, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(Math.round(dist) + 'u', sx - ux * 18, sy - uy * 18);
   ctx.restore();
 }
 
