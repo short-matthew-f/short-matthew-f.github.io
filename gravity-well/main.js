@@ -6,6 +6,7 @@ import {
   PHYSICS_VERSION, DT, SHIP_RADIUS,
   killRadius, createState, step, predict, fieldAt, validateWells
 } from './sim.js';
+import * as Sim from './sim.js';
 import * as levelsModule from './levels.js';
 import { createInput } from './input.js';
 import * as R from './render.js';
@@ -113,6 +114,9 @@ var ARROW_SPACING = 60;   // world units
 var CAM_PAD = 80;         // world units of breathing room around out-of-bounds content
 var CAM_MAX_ZOOM_OUT = 2.2; // never zoom out further than this vs. the base fit
 var CAM_EASE = 5;         // exponential smoothing rate (1 - exp(-dt*CAM_EASE))
+// Wells closer than this are rejected by validateWells, so the gestures never
+// let the player build an invalid field in the first place.
+var MIN_WELL_DISTANCE = Sim.MIN_WELL_DISTANCE != null ? Sim.MIN_WELL_DISTANCE : 100;
 var TRAIL_MAX = 260;
 var RESULT_DELAY = 0.6;   // seconds between outcome and overlay
 
@@ -419,10 +423,25 @@ function updateChargeReadout() {
   }
 }
 
+// Index of the nearest well within `dist` of (wx, wy), ignoring `skip`, else -1.
+function nearestWell(wx, wy, dist, skip) {
+  var best = -1, bestD = dist;
+  for (var i = 0; i < app.wells.length; i++) {
+    if (i === skip) continue;
+    var dx = wx - app.wells[i].x, dy = wy - app.wells[i].y;
+    var d = Math.sqrt(dx * dx + dy * dy);
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  return best;
+}
+
 function handleTap(wx, wy, index) {
   if (app.mode !== 'plan') return;
   var lv = app.level;
   var used = totalCharges(app.wells);
+  // A tap too close to an existing well could not legally place a new one, so
+  // read it as "grow that well" — which is almost certainly what was meant.
+  if (index < 0) index = nearestWell(wx, wy, MIN_WELL_DISTANCE, -1);
   if (index >= 0) {
     var w = app.wells[index];
     if (w.charges >= lv.stackLimit) { toast('Max stack'); return; }
@@ -446,18 +465,31 @@ function handleDoubleTap(wx, wy, index) {
   markWellsChanged();
 }
 
-function handleDragStart(index) { app.dragIndex = index; }
+function handleDragStart(index) {
+  app.dragIndex = index;
+  app.dragBlocked = false;
+}
 
 function handleDragMove(index, wx, wy) {
   if (app.mode !== 'plan') return;
   var w = app.wells[index];
   if (!w) return;
   var p = clampToBounds({ x: wx, y: wy }, app.level.bounds);
+  // Too close to a neighbour: hold the well where it was. It sticks at the
+  // boundary and tints red rather than nagging with a toast.
+  if (nearestWell(p.x, p.y, MIN_WELL_DISTANCE, index) >= 0) {
+    app.dragBlocked = true;
+    return;
+  }
+  app.dragBlocked = false;
   w.x = p.x; w.y = p.y;
   markWellsChanged();
 }
 
-function handleDragEnd() { app.dragIndex = -1; }
+function handleDragEnd() {
+  app.dragIndex = -1;
+  app.dragBlocked = false;
+}
 
 // ------------------------------------------------------- prediction / field
 
@@ -724,6 +756,7 @@ function draw() {
   }
 
   R.drawWells(ctx, view, app.wells, killRadius, { selected: app.dragIndex, dim: flying });
+  drawDragBlockedTint(view);
 
   if (s.ship && s.ship.alive !== false) {
     R.drawShip(ctx, view, s.ship, SHIP_RADIUS, { showVelocity: !flying });
@@ -733,6 +766,24 @@ function draw() {
   if (!flying && lv.hint && lv.hint.well && app.wells.length === 0) {
     R.drawHint(ctx, view, lv.hint.well, app.clock);
   }
+}
+
+// Subtle red ring on the dragged well while it is being held off a neighbour.
+function drawDragBlockedTint(view) {
+  if (!app.dragBlocked || app.dragIndex < 0) return;
+  var w = app.wells[app.dragIndex];
+  if (!w) return;
+  var cx = R.wx2sx(view, w.x), cy = R.wy2sy(view, w.y);
+  var kr = killRadius(w.charges) * view.scale;
+  ctx.save();
+  ctx.strokeStyle = R.COLORS.bad;
+  ctx.globalAlpha = 0.85;
+  ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.arc(cx, cy, kr, 0, Math.PI * 2); ctx.stroke();
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = R.COLORS.bad;
+  ctx.beginPath(); ctx.arc(cx, cy, kr, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
 }
 
 function drawPlanPreview(view, lv) {

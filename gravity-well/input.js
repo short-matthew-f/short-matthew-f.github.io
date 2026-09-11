@@ -3,8 +3,13 @@
 // well dragging. Pointer Events only (no touch/mouse events), single active
 // pointer (extras ignored), pointercancel safe.
 
-import { killRadius } from './sim.js';
+import * as Sim from './sim.js';
 import { screenToWorld } from './render.js';
+
+var killRadius = Sim.killRadius;
+// Wells may not be placed closer than this, so a tap inside the exclusion zone
+// of an existing well cannot mean "new well here" — it means that well.
+export var MIN_WELL_DISTANCE = Sim.MIN_WELL_DISTANCE != null ? Sim.MIN_WELL_DISTANCE : 100;
 
 export var DRAG_THRESHOLD_PX = 8;   // movement before a press becomes a drag
 export var DOUBLE_TAP_MS = 300;     // max gap between the two taps
@@ -45,8 +50,11 @@ export function createInput(canvas, opts) {
     return screenToWorld(view, p.x, p.y);
   }
 
-  // Nearest well whose generous hit disc contains the world point, else -1.
-  function hitTest(wx, wy) {
+  // Nearest well whose hit disc contains the world point, else -1.
+  // `grab` (drag) uses the tight thumb-sized disc; tap classification uses the
+  // wider one, because a tap inside a well's exclusion zone could not have
+  // placed a new well there anyway.
+  function hitTest(wx, wy, generous) {
     var wells = (o.getWells && o.getWells()) || [];
     var best = -1, bestD = Infinity;
     for (var i = 0; i < wells.length; i++) {
@@ -54,6 +62,7 @@ export function createInput(canvas, opts) {
       var dx = wx - w.x, dy = wy - w.y;
       var d = Math.sqrt(dx * dx + dy * dy);
       var rr = killRadius(w.charges) + HIT_PAD_WORLD;
+      if (generous && MIN_WELL_DISTANCE > rr) rr = MIN_WELL_DISTANCE;
       if (d <= rr && d < bestD) { bestD = d; best = i; }
     }
     return best;
@@ -69,7 +78,7 @@ export function createInput(canvas, opts) {
     startX = p.x; startY = p.y; startT = now();
     dragging = false;
     var w = toWorld(p);
-    dragIndex = hitTest(w.x, w.y);
+    dragIndex = hitTest(w.x, w.y, false);
     if (canvas.setPointerCapture) {
       try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
     }
@@ -126,10 +135,10 @@ export function createInput(canvas, opts) {
     var w = toWorld(p);
     if (isDouble) {
       lastTap = null;
-      onDoubleTap(w.x, w.y, hitTest(w.x, w.y));
+      onDoubleTap(w.x, w.y, hitTest(w.x, w.y, true));
     } else {
       lastTap = { x: p.x, y: p.y, time: t };
-      onTap(w.x, w.y, hitTest(w.x, w.y));
+      onTap(w.x, w.y, hitTest(w.x, w.y, true));
     }
   }
 
