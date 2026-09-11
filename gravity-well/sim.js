@@ -18,24 +18,45 @@
 // EPS softens the singularity so a near miss is a hard kick rather than an
 // infinity, and so the numbers stay finite inside the lethal core.
 //
-// Tuning (G = 5.2e5, EPS = 40). `node test/tune.js` flies the ship at 120 u/s
-// past a single well at impact parameter b and prints the measured bend plus
-// the gap left between the ship and the lethal core:
+// Tuning (G = 1.6e6, EPS = 40, reach 360 / taper 90). `node test/tune.js` flies
+// the ship at 120 u/s past a single well at impact parameter b and prints the
+// measured bend plus the gap left between the ship and the lethal core:
 //
-//   charges   b=100            b=150            b=200
-//     1       33 deg, gap 49   26 deg, gap 99   20 deg, gap 152
-//     2       58 deg, gap 30   51 deg, gap 78   41 deg, gap 131
-//     3       72 deg, gap 18   73 deg, gap 59   63 deg, gap 110
+//   charges   b=100               b=150               b=200
+//     1       74 deg, gap 16      75 deg, gap 60      61 deg, gap 118
+//     2       87 deg, gap 0       113 deg, gap 25     122 deg, gap 68
+//     3       eaten by the core   123 deg, gap 7      150 deg, gap 37
 //
-// So 1 charge at ~150 units is a gentle, survivable bend of a couple of tens
-// of degrees, while 3 charges at ~100 units swings the ship through ~70 deg
-// with only ~18 units of clearance from the core — a real capture risk (at
-// b = 60..80 a 3-charge well grazes or eats the ship). Because the field is
-// conservative and static, a flyby cannot be captured into an orbit: "capture"
-// in play means the bend is sharp enough to curve the ship into the core.
+// So one charge swings a 120 u/s ship through most of a right angle, a stacked
+// well can turn it right around, and a careless close pass is genuinely fatal
+// (a 3-charge well eats a 120 u/s ship at b <= 100). EPS flattens the force
+// inside r < EPS, which is why very small impact parameters bend *less* than
+// mid-range ones - they are just eaten instead.
 //
-// EPS also flattens the force inside r < EPS, which is why very small impact
-// parameters bend *less* than mid-range ones.
+// Because the field is cut off at WELL_REACH, a body that leaves the reach does
+// so with exactly the speed it arrived with, and far-away wells contribute
+// nothing at all: a well is a local tool with a visible edge.
+//
+// The board edge is soft. Straying off the board is not itself a failure: a
+// body is lost only when it can provably never come back - it is outside the
+// bounds rectangle, outside every well's reach, and its straight line from
+// there meets neither the board, nor a well's reach disc, nor a wormhole mouth
+// (see willReturn). So a well near the rim can catch a ship that has just
+// slipped off the edge, and a ship still aimed at the board keeps flying.
+// Hunters are exempt from the ray test because they steer; they are given up on
+// only past HUNTER_LEASH or on drift.
+//
+// Slow ships can be BOUND and loop. The speed needed to escape from rest is
+// ~75 u/s at 200 units from a 1-charge well (102 u/s at 150 units) and ~129 u/s
+// at 200 units from a 3-charge well, so a ship that starts inside the reach at
+// well under those speeds cannot leave and will orbit.
+// For a ship arriving from outside the reach the picture is sharper than that:
+// it always carries enough energy to get away again, but it can still wind
+// around several times on the way. A 60 u/s ship passing a 3-charge well at
+// b = 340 (just inside the reach) turns through more than 400 degrees before it
+// escapes, while the same ship at b = 180 is pulled straight into the core and
+// eaten. Loop-de-loop levels therefore want a slow ship and a wide, grazing
+// line - not a close one.
 //
 // Wormholes
 // ---------
@@ -58,13 +79,19 @@
 // killRadius or the integration order change, bump it. Wormholes added no
 // change to any pre-existing behaviour, so 'gw-1' still stands.
 
-export const PHYSICS_VERSION = 'gw-1';
+export const PHYSICS_VERSION = 'gw-2';
 
 export const DT = 1 / 120;
 export const MAX_FLIGHT_SECONDS = 90;
-export const G = 5.2e5;
+export const G = 1.6e6;
 export const EPS = 40;
 export const SHIP_RADIUS = 10;
+
+// Influence cutoff: past WELL_REACH a well contributes nothing at all, and over
+// the last WELL_TAPER units before that its force is smoothstepped to zero so
+// the field stays continuous. The reach does NOT grow with charges.
+export const WELL_REACH = 360;
+export const WELL_TAPER = 90;
 
 // Prediction sampling period (spec: 1/20 s). DT divides it exactly.
 export const PREDICT_SAMPLE_DT = 1 / 20;
@@ -76,6 +103,25 @@ export const RESTITUTION = 1;
 // Hunter defaults (per-fixture `accel` / `maxSpeed` override these).
 export const HUNTER_ACCEL = 60;
 export const HUNTER_MAX_SPEED = 140;
+
+// DEPRECATED as a physics rule (kept exported for the renderer, which uses it
+// as the "start zooming out" hint in world units). Leaving the board is no
+// longer decided by a margin at all - see willReturn().
+export const BOUNDS_MARGIN = 0;
+
+// A body drifting outside the board with no force on it is lost the moment its
+// straight line is known to miss everything. Below this speed there is no line
+// to follow, so an outside body that has effectively stopped is lost too.
+const MIN_RETURN_SPEED = 1e-6;
+
+// Hunters steer, so their path is not a straight line and the ray test does not
+// apply; they are only given up on this far outside the board (or on drift).
+export const HUNTER_LEASH = 2000;
+
+// Two wells this close would act as one stacked well and quietly defeat the
+// level's stackLimit, so placement refuses it. run()/createState stay
+// permissive: validateWells is the gate.
+export const MIN_WELL_DISTANCE = 100;
 
 // Wormhole mouth radius (per-fixture `r` overrides), the per-(body, wormhole)
 // lockout after a jump, and how far outside the far mouth a body is placed.
@@ -111,7 +157,7 @@ export function cloneLevel(level) {
 
 /** Lethal core radius of a well holding `n` charges. */
 export function killRadius(n) {
-  return 14 + 6 * Math.sqrt(n);
+  return 18 + 8 * Math.sqrt(n);
 }
 
 /** Does contact with this body kill the ship? */
@@ -150,16 +196,29 @@ function pushEvent(state, kind, id, extra) {
 /**
  * Gravity acceleration produced by `wells` at world point (x, y).
  * Used by the sim and by the renderer's field arrows.
+ *
+ * Softened inverse-square, cut off at WELL_REACH with a smoothstep taper over
+ * the last WELL_TAPER units: a well is a local tool with a readable edge, not a
+ * board-wide background pull. The taper keeps the force continuous, so nothing
+ * kicks as a body crosses the rim.
  */
 export function fieldAt(wells, x, y) {
+  const reach2 = WELL_REACH * WELL_REACH;
+  const inner = WELL_REACH - WELL_TAPER;
   let ax = 0;
   let ay = 0;
   for (let i = 0; i < wells.length; i++) {
     const w = wells[i];
     const dx = w.x - x;
     const dy = w.y - y;
-    const soft = dx * dx + dy * dy + EPS * EPS;
-    const f = (G * w.charges) / (soft * Math.sqrt(soft));
+    const d2 = dx * dx + dy * dy;
+    if (d2 >= reach2) continue; // out of reach entirely
+    const soft = d2 + EPS * EPS;
+    let f = (G * w.charges) / (soft * Math.sqrt(soft));
+    if (d2 > inner * inner) {
+      const u = (WELL_REACH - Math.sqrt(d2)) / WELL_TAPER; // 1 at the inner edge, 0 at the rim
+      f *= u * u * (3 - 2 * u);
+    }
     ax += f * dx;
     ay += f * dy;
   }
@@ -658,13 +717,103 @@ function collisionPass(state) {
 
 // ---------------------------------------------------------------------------
 // Bounds, ore delivery, win condition
+//
+// Leaving the board is not a failure by itself. Outside the bounds rectangle
+// AND outside every well's reach a body has no force on it at all, so it
+// travels in a straight line for ever and the question "can this ever come
+// back?" is exactly decidable: cast the ray and see whether it still meets the
+// board, a well's reach disc, or a wormhole mouth. Only a ray that meets
+// nothing is lost.
 // ---------------------------------------------------------------------------
 
+function insideBounds(state, body) {
+  return body.x >= 0 && body.x <= state.bounds.w && body.y >= 0 && body.y <= state.bounds.h;
+}
+
+/** Does the ray p + t*d (t >= 0) meet the axis-aligned box [0,w]x[0,h]? */
+function rayHitsRect(px, py, dx, dy, w, h) {
+  let t0 = 0;
+  let t1 = Infinity;
+  const p = [px, py];
+  const d = [dx, dy];
+  const lo = [0, 0];
+  const hi = [w, h];
+  for (let i = 0; i < 2; i++) {
+    if (Math.abs(d[i]) < 1e-12) {
+      if (p[i] < lo[i] || p[i] > hi[i]) return false; // parallel and outside the slab
+      continue;
+    }
+    let ta = (lo[i] - p[i]) / d[i];
+    let tb = (hi[i] - p[i]) / d[i];
+    if (ta > tb) { const sw = ta; ta = tb; tb = sw; }
+    if (ta > t0) t0 = ta;
+    if (tb < t1) t1 = tb;
+    if (t0 > t1) return false;
+  }
+  return t1 >= 0;
+}
+
+/** Does the ray p + t*d (t >= 0) meet the disc (cx, cy, r)? */
+function rayHitsDisc(px, py, dx, dy, cx, cy, r) {
+  const ox = px - cx;
+  const oy = py - cy;
+  const c = ox * ox + oy * oy - r * r;
+  if (c <= 0) return true; // already inside
+  const b = ox * dx + oy * dy;
+  if (b >= 0) return false; // heading away
+  const a = dx * dx + dy * dy;
+  return b * b - a * c >= 0;
+}
+
+/**
+ * Can this body still come back into play? True whenever it is on the board,
+ * still inside some well's reach, or aimed at the board, a well's reach disc or
+ * a wormhole mouth. Exported for the renderer (to flag a doomed body) and for
+ * tests. Hunters always answer true inside their leash: they steer.
+ */
+export function willReturn(state, body) {
+  if (insideBounds(state, body)) return true;
+
+  for (let i = 0; i < state.wells.length; i++) {
+    const w = state.wells[i];
+    const dx = body.x - w.x;
+    const dy = body.y - w.y;
+    if (dx * dx + dy * dy <= WELL_REACH * WELL_REACH) return true; // still in the field
+  }
+
+  if (body.type === 'hunter') {
+    // It is under thrust towards the ship, so no straight line to test.
+    return (
+      body.x > -HUNTER_LEASH && body.x < state.bounds.w + HUNTER_LEASH &&
+      body.y > -HUNTER_LEASH && body.y < state.bounds.h + HUNTER_LEASH
+    );
+  }
+
+  const dx = body.vx;
+  const dy = body.vy;
+  if (Math.sqrt(dx * dx + dy * dy) < MIN_RETURN_SPEED) return false; // adrift, going nowhere
+
+  if (rayHitsRect(body.x, body.y, dx, dy, state.bounds.w, state.bounds.h)) return true;
+
+  for (let i = 0; i < state.wells.length; i++) {
+    const w = state.wells[i];
+    if (rayHitsDisc(body.x, body.y, dx, dy, w.x, w.y, WELL_REACH)) return true;
+  }
+
+  // A mover can also be posted back in through a wormhole mouth.
+  for (let i = 0; i < state.wormholes.length; i++) {
+    const hole = state.wormholes[i];
+    for (let k = 0; k < 2; k++) {
+      const mouth = hole.mouths[k];
+      if (k === 1 && hole.oneWay) continue; // that mouth swallows nothing
+      if (rayHitsDisc(body.x, body.y, dx, dy, mouth.x, mouth.y, hole.r)) return true;
+    }
+  }
+  return false;
+}
+
 function outOfBounds(state, body) {
-  const w = state.bounds.w;
-  const h = state.bounds.h;
-  const r = body.r;
-  return body.x < -r || body.x > w + r || body.y < -r || body.y > h + r;
+  return !willReturn(state, body);
 }
 
 function boundsPass(state) {
@@ -903,5 +1052,22 @@ export function validateWells(level, wells) {
   if (total > budget) {
     return { ok: false, reason: 'budget', message: 'No charges left' };
   }
+
+  // Wells packed together behave as one bigger well; keep them apart so the
+  // stack limit means something.
+  for (let i = 0; i < list.length; i++) {
+    for (let j = i + 1; j < list.length; j++) {
+      const dx = list[i].x - list[j].x;
+      const dy = list[i].y - list[j].y;
+      if (dx * dx + dy * dy < MIN_WELL_DISTANCE * MIN_WELL_DISTANCE) {
+        return {
+          ok: false,
+          reason: 'spacing',
+          message: 'Wells must be at least ' + MIN_WELL_DISTANCE + ' units apart'
+        };
+      }
+    }
+  }
+
   return { ok: true, reason: null, message: null };
 }

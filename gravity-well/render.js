@@ -4,6 +4,15 @@
 // scale; all drawing happens in CSS pixels (the caller applies devicePixelRatio
 // via ctx.setTransform before calling in).
 
+import * as Sim from './sim.js';
+
+// The well influence cutoff. Read from sim.js when it exports it; 360 is the
+// spec value and keeps the ring correct while the retune is still landing.
+export var WELL_REACH = Sim.WELL_REACH != null ? Sim.WELL_REACH : 360;
+
+// How far a body may stray outside the bounds rect and still come back.
+export var BOUNDS_MARGIN = Sim.BOUNDS_MARGIN != null ? Sim.BOUNDS_MARGIN : 120;
+
 export const COLORS = {
   bg: '#05070f',
   bgDeep: '#02030a',
@@ -33,17 +42,40 @@ export const COLORS = {
 
 // ---------------------------------------------------------------- transform
 
-// Fit world bounds into the canvas area, leaving `pad` (CSS px) on each edge.
-// Returns {scale, ox, oy} such that screenX = worldX * scale + ox.
-export function computeView(cssW, cssH, bounds, pad) {
+// Fit an arbitrary world rect into the canvas area, leaving `pad` (CSS px) on
+// each edge. Returns {scale, ox, oy, area} such that screenX = worldX*scale+ox;
+// `area` is the padded CSS-pixel box the world is fitted into, which is what
+// lets callers ask what part of the world is currently on screen.
+// `forceScale` skips the fit and centres the rect at that scale instead — used
+// to clamp how far the camera may zoom out.
+export function computeViewForRect(cssW, cssH, rect, pad, forceScale) {
   var p = pad || {};
   var top = p.top || 0, bottom = p.bottom || 0, left = p.left || 0, right = p.right || 0;
   var availW = Math.max(20, cssW - left - right);
   var availH = Math.max(20, cssH - top - bottom);
-  var scale = Math.min(availW / bounds.w, availH / bounds.h);
-  var ox = left + (availW - bounds.w * scale) / 2;
-  var oy = top + (availH - bounds.h * scale) / 2;
-  return { scale: scale, ox: ox, oy: oy, cssW: cssW, cssH: cssH };
+  var scale = forceScale != null ? forceScale : Math.min(availW / rect.w, availH / rect.h);
+  var ox = left + (availW - rect.w * scale) / 2 - rect.x * scale;
+  var oy = top + (availH - rect.h * scale) / 2 - rect.y * scale;
+  return {
+    scale: scale, ox: ox, oy: oy, cssW: cssW, cssH: cssH,
+    area: { x: left, y: top, w: availW, h: availH }
+  };
+}
+
+// Static letterbox fit of the whole level — the camera's base/rest state.
+export function computeView(cssW, cssH, bounds, pad) {
+  return computeViewForRect(cssW, cssH, { x: 0, y: 0, w: bounds.w, h: bounds.h }, pad);
+}
+
+// The world rect currently on screen (inside the padded area).
+export function visibleWorldRect(view) {
+  var a = view.area || { x: 0, y: 0, w: view.cssW, h: view.cssH };
+  return {
+    x: (a.x - view.ox) / view.scale,
+    y: (a.y - view.oy) / view.scale,
+    w: a.w / view.scale,
+    h: a.h / view.scale
+  };
 }
 
 export function wx2sx(view, x) { return x * view.scale + view.ox; }
@@ -201,9 +233,12 @@ export function drawFieldArrows(ctx, view, samples, opts) {
 // -------------------------------------------------------------------- wells
 
 // wells: [{x,y,charges}]; killRadiusFn(n) -> world units.
+// opts: {selected, dim, reach}. `dim` fades the reach ring for flight state.
 export function drawWells(ctx, view, wells, killRadiusFn, opts) {
   if (!wells) return;
   var o = opts || {};
+  var reach = (o.reach != null ? o.reach : WELL_REACH) * view.scale;
+  var dim = !!o.dim;
   ctx.save();
   for (var i = 0; i < wells.length; i++) {
     var w = wells[i];
@@ -211,17 +246,31 @@ export function drawWells(ctx, view, wells, killRadiusFn, opts) {
     var kr = killRadiusFn(w.charges) * view.scale;
     var selected = o.selected === i;
 
-    // influence rings scale with charge count
-    var rings = 3;
-    for (var r = rings; r >= 1; r--) {
-      var rr = kr * (1 + r * 0.9 * Math.sqrt(w.charges));
+    // Reach ring: beyond this the well contributes nothing, so the field is
+    // visibly bounded rather than looking infinite.
+    ctx.globalAlpha = dim ? 0.10 : 0.26;
+    ctx.strokeStyle = COLORS.well;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 9]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, reach, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Influence rings, spaced between the core and a band that always stays
+    // inside the reach ring.
+    var outer = Math.min(reach * 0.8, kr * (1 + 2.7 * Math.sqrt(w.charges)));
+    if (outer < kr * 1.4) outer = kr * 1.4;
+    for (var k = 3; k >= 1; k--) {
+      var rr = kr + (outer - kr) * (k / 3);
       ctx.beginPath();
       ctx.arc(cx, cy, rr, 0, Math.PI * 2);
       ctx.strokeStyle = COLORS.well;
-      ctx.globalAlpha = 0.05 + 0.09 / r;
+      ctx.globalAlpha = (dim ? 0.5 : 1) * (0.05 + 0.09 / k);
       ctx.lineWidth = 1;
       ctx.stroke();
     }
+
     // soft glow
     ctx.globalAlpha = 1;
     var g = ctx.createRadialGradient(cx, cy, kr * 0.4, cx, cy, kr * 3.2);
@@ -243,7 +292,7 @@ export function drawWells(ctx, view, wells, killRadiusFn, opts) {
 
     // charge numeral
     ctx.fillStyle = COLORS.wellRim;
-    ctx.font = '600 ' + Math.max(10, Math.round(kr * 0.95)) + 'px ui-monospace, Menlo, monospace';
+    ctx.font = '600 ' + Math.max(10, Math.round(kr * 0.85)) + 'px ui-monospace, Menlo, monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(String(w.charges), cx, cy + 0.5);
@@ -331,6 +380,65 @@ export function drawShip(ctx, view, ship, shipRadius, opts) {
   ctx.lineWidth = 1.8;
   ctx.stroke();
   ctx.restore();
+}
+
+// The camera follows a ship that swings outside the board, so the chevron only
+// appears once the ship has left the *visible* area. It is pinned to the edge
+// of what is on screen, points at the ship, and is labelled with how far
+// outside the playfield bounds the ship actually is (the number that matters
+// for the lost rule). Nothing is ever clipped to the bounds rect — paths and
+// trails run past it freely.
+export function drawOutOfBoundsMarker(ctx, view, ship, bounds) {
+  if (!ship || ship.alive === false) return;
+  var vis = visibleWorldRect(view);
+  var inset = 16 / view.scale;
+  var vx0 = vis.x + inset, vx1 = vis.x + vis.w - inset;
+  var vy0 = vis.y + inset, vy1 = vis.y + vis.h - inset;
+  if (vx1 < vx0) { vx0 = vx1 = vis.x + vis.w / 2; }
+  if (vy1 < vy0) { vy0 = vy1 = vis.y + vis.h / 2; }
+
+  var ex = Math.max(vx0, Math.min(vx1, ship.x));
+  var ey = Math.max(vy0, Math.min(vy1, ship.y));
+  var dx = ship.x - ex, dy = ship.y - ey;
+  if ((dx * dx + dy * dy) < 1) return; // still on screen
+
+  // Label the distance outside the playfield, not outside the viewport.
+  var bx = Math.max(0, Math.min(bounds.w, ship.x));
+  var by = Math.max(0, Math.min(bounds.h, ship.y));
+  var odx = ship.x - bx, ody = ship.y - by;
+  var outside = Math.sqrt(odx * odx + ody * ody);
+
+  var ang = Math.atan2(dy, dx);
+  var ux = Math.cos(ang), uy = Math.sin(ang);
+  var sx = wx2sx(view, ex), sy = wy2sy(view, ey);
+  var urgency = Math.min(1, outside / (BOUNDS_MARGIN || 120));
+
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(ang);
+  ctx.strokeStyle = COLORS.ship;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.globalAlpha = 0.55 + 0.45 * urgency;
+  ctx.lineWidth = 2 + urgency;
+  var h = 7, d = 6;
+  ctx.beginPath();
+  ctx.moveTo(-d, -h);
+  ctx.lineTo(d, 0);
+  ctx.lineTo(-d, h);
+  ctx.stroke();
+  ctx.restore();
+
+  if (outside >= 1) {
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = COLORS.ship;
+    ctx.font = '600 10px ui-monospace, Menlo, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(Math.round(outside) + 'u', sx - ux * 18, sy - uy * 18);
+    ctx.restore();
+  }
 }
 
 // ----------------------------------------------------------------- fixtures

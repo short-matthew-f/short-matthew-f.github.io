@@ -28,6 +28,28 @@ const VIEWPORTS = [
   { name: 'desktop-1280x800', width: 1280, height: 800 }
 ];
 
+// A throwaway level whose ship starts outside the bounds rect on both axes and
+// flies back in, so the dynamic camera has to open up in either viewport.
+const CAMERA_LEVEL = {
+  id: 'smoke-camera', name: 'Camera Smoke', phase: 1, optional: false,
+  bounds: { w: 900, h: 1200 },
+  charges: 1, stackLimit: 1, previewSeconds: 0, showBodyPreview: false,
+  ship: { x: -110, y: -110, vx: 40, vy: 40 },
+  target: { x: 450, y: 450, r: 28 },
+  fixtures: [], radio: [], hint: null, solution: []
+};
+
+// A throwaway level with room for three charges, used to check that a tap
+// inside a well's exclusion zone grows that well instead of placing a new one.
+const SPACING_LEVEL = {
+  id: 'smoke-spacing', name: 'Spacing Smoke', phase: 1, optional: false,
+  bounds: { w: 900, h: 1200 },
+  charges: 3, stackLimit: 3, previewSeconds: 0, showBodyPreview: false,
+  ship: { x: 450, y: 1100, vx: 0, vy: -160 },
+  target: { x: 450, y: 120, r: 28 },
+  fixtures: [], radio: [], hint: null, solution: []
+};
+
 // Stage 4 adds manifest.webmanifest / icons; until then the 404 is expected and
 // is the only console noise we tolerate.
 const IGNORED_CONSOLE = [/manifest/i, /favicon/i];
@@ -226,6 +248,43 @@ async function runViewport(browser, vp, baseURL) {
   await page.click('#btn-adjust');
   await page.waitForFunction(() => window.GW.mode === 'plan', null, { timeout: 5000 });
   assert((await charges(page)) === '1', 'Adjust returns to plan with wells intact');
+
+  // ---- well spacing: a tap inside the exclusion zone grows the nearest well
+  await page.evaluate((lv) => window.GW.loadLevel(lv), SPACING_LEVEL);
+  await page.waitForFunction(() => window.GW.mode === 'plan', null, { timeout: 5000 });
+  const seedPt = await worldToPage(page, 450, 700);
+  await tap(page, seedPt);
+  await page.waitForTimeout(120);
+  assert((await charges(page)) === '1', 'seed well placed for the spacing check');
+
+  await page.waitForTimeout(420); // past the double-tap window
+  const nearPt = await worldToPage(page, 450, 760); // 60 world units away
+  await tap(page, nearPt);
+  await page.waitForTimeout(150);
+  const wellCount = await page.evaluate(() => window.GW.wells.length);
+  const wellCharges = await page.evaluate(() => window.GW.wells[0].charges);
+  assert(wellCount === 1 && wellCharges === 2 && (await charges(page)) === '2',
+    'a tap 60u from a well grows it to 2 charges instead of placing a second well');
+
+  // ---- camera: a ship outside the bounds must zoom the view out
+  await page.evaluate((lv) => window.GW.loadLevel(lv), CAMERA_LEVEL);
+  await page.waitForFunction(() => window.GW.mode === 'plan', null, { timeout: 5000 });
+  const baseScale = await page.evaluate(() => window.GW.view.scale);
+  assert(baseScale > 0, 'synthetic camera level loaded (base scale ' + baseScale.toFixed(3) + ')');
+  await page.click('#btn-launch');
+  await page.waitForFunction(() => window.GW.mode === 'flight', null, { timeout: 5000 });
+  await page.click('#btn-speed');
+  await page.waitForFunction(
+    (b) => window.GW.view.scale < b * 0.95,
+    baseScale,
+    { timeout: 20000 }
+  );
+  const zoomed = await page.evaluate(() => window.GW.view.scale);
+  assert(zoomed < baseScale * 0.95,
+    'camera zooms out when the ship is outside the bounds (' +
+    baseScale.toFixed(3) + ' -> ' + zoomed.toFixed(3) + ')');
+  assert(zoomed >= baseScale / 2.2 - 1e-6, 'zoom-out stays within the 2.2x cap');
+  await page.screenshot({ path: path.join(SHOT_DIR, 'gw-' + vp.name + '-camera.png') });
 
   await context.close();
   if (problems.length) throw new Error(vp.name + ' had page problems:\n  - ' + problems.join('\n  - '));

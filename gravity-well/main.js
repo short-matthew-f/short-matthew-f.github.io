@@ -6,6 +6,7 @@ import {
   PHYSICS_VERSION, DT, SHIP_RADIUS,
   killRadius, createState, step, predict, fieldAt, validateWells
 } from './sim.js';
+import * as Sim from './sim.js';
 import * as levelsModule from './levels.js';
 import { createInput } from './input.js';
 import * as R from './render.js';
@@ -110,6 +111,12 @@ var app = {
 };
 
 var ARROW_SPACING = 60;   // world units
+var CAM_PAD = 80;         // world units of breathing room around out-of-bounds content
+var CAM_MAX_ZOOM_OUT = 2.2; // never zoom out further than this vs. the base fit
+var CAM_EASE = 5;         // exponential smoothing rate (1 - exp(-dt*CAM_EASE))
+// Wells closer than this are rejected by validateWells, so the gestures never
+// let the player build an invalid field in the first place.
+var MIN_WELL_DISTANCE = Sim.MIN_WELL_DISTANCE != null ? Sim.MIN_WELL_DISTANCE : 100;
 var TRAIL_MAX = 260;
 var RESULT_DELAY = 0.6;   // seconds between outcome and overlay
 
@@ -153,9 +160,64 @@ function updateView() {
   if (!app.level) return;
   var top = el.topbar.getBoundingClientRect().height || 52;
   var bottom = el.bottombar.getBoundingClientRect().height || 70;
-  app.view = R.computeView(app.cssW, app.cssH, app.level.bounds, {
-    top: top + 10, bottom: bottom + 10, left: 10, right: 10
-  });
+  app.pad = { top: top + 10, bottom: bottom + 10, left: 10, right: 10 };
+  app.baseView = R.computeView(app.cssW, app.cssH, app.level.bounds, app.pad);
+  // A resize snaps the camera rather than animating from a stale geometry.
+  app.view = R.computeViewForRect(app.cssW, app.cssH, cameraRect(), app.pad, null);
+  clampViewScale(app.view);
+}
+
+// ---------------------------------------------------------------- camera
+//
+// The camera rests on the base letterbox fit of the level bounds and only ever
+// grows: in flight it opens up to keep a ship that has swung off the board in
+// frame, and in planning it opens up to show the parts of the predicted path
+// that leave the board. The zoom-out is capped, after which the edge chevron
+// takes over.
+
+function cameraRect() {
+  var b = app.level.bounds;
+  var x0 = 0, y0 = 0, x1 = b.w, y1 = b.h;
+  function include(x, y) {
+    if (x >= 0 && x <= b.w && y >= 0 && y <= b.h) return; // inside: no growth
+    if (x - CAM_PAD < x0) x0 = x - CAM_PAD;
+    if (x + CAM_PAD > x1) x1 = x + CAM_PAD;
+    if (y - CAM_PAD < y0) y0 = y - CAM_PAD;
+    if (y + CAM_PAD > y1) y1 = y + CAM_PAD;
+  }
+
+  if (app.mode === 'flight' || (app.mode === 'result' && app.sim)) {
+    var sh = app.sim && app.sim.ship;
+    if (sh && sh.alive !== false) include(sh.x, sh.y);
+  } else if (app.pred && app.pred.ship) {
+    var pts = app.pred.ship;
+    for (var i = 0; i < pts.length; i++) include(pts[i].x, pts[i].y);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
+function clampViewScale(v) {
+  if (!app.baseView) return v;
+  var minScale = app.baseView.scale / CAM_MAX_ZOOM_OUT;
+  if (v.scale < minScale) {
+    var fixed = R.computeViewForRect(app.cssW, app.cssH, cameraRect(), app.pad, minScale);
+    v.scale = fixed.scale; v.ox = fixed.ox; v.oy = fixed.oy;
+  }
+  return v;
+}
+
+function updateCamera(dt) {
+  if (!app.level || !app.view || !app.baseView) return;
+  var target = clampViewScale(R.computeViewForRect(app.cssW, app.cssH, cameraRect(), app.pad, null));
+  // Frame-rate independent exponential smoothing (~8%/frame at 60fps).
+  var k = dt > 0 ? 1 - Math.exp(-dt * CAM_EASE) : 1;
+  if (!(k > 0)) return;
+  if (k > 1) k = 1;
+  var v = app.view;
+  v.scale += (target.scale - v.scale) * k;
+  v.ox += (target.ox - v.ox) * k;
+  v.oy += (target.oy - v.oy) * k;
+  v.area = target.area;
 }
 
 // ------------------------------------------------------------------- menu
@@ -274,7 +336,11 @@ function showMenu() {
 // -------------------------------------------------------------- level load
 
 function openLevel(index) {
-  var lv = LEVELS[index];
+  startLevel(LEVELS[index], index);
+}
+
+// `index` is -1 for a level that is not part of the campaign (test fixtures).
+function startLevel(lv, index) {
   if (!lv) return;
   app.level = lv;
   app.levelIndex = index;
@@ -357,10 +423,25 @@ function updateChargeReadout() {
   }
 }
 
+// Index of the nearest well within `dist` of (wx, wy), ignoring `skip`, else -1.
+function nearestWell(wx, wy, dist, skip) {
+  var best = -1, bestD = dist;
+  for (var i = 0; i < app.wells.length; i++) {
+    if (i === skip) continue;
+    var dx = wx - app.wells[i].x, dy = wy - app.wells[i].y;
+    var d = Math.sqrt(dx * dx + dy * dy);
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  return best;
+}
+
 function handleTap(wx, wy, index) {
   if (app.mode !== 'plan') return;
   var lv = app.level;
   var used = totalCharges(app.wells);
+  // A tap too close to an existing well could not legally place a new one, so
+  // read it as "grow that well" — which is almost certainly what was meant.
+  if (index < 0) index = nearestWell(wx, wy, MIN_WELL_DISTANCE, -1);
   if (index >= 0) {
     var w = app.wells[index];
     if (w.charges >= lv.stackLimit) { toast('Max stack'); return; }
@@ -384,18 +465,31 @@ function handleDoubleTap(wx, wy, index) {
   markWellsChanged();
 }
 
-function handleDragStart(index) { app.dragIndex = index; }
+function handleDragStart(index) {
+  app.dragIndex = index;
+  app.dragBlocked = false;
+}
 
 function handleDragMove(index, wx, wy) {
   if (app.mode !== 'plan') return;
   var w = app.wells[index];
   if (!w) return;
   var p = clampToBounds({ x: wx, y: wy }, app.level.bounds);
+  // Too close to a neighbour: hold the well where it was. It sticks at the
+  // boundary and tints red rather than nagging with a toast.
+  if (nearestWell(p.x, p.y, MIN_WELL_DISTANCE, index) >= 0) {
+    app.dragBlocked = true;
+    return;
+  }
+  app.dragBlocked = false;
   w.x = p.x; w.y = p.y;
   markWellsChanged();
 }
 
-function handleDragEnd() { app.dragIndex = -1; }
+function handleDragEnd() {
+  app.dragIndex = -1;
+  app.dragBlocked = false;
+}
 
 // ------------------------------------------------------- prediction / field
 
@@ -414,6 +508,9 @@ function recomputeArrows() {
       }
       if (skip) continue;
       var f = fieldAt(wells, x, y);
+      // Outside every well's reach the field is exactly zero; skipping those
+      // samples is what makes the bounded field visible.
+      if (f.ax === 0 && f.ay === 0) continue;
       out.push({ x: x, y: y, ax: f.ax, ay: f.ay });
     }
   }
@@ -609,7 +706,11 @@ function pasteSolution() {
   if (!text) return;
   var parts = String(text).trim().split('|');
   if (parts.length < 3) { toast('Unreadable code'); return; }
-  if (parts[0] !== PHYSICS_VERSION) { toast('Wrong physics version'); return; }
+  if (parts[0] !== PHYSICS_VERSION) {
+    // Solutions are only reproducible under the physics they were flown on.
+    toast('Solution is for physics ' + parts[0] + '; this build is ' + PHYSICS_VERSION);
+    return;
+  }
   if (parts[1] !== app.level.id) { toast('Code is for ' + parts[1]); return; }
   var wells = [];
   var chunks = parts[2] ? parts[2].split(';') : [];
@@ -654,15 +755,35 @@ function draw() {
     drawFlightTrails(view);
   }
 
-  R.drawWells(ctx, view, app.wells, killRadius, { selected: app.dragIndex });
+  R.drawWells(ctx, view, app.wells, killRadius, { selected: app.dragIndex, dim: flying });
+  drawDragBlockedTint(view);
 
   if (s.ship && s.ship.alive !== false) {
     R.drawShip(ctx, view, s.ship, SHIP_RADIUS, { showVelocity: !flying });
+    if (flying) R.drawOutOfBoundsMarker(ctx, view, s.ship, lv.bounds);
   }
 
   if (!flying && lv.hint && lv.hint.well && app.wells.length === 0) {
     R.drawHint(ctx, view, lv.hint.well, app.clock);
   }
+}
+
+// Subtle red ring on the dragged well while it is being held off a neighbour.
+function drawDragBlockedTint(view) {
+  if (!app.dragBlocked || app.dragIndex < 0) return;
+  var w = app.wells[app.dragIndex];
+  if (!w) return;
+  var cx = R.wx2sx(view, w.x), cy = R.wy2sy(view, w.y);
+  var kr = killRadius(w.charges) * view.scale;
+  ctx.save();
+  ctx.strokeStyle = R.COLORS.bad;
+  ctx.globalAlpha = 0.85;
+  ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.arc(cx, cy, kr, 0, Math.PI * 2); ctx.stroke();
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = R.COLORS.bad;
+  ctx.beginPath(); ctx.arc(cx, cy, kr, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
 }
 
 function drawPlanPreview(view, lv) {
@@ -729,6 +850,7 @@ function frame(nowMs) {
     }
   }
 
+  updateCamera(dt);
   draw();
 }
 
@@ -831,7 +953,10 @@ window.GW = {
   get wells() { return app.wells; },
   get level() { return app.level; },
   get view() { return app.view; },
-  openLevel: openLevel
+  get baseView() { return app.baseView; },
+  openLevel: openLevel,
+  // Load a level object directly, for tests and debugging.
+  loadLevel: function (lv) { startLevel(lv, -1); }
 };
 
 showMenu();
