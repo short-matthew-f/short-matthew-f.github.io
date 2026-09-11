@@ -60,6 +60,46 @@ function legalWell(level, w) {
 }
 
 // ---------------------------------------------------------------------------
+// Speed sanity
+//
+// The field can only bend what it has time to pull on. Levels are authored for
+// a 60-200 u/s ship; much outside that and no legal placement wins, which used
+// to show up as a silent "0 families" from the solution finder. These notes are
+// reported by lint AND attached to an empty solver result.
+// ---------------------------------------------------------------------------
+
+var SHIP_SPEED_MIN = 40;
+var SHIP_SPEED_MAX = 250;
+var MOVER_SPEED_MAX = 300;
+
+function speedNotes(level) {
+  var notes = [];
+  var ship = level.ship || {};
+  var sp = Math.hypot(ship.vx || 0, ship.vy || 0);
+  if (sp < SHIP_SPEED_MIN || sp > SHIP_SPEED_MAX) {
+    notes.push({
+      level: 'warn',
+      text: 'Ship speed ' + Math.round(sp) + ' u/s is far outside the playable range (60–200); ' +
+        (sp > SHIP_SPEED_MAX ? 'wells cannot bend it' : 'the ship barely travels')
+    });
+  }
+  var fixtures = level.fixtures || [];
+  for (var i = 0; i < fixtures.length; i++) {
+    var f = fixtures[i];
+    if (f.path) continue;   // a patrol's speed is its own field, not vx/vy
+    var v = Math.hypot(f.vx || 0, f.vy || 0);
+    if (v > MOVER_SPEED_MAX) {
+      notes.push({
+        level: 'warn',
+        text: f.type + ' "' + (f.id || i) + '" moves at ' + Math.round(v) + ' u/s, above ' +
+          MOVER_SPEED_MAX + ' — it will cross the board before anything can act on it'
+      });
+    }
+  }
+  return notes;
+}
+
+// ---------------------------------------------------------------------------
 // Hot zone: single-well sweep, row by row so progress and cancel both work
 // ---------------------------------------------------------------------------
 
@@ -250,7 +290,22 @@ async function solve(id, level, opts) {
     return b.count - a.count;
   });
 
-  return { samples: samples, tried: tried, winners: winners.length, families: families.slice(0, 12) };
+  var diagnosis = null;
+  if (!families.length) {
+    // Nothing won: say why rather than leaving a bare zero on screen.
+    var empty = run(level, [], { maxSeconds: MAX_SECONDS });
+    diagnosis = {
+      emptyOutcome: empty.outcome,
+      emptyReason: empty.reason,
+      emptyT: empty.t,
+      notes: speedNotes(level)
+    };
+  }
+
+  return {
+    samples: samples, tried: tried, winners: winners.length,
+    families: families.slice(0, 12), diagnosis: diagnosis
+  };
 }
 
 /** Cheap proxy for tolerance: how far the first well can move and still win. */
@@ -316,6 +371,10 @@ async function lint(id, level, opts) {
     for (i = 0; i < orders.length; i++) if (orders[i] !== i + 1) good = false;
     if (!good) add('error', 'Waypoint order must be 1..' + waypoints.length + ' with no gaps or repeats.');
   }
+
+  var speeds = speedNotes(level);
+  for (i = 0; i < speeds.length; i++) notes.push(speeds[i]);
+  if (!speeds.length) add('ok', 'Ship and mover speeds are in the playable band.');
 
   var sol = level.solution || [];
   if (!sol.length) {
@@ -402,7 +461,12 @@ self.onmessage = function (e) {
     });
   } else if (msg.cmd === 'solve') {
     work = solve(id, level, opts).then(function (r) {
-      if (r) post(id, { type: 'result', cmd: 'solve', families: r.families, winners: r.winners, tried: r.tried, samples: r.samples });
+      if (r) {
+        post(id, {
+          type: 'result', cmd: 'solve', families: r.families, winners: r.winners,
+          tried: r.tried, samples: r.samples, diagnosis: r.diagnosis
+        });
+      }
       return r;
     });
   } else if (msg.cmd === 'tolerance') {

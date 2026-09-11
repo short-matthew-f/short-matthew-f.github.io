@@ -176,15 +176,19 @@ function findFixture(list, type) {
   return { fx: null, index: -1 };
 }
 
-// Select a fixture by index the way a tap would, then open the Inspect tab.
-async function selectFixture(page, index) {
-  await page.evaluate((i) => {
-    window.GWED.app.setSel([{ kind: 'fixture', index: i }]);
+// Select something the way a tap would, then open the Inspect tab.
+async function selectRef(page, ref) {
+  await page.evaluate((r) => {
+    window.GWED.app.setSel([r]);
     window.GWED.app.refreshPanel();
     window.GWED.draw();
-  }, index);
+  }, ref);
   await page.click('#tab-inspect');
   await page.waitForTimeout(60);
+}
+
+function selectFixture(page, index) {
+  return selectRef(page, { kind: 'fixture', index: index });
 }
 
 // ---------------------------------------------------------------- the run
@@ -265,6 +269,39 @@ async function runViewport(browser, vp, baseURL) {
   await setField(page, '#insp-y', LEVEL.ship.y);
   await setField(page, '#insp-vx', LEVEL.ship.vx);
   await setField(page, '#insp-vy', LEVEL.ship.vy);
+
+  // ---- the velocity handle reads as time and is clamped
+  //      (a real phone session dragged it to 1280 u/s, which no well can bend)
+  await selectRef(page, { kind: 'ship', index: 0 });
+  for (let z = 0; z < 10; z++) {
+    if (await page.evaluate(() => window.GWED.view.scale) < 0.22) break;
+    await page.click('#ed-zoom-out');
+    await page.waitForTimeout(40);
+  }
+  const handle = await page.evaluate(() => {
+    const lv = window.GWED.level();
+    const sp = Math.hypot(lv.ship.vx, lv.ship.vy);
+    const a = Math.atan2(lv.ship.vy, lv.ship.vx);
+    return { x: lv.ship.x + Math.cos(a) * (40 + sp * 2), y: lv.ship.y + Math.sin(a) * (40 + sp * 2) };
+  });
+  await dragWorld(page, handle, { x: LEVEL.ship.x, y: LEVEL.ship.y - 1000 });
+  lv = await level(page);
+  const dragged = Math.hypot(lv.ship.vx, lv.ship.vy);
+  assert(dragged > 200 && dragged <= 400,
+    'dragging the velocity handle right across the board clamps at 400 u/s (got ' + Math.round(dragged) + ')');
+  await page.click('#ed-zoom-fit');
+  await page.waitForTimeout(80);
+  await page.click('#tab-inspect');
+  await setField(page, '#insp-speed', 152.3);
+  await setField(page, '#insp-heading', -66.8);
+  lv = await level(page);
+  assert(near(lv.ship.vx, LEVEL.ship.vx, 2) && near(lv.ship.vy, LEVEL.ship.vy, 2),
+    'the speed/heading fields write vx/vy (' + Math.round(lv.ship.vx) + ',' + Math.round(lv.ship.vy) + ')');
+  await setField(page, '#insp-vx', LEVEL.ship.vx);
+  await setField(page, '#insp-vy', LEVEL.ship.vy);
+  assert(await page.evaluate(() => Math.round(parseFloat(document.getElementById('insp-speed').value))) === 152,
+    'and editing vx/vy syncs speed back (152 u/s)');
+  assert((await page.textContent('#ed-hud')).indexOf('ship 152 u/s') >= 0, 'the HUD shows the ship speed');
 
   // ---- palette: target
   await pickTool(page, 'target');
@@ -387,6 +424,23 @@ async function runViewport(browser, vp, baseURL) {
     'Lint reports "Solvable with one well" on the trivial level');
   assert(/Zero wells fails/i.test(lintText), 'Lint confirms zero wells fails');
   await page.screenshot({ path: path.join(SHOT_DIR, 'ed-' + vp.name + '-lint.png') });
+
+  // ---- lint flags a ship nothing can bend
+  await selectRef(page, { kind: 'ship', index: 0 });
+  await setField(page, '#insp-vy', -1258);
+  await page.click('#tab-analyse');
+  await page.click('#an-lint');
+  await page.waitForFunction(() => {
+    const el = document.getElementById('an-out');
+    return el && /playable range|No single well|one well/i.test(el.textContent);
+  }, null, { timeout: 90000 });
+  const fastText = await page.textContent('#an-out');
+  assert(/far outside the playable range/i.test(fastText),
+    'Lint warns about a ship speed no well can bend: ' +
+    (fastText.match(/Ship speed [^.]*/) || ['?'])[0]);
+  await selectRef(page, { kind: 'ship', index: 0 });
+  await setField(page, '#insp-vy', LEVEL.ship.vy);
+  await page.click('#tab-analyse');
 
   // ---- hot zone sweep paints an overlay
   await setField(page, '#an-charges', 1);

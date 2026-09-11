@@ -29,6 +29,15 @@ var HANDLE_HIT = 18;      // generous thumb target
 var MIN_SCALE = 0.08;
 var MAX_SCALE = 6;
 
+// Velocity handles read as TIME, not as an arbitrary gain: the tip sits where
+// the body will be in VEL_SECONDS, offset by VEL_BASE so it clears the body
+// itself, and ticks mark 1 s and 2 s along the way. With the old 0.45 gain a
+// drag across the board set 1200 u/s, far outside the 60-200 band the field can
+// bend, so a handle-driven speed is clamped to VEL_MAX as well.
+var VEL_BASE = 40;        // world units from the body to the t=0 end of the arrow
+var VEL_SECONDS = 2;      // world units of arrow per (u/s)
+var VEL_MAX = 400;        // hard ceiling on a handle-driven speed
+
 // Types whose body is a circle with a draggable radius handle.
 var RADIUS_TYPES = {
   obstacle: 1, asteroid: 1, drone: 1, hunter: 1, ore: 1, oreReceiver: 1,
@@ -490,9 +499,72 @@ export function createEditorCanvas(app, canvasEl) {
     }
     var handles = handlesFor(lv, sel[sel.length - 1]);
     for (i = 0; i < handles.length; i++) {
+      if (handles[i].kind === 'ship-vel' || handles[i].kind === 'vel') drawVelocityShaft(handles[i]);
+    }
+    for (i = 0; i < handles.length; i++) {
       var h = handles[i];
       dot(R.wx2sx(view, h.x), R.wy2sy(view, h.y), h.color || '#4fe3d0', h.square);
     }
+  }
+
+  /**
+   * The velocity handle's shaft, with ticks where the body will be after 1 s
+   * and 2 s (the tip). Dragging it also prints the live speed next to the tip,
+   * so "how fast is this ship" is never a guess.
+   */
+  function drawVelocityShaft(h) {
+    var ox = R.wx2sx(view, h.ox);
+    var oy = R.wy2sy(view, h.oy);
+    var tx = R.wx2sx(view, h.x);
+    var ty = R.wy2sy(view, h.y);
+    var dx = tx - ox;
+    var dy = ty - oy;
+    var m = Math.hypot(dx, dy);
+    if (m < 1) return;
+    var ux = dx / m;
+    var uy = dy / m;
+    var nx = -uy;
+    var ny = ux;
+
+    ctx.save();
+    ctx.strokeStyle = h.color;
+    ctx.lineWidth = 1.4;
+    ctx.globalAlpha = 0.75;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.font = '600 10px ui-monospace, Menlo, monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    for (var k = 1; k <= VEL_SECONDS; k++) {
+      var d = (VEL_BASE + h.speed * k) * view.scale;
+      if (d > m + 0.5) continue;
+      var px = ox + ux * d;
+      var py = oy + uy * d;
+      var half = k === VEL_SECONDS ? 6 : 4;
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(px - nx * half, py - ny * half);
+      ctx.lineTo(px + nx * half, py + ny * half);
+      ctx.stroke();
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = h.color;
+      ctx.fillText(k + 's', px + nx * 9 + 2, py + ny * 9);
+    }
+
+    if (gesture && gesture.mode === 'handle' &&
+        (gesture.handle.kind === 'ship-vel' || gesture.handle.kind === 'vel')) {
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#dfe7ff';
+      ctx.font = '700 12px ui-monospace, Menlo, monospace';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(Math.round(h.speed) + ' u/s', tx + 12, ty - 8);
+    }
+    ctx.restore();
   }
 
   function refFixture(lv, ref) {
@@ -523,8 +595,12 @@ export function createEditorCanvas(app, canvasEl) {
     if (ref.kind === 'ship') {
       var sp = Math.hypot(lv.ship.vx || 0, lv.ship.vy || 0);
       var ang = sp > 1e-6 ? Math.atan2(lv.ship.vy || 0, lv.ship.vx || 0) : -Math.PI / 2;
-      var len = 40 + sp * 0.45;
-      out.push({ kind: 'ship-vel', x: lv.ship.x + Math.cos(ang) * len, y: lv.ship.y + Math.sin(ang) * len, color: '#4fe3d0' });
+      var len = VEL_BASE + sp * VEL_SECONDS;
+      out.push({
+        kind: 'ship-vel', color: '#4fe3d0',
+        x: lv.ship.x + Math.cos(ang) * len, y: lv.ship.y + Math.sin(ang) * len,
+        ox: lv.ship.x, oy: lv.ship.y, speed: sp
+      });
       return out;
     }
     if (ref.kind === 'target') {
@@ -576,8 +652,12 @@ export function createEditorCanvas(app, canvasEl) {
     if ((f.type === 'drone' || f.type === 'hunter' || f.type === 'asteroid' || f.type === 'ore') && !f.path) {
       var v = Math.hypot(f.vx || 0, f.vy || 0);
       var va = v > 1e-6 ? Math.atan2(f.vy || 0, f.vx || 0) : 0;
-      var vl = 40 + v * 0.45;
-      out.push({ kind: 'vel', x: f.x + Math.cos(va) * vl, y: f.y + Math.sin(va) * vl, color: '#e05ce0' });
+      var vl = VEL_BASE + v * VEL_SECONDS;
+      out.push({
+        kind: 'vel', color: '#e05ce0',
+        x: f.x + Math.cos(va) * vl, y: f.y + Math.sin(va) * vl,
+        ox: f.x, oy: f.y, speed: v
+      });
     }
     return out;
   }
@@ -679,6 +759,13 @@ export function createEditorCanvas(app, canvasEl) {
     f.y = (f.y || 0) + dy;
   }
 
+  /** Distance from the body -> speed, inverted from the handle's time scale. */
+  function handleSpeed(distance) {
+    var s = (distance - VEL_BASE) / VEL_SECONDS;
+    if (!(s > 0)) return 0;
+    return s > VEL_MAX ? VEL_MAX : s;
+  }
+
   function applyHandle(lv, ref, handle, world) {
     var f = refFixture(lv, ref);
     switch (handle.kind) {
@@ -686,7 +773,7 @@ export function createEditorCanvas(app, canvasEl) {
         var dx = world.x - lv.ship.x;
         var dy = world.y - lv.ship.y;
         var d = Math.hypot(dx, dy);
-        var speed = Math.max(0, (d - 40) / 0.45);
+        var speed = handleSpeed(d);
         var a = d > 1e-6 ? Math.atan2(dy, dx) : -Math.PI / 2;
         lv.ship.vx = Math.round(Math.cos(a) * speed);
         lv.ship.vy = Math.round(Math.sin(a) * speed);
@@ -706,7 +793,7 @@ export function createEditorCanvas(app, canvasEl) {
         var vdx = world.x - f.x;
         var vdy = world.y - f.y;
         var vd = Math.hypot(vdx, vdy);
-        var vs = Math.max(0, (vd - 40) / 0.45);
+        var vs = handleSpeed(vd);
         var va = vd > 1e-6 ? Math.atan2(vdy, vdx) : 0;
         f.vx = Math.round(Math.cos(va) * vs);
         f.vy = Math.round(Math.sin(va) * vs);

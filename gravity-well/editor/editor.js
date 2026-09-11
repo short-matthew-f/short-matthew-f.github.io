@@ -432,8 +432,10 @@ function updateHud() {
   if (!lv) return;
   var fixtures = (lv.fixtures || []).length;
   var chg = (lv.solution || []).reduce(function (a, w) { return a + w.charges; }, 0);
+  var speed = lv.ship ? Math.round(Math.hypot(lv.ship.vx || 0, lv.ship.vy || 0)) : 0;
   hudEl.textContent = lv.id + '  ' + lv.bounds.w + '×' + lv.bounds.h +
     '  ·  ' + fixtures + ' fixture' + (fixtures === 1 ? '' : 's') +
+    '  ·  ship ' + speed + ' u/s' +
     '  ·  solution ' + chg + '/' + lv.charges + ' chg' +
     '  ·  tool: ' + app.tool;
 }
@@ -557,7 +559,19 @@ function onWorkerMessage(e) {
     var html = '<b>Solution finder</b> — ' + msg.winners + ' winners in ' + msg.tried +
       ' legal samples (of ' + msg.samples + ' tried), ' + msg.families.length + ' famil' +
       (msg.families.length === 1 ? 'y' : 'ies') + '.';
-    if (!msg.families.length) html += '<br><span class="ed-warn">Nothing found — raise the sample count or check the budget.</span>';
+    if (!msg.families.length) {
+      html += '<br><span class="ed-warn">Nothing found — raise the sample count, or the level may not be winnable within the budget.</span>';
+      var d = msg.diagnosis;
+      if (d) {
+        html += '<br>With no wells at all the ship ' +
+          (d.emptyOutcome === 'win' ? 'already wins' : 'ends in ' + escapeHTML(String(d.emptyOutcome)) +
+            (d.emptyReason ? ' (' + escapeHTML(d.emptyReason) + ')' : '')) +
+          ' after ' + (d.emptyT || 0).toFixed(1) + 's.';
+        for (var di = 0; di < (d.notes || []).length; di++) {
+          html += '<br><span class="ed-warn">! ' + escapeHTML(d.notes[di].text) + '</span>';
+        }
+      }
+    }
     panel.setAnalyseOutput(html, msg.families);
     return;
   }
