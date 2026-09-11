@@ -133,6 +133,7 @@ export function createPanel(app) {
     var apply = function (final) {
       o.set(read());
       app.onLiveEdit();
+      syncFields(pane);   // vx/vy and speed/heading are two views of one thing
       if (commitTimer) clearTimeout(commitTimer);
       if (final) app.commit('Edit ' + labelText);
       else commitTimer = setTimeout(function () { app.commit('Edit ' + labelText); }, 400);
@@ -155,6 +156,43 @@ export function createPanel(app) {
   function syncFields(pane) {
     var list = fields[pane];
     for (var i = 0; i < list.length; i++) list[i].sync();
+  }
+
+  /**
+   * speed + heading fields for anything with vx/vy. They are the same value as
+   * the vx/vy pair in polar form: editing either rewrites the other, and every
+   * field in the pane re-syncs on each keystroke. `hold` remembers the heading
+   * while the speed is zero, so typing a speed does not always fire the body
+   * off to the right.
+   */
+  function velocityFields(pane, obj) {
+    var hold = { deg: Math.hypot(obj.vx || 0, obj.vy || 0) > 1e-9
+      ? Math.atan2(obj.vy || 0, obj.vx || 0) * 180 / Math.PI : 0 };
+
+    function speed() { return Math.hypot(obj.vx || 0, obj.vy || 0); }
+    function heading() {
+      if (speed() > 1e-9) hold.deg = Math.atan2(obj.vy || 0, obj.vx || 0) * 180 / Math.PI;
+      return hold.deg;
+    }
+    function setPolar(sp, deg) {
+      var a = deg * Math.PI / 180;
+      obj.vx = Math.round(Math.cos(a) * sp * 100) / 100;
+      obj.vy = Math.round(Math.sin(a) * sp * 100) / 100;
+      hold.deg = deg;
+    }
+
+    return [
+      makeField(pane, 'insp-speed', 'speed u/s', {
+        step: '1', min: '0',
+        get: function () { return round(speed()); },
+        set: function (v) { setPolar(Math.max(0, v), heading()); }
+      }),
+      makeField(pane, 'insp-heading', 'heading ° (0 = right)', {
+        step: '1',
+        get: function () { return round(heading()); },
+        set: function (v) { setPolar(speed(), v); }
+      })
+    ];
   }
 
   function btn(text, onClick, cls, id) {
@@ -345,8 +383,11 @@ export function createPanel(app) {
       makeField('inspect', 'insp-vx', 'vx', { step: '1', get: function () { return round(lv.ship.vx || 0); }, set: function (v) { lv.ship.vx = v; } }),
       makeField('inspect', 'insp-vy', 'vy', { step: '1', get: function () { return round(lv.ship.vy || 0); }, set: function (v) { lv.ship.vy = v; } })
     ]);
+    var sv = velocityFields('inspect', lv.ship);
+    grid.appendChild(sv[0]);
+    grid.appendChild(sv[1]);
     pane.appendChild(grid);
-    pane.appendChild(h('p', { class: 'ed-note', text: 'Speed ' + Math.round(Math.hypot(lv.ship.vx || 0, lv.ship.vy || 0)) + ' u/s. Drag the arrow tip on the board to aim it.' }));
+    pane.appendChild(h('p', { class: 'ed-note', text: 'Levels are authored for 60–200 u/s: that is the band a charge can visibly bend. The arrow on the board is two seconds of travel — its tip is where the ship will be after 2 s, and dragging it is capped at 400 u/s.' }));
   }
 
   function buildTargetInspect(pane, lv) {
@@ -498,6 +539,11 @@ export function createPanel(app) {
       if (f.vx != null || f.vy != null) {
         grid.appendChild(makeField('inspect', 'insp-vx', 'vx', { step: '1', get: function () { return round(f.vx || 0); }, set: function (v) { f.vx = v; } }));
         grid.appendChild(makeField('inspect', 'insp-vy', 'vy', { step: '1', get: function () { return round(f.vy || 0); }, set: function (v) { f.vy = v; } }));
+        if (!f.path) {
+          var mv = velocityFields('inspect', f);
+          grid.appendChild(mv[0]);
+          grid.appendChild(mv[1]);
+        }
       }
       if (f.type === 'well' || f.type === 'repulsor') {
         grid.appendChild(makeField('inspect', 'insp-charges', 'charges', {
