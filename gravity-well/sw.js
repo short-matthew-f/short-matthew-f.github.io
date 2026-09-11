@@ -2,6 +2,9 @@
 // Minimal, dependency-free service worker. It exists so the game installs and
 // runs with no network at all; it is deliberately NOT a smart cache.
 //
+// The editor entries are optional: cache.add() failures are swallowed per file,
+// so a build without editor/ still installs cleanly.
+//
 // Bump CACHE_VERSION whenever any shell file changes. That single change is the
 // whole update mechanism: a new cache name is filled on install, the old ones
 // are dropped on activate, and clients.claim() means the very next navigation is
@@ -15,7 +18,7 @@
 //   everything else                network, falling back to whatever is cached
 // Non-GET and cross-origin requests are ignored entirely.
 
-var CACHE_VERSION = 1;
+var CACHE_VERSION = 2;
 var CACHE_NAME = 'gw-v' + CACHE_VERSION;
 
 var SHELL = [
@@ -27,6 +30,15 @@ var SHELL = [
   'input.js',
   'sim.js',
   'levels.js',
+  'campaign.js',
+  'packs.js',
+  'editor.html',
+  'editor/editor.js',
+  'editor/editor.css',
+  'editor/tools.js',
+  'editor/canvas.js',
+  'editor/panel.js',
+  'editor/analyse.worker.js',
   'manifest.webmanifest',
   'icons/icon.svg',
   'icons/icon-192.png',

@@ -1,6 +1,7 @@
 // node --test gravity-well/test
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
   PHYSICS_VERSION,
   DT,
@@ -11,12 +12,15 @@ import {
   PREDICT_SAMPLE_DT,
   HUNTER_LEASH,
   MIN_WELL_DISTANCE,
+  WAYPOINT_RADIUS,
   WELL_REACH,
   WELL_TAPER,
   WORMHOLE_COOLDOWN,
   WORMHOLE_RADIUS,
   killRadius,
   willReturn,
+  pointInZone,
+  fieldAtState,
   cloneLevel,
   bodyIsLethal,
   createState,
@@ -877,4 +881,224 @@ test('prediction keeps sampling across a teleport', function () {
 
   // Wormholes are static, so they are not sampled as movers.
   assert.equal(p.bodies.wh, undefined);
+});
+
+// --- phase 2 ingredients ---------------------------------------------------
+
+test('the 47 campaign solutions still fly exactly as they did', async function () {
+  // Snapshot taken before the phase-2 additions: the whole point of those
+  // additions is that no existing level can notice them.
+  const snap = JSON.parse(await readFile(new URL('./campaign-times.json', import.meta.url), 'utf8'));
+  const { LEVELS } = await import('../levels.js');
+  assert.equal(snap.physicsVersion, PHYSICS_VERSION, 'snapshot is for this physics');
+  assert.equal(Object.keys(snap.levels).length, LEVELS.length, 'a snapshot per level');
+
+  for (const l of LEVELS) {
+    const want = snap.levels[l.id];
+    assert.ok(want, l.id + ' is in the snapshot');
+    const res = run(l, l.solution || [], { maxSeconds: 60 });
+    assert.equal(res.outcome, want.outcome, l.id + ' outcome');
+    assert.equal(res.reason, want.reason, l.id + ' reason');
+    near(res.t, want.t, 1e-9, l.id + ' win time');
+    assert.equal(res.oreDelivered, want.oreDelivered, l.id + ' ore delivered');
+    assert.equal(res.events.length, want.events, l.id + ' event count');
+  }
+});
+
+test('dead zones and allowed zones gate placement in all three shapes', function () {
+  const zones = [
+    { type: 'deadZone', id: 'dz-circle', shape: 'circle', x: 200, y: 200, r: 80 },
+    { type: 'deadZone', id: 'dz-rect', shape: 'rect', x: 400, y: 100, w: 200, h: 120 },
+    { type: 'deadZone', id: 'dz-poly', shape: 'poly', points: [{ x: 100, y: 800 }, { x: 300, y: 800 }, { x: 200, y: 980 }] }
+  ];
+  const l = level({ charges: 3, stackLimit: 3, fixtures: zones });
+  const ok = function (x, y) { return validateWells(l, [{ x: x, y: y, charges: 1 }]); };
+
+  // pointInZone is the shared geometry the editor draws with.
+  assert.equal(pointInZone(zones[0], 250, 200), true);
+  assert.equal(pointInZone(zones[0], 300, 200), false);
+  assert.equal(pointInZone(zones[1], 500, 150), true);
+  assert.equal(pointInZone(zones[1], 400, 100), true, 'top-left corner is inside');
+  assert.equal(pointInZone(zones[1], 601, 150), false);
+  assert.equal(pointInZone(zones[2], 200, 850), true, 'inside the triangle');
+  assert.equal(pointInZone(zones[2], 120, 950), false, 'outside the sloped edge');
+
+  assert.equal(ok(250, 200).reason, 'deadzone', 'circle zone');
+  assert.equal(ok(500, 150).reason, 'deadzone', 'rect zone');
+  assert.equal(ok(200, 850).reason, 'deadzone', 'poly zone');
+  assert.equal(ok(700, 600).ok, true, 'clear of every zone');
+  assert.equal(ok(250, 200).message, 'No charge can go there');
+
+  // Zones are placement rules only: they never touch the flight.
+  const flown = run(level({ fixtures: zones, target: { x: 700, y: 600, r: 28 } }), [], {});
+  assert.equal(flown.outcome, 'win', 'the ship sails straight through a dead zone');
+
+  // With allowed zones present, everything outside them is refused.
+  const gated = level({
+    charges: 3,
+    stackLimit: 3,
+    fixtures: [
+      { type: 'allowedZone', id: 'az', shape: 'rect', x: 300, y: 300, w: 200, h: 200 },
+      { type: 'allowedZone', id: 'az2', shape: 'circle', x: 800, y: 900, r: 60 }
+    ]
+  });
+  assert.equal(validateWells(gated, [{ x: 400, y: 400, charges: 1 }]).ok, true, 'inside the first zone');
+  assert.equal(validateWells(gated, [{ x: 800, y: 900, charges: 1 }]).ok, true, 'inside the second');
+  const refused = validateWells(gated, [{ x: 100, y: 100, charges: 1 }]);
+  assert.equal(refused.reason, 'allowed');
+  assert.equal(refused.message, 'Charges only go in the marked zones');
+});
+
+test('waypoints must be collected in order before the target counts', function () {
+  // The ship flies straight along y = 600 through two rings and into the
+  // target; a third ring off the path is never touched.
+  const rings = [
+    { type: 'waypoint', id: 'wp2', x: 500, y: 600, r: 34, order: 2 },
+    { type: 'waypoint', id: 'wp1', x: 300, y: 600, r: 34, order: 1 }
+  ];
+  const l = level({ fixtures: rings, target: { x: 700, y: 600, r: 28 } });
+
+  const state = createState(l, []);
+  assert.deepEqual(state.waypoints.map(function (w) { return w.id; }), ['wp1', 'wp2'], 'sorted by order');
+  assert.equal(state.waypointsPassed, 0);
+  assert.equal(state.nextWaypoint.id, 'wp1');
+  assert.equal(state.nextWaypoint.r, 34);
+
+  const res = run(l, [], {});
+  assert.equal(res.outcome, 'win');
+  const passes = res.events.filter(function (e) { return e.kind === 'waypoint'; });
+  assert.deepEqual(passes.map(function (e) { return e.id; }), ['wp1', 'wp2'], 'both, in order');
+  assert.equal(passes[0].order, 1);
+  near(passes[0].t, (300 - 34 - SHIP_RADIUS - 100) / 120, 0.02, 'first ring at x = 256');
+  assert.ok(passes[1].t < res.t, 'and the win comes last');
+  assert.equal(res.state.waypointsPassed, 2);
+  assert.equal(res.state.nextWaypoint, null);
+  assert.equal(res.state.waypoints[0].passed, true);
+
+  // Default radius when the fixture leaves it out.
+  assert.equal(createState(level({ fixtures: [{ type: 'waypoint', id: 'w', x: 1, y: 1, order: 1 }] }), []).waypoints[0].r, WAYPOINT_RADIUS);
+
+  // A ring the ship never reaches keeps the target inert: it flies straight
+  // through the target circle and is eventually lost instead of winning.
+  const unreachable = level({
+    fixtures: [{ type: 'waypoint', id: 'wp', x: 450, y: 100, r: 34, order: 1 }],
+    target: { x: 700, y: 600, r: 28 }
+  });
+  const denied = run(unreachable, [], {});
+  assert.equal(denied.outcome, 'fail');
+  assert.equal(denied.reason, 'lost', 'the target does nothing until the ring is passed');
+
+  // Reaching ring 2 before ring 1 does not count and is not fatal.
+  const outOfOrder = level({
+    ship: { x: 100, y: 600, vx: 120, vy: 0 },
+    fixtures: [
+      { type: 'waypoint', id: 'first', x: 300, y: 1000, r: 34, order: 1 },
+      { type: 'waypoint', id: 'second', x: 400, y: 600, r: 34, order: 2 }
+    ],
+    target: { x: 700, y: 600, r: 28 }
+  });
+  const skipped = run(outOfOrder, [], {});
+  assert.equal(skipped.outcome, 'fail', 'flying through ring 2 first wins nothing');
+  assert.equal(skipped.state.waypointsPassed, 0);
+  assert.equal(skipped.state.nextWaypoint.id, 'first');
+  assert.ok(!skipped.events.some(function (e) { return e.kind === 'waypoint'; }), 'no credit');
+});
+
+test('a designer-placed well pulls, kills and blocks placement like a real one', function () {
+  const fixed = { type: 'well', id: 'lock', x: 450, y: 450, charges: 1 };
+  const l = level({ fixtures: [fixed], target: { x: 10000, y: 10000, r: 10 } });
+
+  const state = createState(l, []);
+  assert.equal(state.wells.length, 0, 'not one of the player’s wells');
+  assert.equal(state.fixedWells.length, 1);
+  assert.equal(state.fixedWells[0].id, 'lock');
+  assert.equal(state.fixedWells[0].r, killRadius(1), 'it has a lethal core');
+  assert.deepEqual(state.sources, state.fixedWells, 'and it is a gravity source');
+  assert.ok(!state.bodies.some(function (b) { return b.type === 'well'; }), 'never a body');
+
+  // Same bend as the player placing that well by hand.
+  const byDesigner = run(l, [], {});
+  const byPlayer = run(level({ target: { x: 10000, y: 10000, r: 10 } }), [{ x: 450, y: 450, charges: 1 }], {});
+  near(byDesigner.t, byPlayer.t, 1e-9, 'identical flight');
+  near(byDesigner.trace[byDesigner.trace.length - 1].vy, byPlayer.trace[byPlayer.trace.length - 1].vy, 1e-9);
+  near(fieldAtState(state, 100, 600).ax, fieldAt([{ x: 450, y: 450, charges: 1 }], 100, 600).ax, 1e-12);
+
+  // It eats the ship and other bodies just like a player well.
+  const head = run(level({ fixtures: [{ type: 'well', id: 'lock', x: 450, y: 600, charges: 1 }] }), [], {});
+  assert.equal(head.reason, 'well');
+  assert.equal(head.events[0].other, 'lock');
+
+  // ... and the player's wells have to keep their distance from it.
+  const pl = level({ charges: 3, stackLimit: 3, fixtures: [fixed] });
+  assert.equal(validateWells(pl, [{ x: 450, y: 520, charges: 1 }]).reason, 'spacing');
+  assert.equal(validateWells(pl, [{ x: 450, y: 560, charges: 1 }]).ok, true, '110 units away is fine');
+  // It costs nothing from the budget.
+  assert.equal(validateWells(pl, [{ x: 200, y: 200, charges: 3 }]).ok, true);
+});
+
+test('a repulsor pushes, has no core and still blocks placement', function () {
+  const push = { type: 'repulsor', id: 'push', x: 450, y: 450, charges: 1 };
+  const l = level({ fixtures: [push], target: { x: 10000, y: 10000, r: 10 } });
+
+  const state = createState(l, []);
+  assert.equal(state.repulsors.length, 1);
+  assert.equal(state.repulsors[0].charges, -1, 'a sign-flipped source');
+  assert.equal(state.repulsors[0].r, 0, 'no lethal core');
+  assert.ok(!state.bodies.some(function (b) { return b.type === 'repulsor'; }));
+
+  // Exactly the opposite field of the same well, taper and all.
+  const a = fieldAtState(state, 100, 600);
+  const b = fieldAt([{ x: 450, y: 450, charges: 1 }], 100, 600);
+  near(a.ax, -b.ax, 1e-12, 'pushed the other way in x');
+  near(a.ay, -b.ay, 1e-12, 'and in y');
+  near(fieldAtState(state, 450, 450 - WELL_REACH - 1).ay, 0, 1e-12, 'same reach cutoff');
+
+  const res = run(l, [], {});
+  assert.equal(res.reason, 'lost', 'nothing to crash into');
+  const end = res.trace[res.trace.length - 1];
+  assert.ok(end.y > 600 && end.vy > 0, 'shoved away from the repulsor, not towards it');
+
+  // Aimed straight at the centre: it is not lethal and not consumed, it just
+  // cannot get there.
+  const headOn = run(level({ fixtures: [{ type: 'repulsor', id: 'push', x: 450, y: 600, charges: 3 }], target: { x: 10000, y: 10000, r: 10 } }), [], {});
+  assert.notEqual(headOn.reason, 'well', 'a repulsor never eats anything');
+  assert.ok(!headOn.events.some(function (e) { return e.kind === 'consumed'; }));
+  const back = headOn.trace[headOn.trace.length - 1];
+  assert.ok(back.vx < 0, 'bounced straight back down the way it came: vx = ' + back.vx.toFixed(1));
+
+  const pl = level({ charges: 3, stackLimit: 3, fixtures: [push] });
+  assert.equal(validateWells(pl, [{ x: 500, y: 480, charges: 1 }]).reason, 'spacing');
+  assert.equal(validateWells(pl, [{ x: 450, y: 560, charges: 1 }]).ok, true);
+});
+
+test('a patrolling target is hit where it actually is, and is predicted', function () {
+  // The target runs down the x = 700 line at 60 u/s while the ship crosses to
+  // meet it; they arrive together at about t = 4.7.
+  const patrol = { x: 700, y: 300, r: 28, path: [{ x: 700, y: 300 }, { x: 700, y: 900 }], speed: 60, loop: true };
+  const l = level({ ship: { x: 100, y: 600, vx: 120, vy: 0 }, target: patrol });
+
+  // Watch the patrol itself with the ship parked out of the way.
+  const watch = createState(level({ ship: { x: 100, y: 1100, vx: 0, vy: 0 }, target: patrol }), []);
+  assert.equal(watch.target.moving, true);
+  near(watch.target.x, 700, 1e-9, 'starts at the first path point');
+  near(watch.target.y, 300, 1e-9);
+  advance(watch, 1);
+  near(watch.target.y, 360, 1e-9, 'moves at 60 u/s along its path');
+  advance(watch, 11);
+  near(watch.target.y, 900 - 60, 1e-9, 'and turns around at the far end');
+  assert.equal(watch.target.pathT, 11, 'position is a pure function of sim time');
+
+  const res = run(l, [], {});
+  assert.equal(res.outcome, 'win', 'caught on the way past');
+  near(res.t, 4.72, 0.1, 'at the meeting point, not at the start of the path');
+  const still = run(level({ ship: { x: 100, y: 600, vx: 120, vy: 0 }, target: { x: 700, y: 300, r: 28 } }), [], {});
+  assert.equal(still.reason, 'lost', 'the same flight misses a target parked at the start of the path');
+
+  const p = predict(l, [], 3);
+  assert.ok(Array.isArray(p.target), 'target samples returned');
+  assert.equal(p.target.length, p.ship.length, 'one per ship sample');
+  near(p.target[0].y, 300, 1e-9);
+  near(p.target[p.target.length - 1].t, 3, 1e-9);
+  near(p.target[p.target.length - 1].y, 300 + 180, 1e-9, 'sampled along the patrol');
+  assert.equal(predict(level({}), [], 1).target, null, 'null for a target that never moves');
 });

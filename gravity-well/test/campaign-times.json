@@ -1,0 +1,335 @@
+{
+  "physicsVersion": "gw-2",
+  "note": "Snapshot of every campaign solution flight, taken before the phase-2 additions. test/sim.test.js re-runs these and requires identical outcome and t.",
+  "levels": {
+    "w1-1": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 6.7749999999999995,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w1-2": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 6.55,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w1-3": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 5.208333333333333,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w1-4": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 6.383333333333333,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w2-1": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.05,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w2-2": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.6416666666666666,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w2-3": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 5.016666666666667,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w2-4": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 7.116666666666666,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w3-1": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.966666666666667,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w3-2": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 5.833333333333333,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w3-3": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 5.116666666666666,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w3-4": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 7.791666666666667,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w4-1": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.8666666666666667,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w4-2": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 5.466666666666667,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w4-3": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 9.4,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w4-4": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 10.591666666666667,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w5-1": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.5749999999999997,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w5-2": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.2583333333333333,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w5-3": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 5.333333333333333,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w5-4": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 4.091666666666667,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w6-1": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.125,
+      "oreDelivered": 0,
+      "events": 2
+    },
+    "w6-2": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 2.7333333333333334,
+      "oreDelivered": 0,
+      "events": 3
+    },
+    "w6-3": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 2.45,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w6-4": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 5.591666666666667,
+      "oreDelivered": 0,
+      "events": 2
+    },
+    "w7-1": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 4,
+      "oreDelivered": 0,
+      "events": 2
+    },
+    "w7-2": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 4.008333333333333,
+      "oreDelivered": 0,
+      "events": 2
+    },
+    "w7-3": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.9833333333333334,
+      "oreDelivered": 0,
+      "events": 2
+    },
+    "w7-4": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 2.466666666666667,
+      "oreDelivered": 0,
+      "events": 3
+    },
+    "w8-1": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.475,
+      "oreDelivered": 0,
+      "events": 3
+    },
+    "w8-2": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.4499999999999997,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w8-3": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.2416666666666667,
+      "oreDelivered": 0,
+      "events": 2
+    },
+    "w8-4": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 4.466666666666667,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w9-1": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 7.191666666666666,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w9-2": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 7.458333333333333,
+      "oreDelivered": 0,
+      "events": 1
+    },
+    "w9-3": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.8166666666666664,
+      "oreDelivered": 0,
+      "events": 2
+    },
+    "w9-4": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 6.5249999999999995,
+      "oreDelivered": 0,
+      "events": 2
+    },
+    "w10-1": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 2.783333333333333,
+      "oreDelivered": 1,
+      "events": 2
+    },
+    "w10-2": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 6.35,
+      "oreDelivered": 1,
+      "events": 2
+    },
+    "w10-3": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 5.866666666666666,
+      "oreDelivered": 1,
+      "events": 3
+    },
+    "w10-4": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 6.8999999999999995,
+      "oreDelivered": 2,
+      "events": 3
+    },
+    "w11-1": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 8.133333333333333,
+      "oreDelivered": 0,
+      "events": 3
+    },
+    "w11-2": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 5.983333333333333,
+      "oreDelivered": 0,
+      "events": 2
+    },
+    "w11-3": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 3.908333333333333,
+      "oreDelivered": 0,
+      "events": 3
+    },
+    "w11-4": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 8.166666666666666,
+      "oreDelivered": 0,
+      "events": 4
+    },
+    "w12-1": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 5.616666666666666,
+      "oreDelivered": 0,
+      "events": 2
+    },
+    "w12-2": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 4.641666666666667,
+      "oreDelivered": 1,
+      "events": 3
+    },
+    "w12-3": {
+      "outcome": "win",
+      "reason": "target",
+      "t": 7.083333333333333,
+      "oreDelivered": 0,
+      "events": 2
+    }
+  }
+}

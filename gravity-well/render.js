@@ -302,28 +302,31 @@ export function drawWells(ctx, view, wells, killRadiusFn, opts) {
 
 // ------------------------------------------------------------------- target
 
-export function drawTarget(ctx, view, target, t) {
+// opts.dimmed = waypoints are still outstanding, so the target does nothing yet
+// and is drawn faded to say so.
+export function drawTarget(ctx, view, target, t, opts) {
   var cx = wx2sx(view, target.x), cy = wy2sy(view, target.y);
   var r = target.r * view.scale;
   var pulse = 0.5 + 0.5 * Math.sin(t * 2.4);
+  var dim = (opts && opts.dimmed) ? 0.32 : 1;
   ctx.save();
   ctx.strokeStyle = COLORS.target;
   ctx.lineWidth = 2;
-  ctx.globalAlpha = 0.9;
+  ctx.globalAlpha = 0.9 * dim;
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.stroke();
-  ctx.globalAlpha = 0.25 + 0.25 * pulse;
+  ctx.globalAlpha = (0.25 + 0.25 * pulse) * dim;
   ctx.beginPath();
   ctx.arc(cx, cy, r * (1.12 + 0.10 * pulse), 0, Math.PI * 2);
   ctx.stroke();
-  ctx.globalAlpha = 0.65 + 0.35 * pulse;
+  ctx.globalAlpha = (0.65 + 0.35 * pulse) * dim;
   ctx.fillStyle = COLORS.target;
   ctx.beginPath();
   ctx.arc(cx, cy, r * (0.24 + 0.07 * pulse), 0, Math.PI * 2);
   ctx.fill();
   // cross ticks
-  ctx.globalAlpha = 0.6;
+  ctx.globalAlpha = 0.6 * dim;
   ctx.beginPath();
   for (var a = 0; a < 4; a++) {
     var ang = a * Math.PI / 2 + Math.PI / 4;
@@ -799,9 +802,338 @@ export function drawBodies(ctx, view, bodies, t, ship) {
       case 'ore': drawOre(ctx, view, b, t); break;
       case 'oreReceiver': break;  // drawn in the zone pass above
       case 'wormhole': break;     // drawn in the zone pass above
+      // Drawn from the level by drawLevelFixtures(), not from state.
+      case 'deadZone': case 'allowedZone': case 'waypoint':
+      case 'well': case 'repulsor': break;
       default: drawUnknownFixture(ctx, view, b); break;
     }
   }
+}
+
+// ------------------------------------------------- phase-2 level fixtures
+//
+// Zones, waypoints, designer wells, repulsors and a moving target's path are
+// drawn from the LEVEL, not from state.bodies: some of them are pure placement
+// rules with no physics, so the level is the only source that always has them.
+// drawBodies() deliberately ignores these types to avoid drawing them twice.
+
+export var ZONE_TYPES = { deadZone: 1, allowedZone: 1 };
+export var LEVEL_DRAWN_TYPES = {
+  deadZone: 1, allowedZone: 1, waypoint: 1, well: 1, repulsor: 1
+};
+
+// Build the screen-space path of a zone fixture (circle / rect / poly).
+function zonePath(ctx, view, fx) {
+  ctx.beginPath();
+  if (fx.shape === 'rect') {
+    ctx.rect(wx2sx(view, fx.x), wy2sy(view, fx.y), (fx.w || 0) * view.scale, (fx.h || 0) * view.scale);
+  } else if (fx.shape === 'poly' && fx.points && fx.points.length > 2) {
+    for (var i = 0; i < fx.points.length; i++) {
+      var px = wx2sx(view, fx.points[i].x), py = wy2sy(view, fx.points[i].y);
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  } else {
+    ctx.arc(wx2sx(view, fx.x), wy2sy(view, fx.y), (fx.r || 0) * view.scale, 0, Math.PI * 2);
+  }
+}
+
+// Diagonal hatch fill clipped to the current path's bounding box.
+function hatchPath(ctx, color, alpha, box, step, dir) {
+  ctx.save();
+  ctx.clip();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  var span = box.w + box.h;
+  for (var d = -box.h; d < span; d += step) {
+    ctx.beginPath();
+    ctx.moveTo(box.x + d, box.y);
+    ctx.lineTo(box.x + d - dir * box.h, box.y + box.h);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function zoneBox(view, fx) {
+  var x, y, w, h;
+  if (fx.shape === 'rect') {
+    x = fx.x; y = fx.y; w = fx.w || 0; h = fx.h || 0;
+  } else if (fx.shape === 'poly' && fx.points && fx.points.length) {
+    var x0 = fx.points[0].x, y0 = fx.points[0].y, x1 = x0, y1 = y0;
+    for (var i = 1; i < fx.points.length; i++) {
+      if (fx.points[i].x < x0) x0 = fx.points[i].x;
+      if (fx.points[i].x > x1) x1 = fx.points[i].x;
+      if (fx.points[i].y < y0) y0 = fx.points[i].y;
+      if (fx.points[i].y > y1) y1 = fx.points[i].y;
+    }
+    x = x0; y = y0; w = x1 - x0; h = y1 - y0;
+  } else {
+    var r = fx.r || 0;
+    x = fx.x - r; y = fx.y - r; w = r * 2; h = r * 2;
+  }
+  return {
+    x: wx2sx(view, x), y: wy2sy(view, y), w: w * view.scale, h: h * view.scale
+  };
+}
+
+// deadZone: hatched red with a dashed outline. allowedZone: faint green.
+export function drawZone(ctx, view, fx, allowed, alpha) {
+  var color = allowed ? '#5fd98a' : '#ff6b6b';
+  var box = zoneBox(view, fx);
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  zonePath(ctx, view, fx);
+  ctx.fillStyle = color;
+  ctx.globalAlpha = alpha * (allowed ? 0.10 : 0.13);
+  ctx.fill();
+
+  if (!allowed) {
+    zonePath(ctx, view, fx);
+    hatchPath(ctx, color, alpha * 0.35, box, Math.max(7, box.w * 0.08), 1);
+  }
+
+  zonePath(ctx, view, fx);
+  ctx.globalAlpha = alpha * 0.75;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.4;
+  ctx.setLineDash(allowed ? [8, 6] : [5, 5]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+// waypoint: thin hollow amber ring with its order numeral; fills once passed.
+export function drawWaypoint(ctx, view, fx, passed, isNext, t) {
+  var cx = wx2sx(view, fx.x), cy = wy2sy(view, fx.y);
+  var r = (fx.r != null ? fx.r : 34) * view.scale;
+  ctx.save();
+  ctx.strokeStyle = COLORS.target;
+  ctx.lineWidth = passed ? 2.2 : 1.4;
+  ctx.globalAlpha = passed ? 0.95 : 0.5;
+  ctx.setLineDash(passed ? [] : [6, 5]);
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  if (passed) {
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = COLORS.target;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+  } else if (isNext) {
+    var pulse = 0.5 + 0.5 * Math.sin(t * 3);
+    ctx.globalAlpha = 0.25 + 0.35 * pulse;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, cy, r * (1.08 + 0.08 * pulse), 0, Math.PI * 2); ctx.stroke();
+  }
+
+  ctx.globalAlpha = passed ? 1 : 0.75;
+  ctx.fillStyle = COLORS.target;
+  ctx.font = '700 ' + Math.max(10, Math.round(r * 0.55)) + 'px ui-monospace, Menlo, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(fx.order != null ? fx.order : '?'), cx, cy);
+  ctx.restore();
+}
+
+function padlock(ctx, cx, cy, size, color) {
+  var w = size, h = size * 0.78;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = Math.max(1, size * 0.16);
+  ctx.beginPath();
+  ctx.arc(cx, cy - h * 0.45, w * 0.3, Math.PI, 0);
+  ctx.stroke();
+  ctx.globalAlpha = 0.9;
+  ctx.fillRect(cx - w * 0.45, cy - h * 0.18, w * 0.9, h * 0.72);
+  ctx.restore();
+}
+
+// A designer-placed well: identical physics to a player well, steel rim and a
+// padlock so it reads as immovable. Input never hit-tests these.
+export function drawFixedWell(ctx, view, fx, killRadiusFn, opts) {
+  var o = opts || {};
+  var cx = wx2sx(view, fx.x), cy = wy2sy(view, fx.y);
+  var n = fx.charges || 1;
+  var kr = killRadiusFn(n) * view.scale;
+  var reach = (o.reach != null ? o.reach : WELL_REACH) * view.scale;
+  var dim = !!o.dim;
+  var steel = '#b7c2d6';
+
+  ctx.save();
+  ctx.globalAlpha = dim ? 0.10 : 0.22;
+  ctx.strokeStyle = steel;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 9]);
+  ctx.beginPath(); ctx.arc(cx, cy, reach, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  var outer = Math.min(reach * 0.8, kr * (1 + 2.7 * Math.sqrt(n)));
+  if (outer < kr * 1.4) outer = kr * 1.4;
+  for (var k = 3; k >= 1; k--) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, kr + (outer - kr) * (k / 3), 0, Math.PI * 2);
+    ctx.strokeStyle = steel;
+    ctx.globalAlpha = (dim ? 0.5 : 1) * (0.04 + 0.07 / k);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 1;
+  var g = ctx.createRadialGradient(cx, cy, kr * 0.4, cx, cy, kr * 3.2);
+  g.addColorStop(0, 'rgba(150,165,195,0.26)');
+  g.addColorStop(1, 'rgba(150,165,195,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(cx, cy, kr * 3.2, 0, Math.PI * 2); ctx.fill();
+
+  ctx.beginPath(); ctx.arc(cx, cy, kr, 0, Math.PI * 2);
+  ctx.fillStyle = '#0d1220';
+  ctx.fill();
+  ctx.strokeStyle = steel;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = steel;
+  ctx.font = '600 ' + Math.max(9, Math.round(kr * 0.72)) + 'px ui-monospace, Menlo, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(n), cx, cy + kr * 0.24);
+  ctx.restore();
+
+  padlock(ctx, cx, cy - kr * 0.42, Math.max(6, kr * 0.5), steel);
+}
+
+// repulsor: orange, rings pushing outward, no lethal core.
+export function drawRepulsor(ctx, view, fx, t, opts) {
+  var o = opts || {};
+  var cx = wx2sx(view, fx.x), cy = wy2sy(view, fx.y);
+  var n = fx.charges || 1;
+  var reach = (o.reach != null ? o.reach : WELL_REACH) * view.scale;
+  var dim = !!o.dim;
+  var core = Math.max(6, (14 + 5 * Math.sqrt(n)) * view.scale);
+  var color = '#ff9a3c';
+
+  ctx.save();
+  ctx.globalAlpha = dim ? 0.10 : 0.24;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 9]);
+  ctx.beginPath(); ctx.arc(cx, cy, reach, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // rings drifting outward, the visual inverse of a well's inward pull
+  var phase = (t * 0.5) % 1;
+  for (var k = 0; k < 3; k++) {
+    var u = (phase + k / 3) % 1;
+    ctx.globalAlpha = (dim ? 0.4 : 1) * (1 - u) * 0.32;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(cx, cy, core + u * (reach * 0.45 - core), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 1;
+  var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, core * 2.6);
+  g.addColorStop(0, 'rgba(255,154,60,0.34)');
+  g.addColorStop(1, 'rgba(255,154,60,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(cx, cy, core * 2.6, 0, Math.PI * 2); ctx.fill();
+
+  // hollow core: nothing can touch it, so it is drawn open, not filled dark
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy, core, 0, Math.PI * 2); ctx.stroke();
+  for (var a = 0; a < 4; a++) {
+    var ang = a * Math.PI / 2 + Math.PI / 4;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(ang) * core * 0.45, cy + Math.sin(ang) * core * 0.45);
+    ctx.lineTo(cx + Math.cos(ang) * core * 0.85, cy + Math.sin(ang) * core * 0.85);
+    ctx.stroke();
+  }
+  ctx.fillStyle = color;
+  ctx.font = '600 ' + Math.max(9, Math.round(core * 0.7)) + 'px ui-monospace, Menlo, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(n), cx, cy);
+  ctx.restore();
+}
+
+// A moving target's patrol polyline, drawn faintly behind everything.
+export function drawTargetPath(ctx, view, target) {
+  if (!target || !target.path || target.path.length < 2) return;
+  ctx.save();
+  ctx.strokeStyle = COLORS.target;
+  ctx.globalAlpha = 0.22;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 7]);
+  ctx.beginPath();
+  for (var i = 0; i < target.path.length; i++) {
+    var px = wx2sx(view, target.path[i].x), py = wy2sy(view, target.path[i].y);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  if (target.loop !== false) ctx.closePath();
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 0.35;
+  for (var j = 0; j < target.path.length; j++) {
+    ctx.beginPath();
+    ctx.arc(wx2sx(view, target.path[j].x), wy2sy(view, target.path[j].y), 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// Draw every level-sourced fixture. opts: {flight, waypointsPassed, nextWaypoint,
+// killRadiusFn, reach}.
+export function drawLevelFixtures(ctx, view, level, t, opts) {
+  if (!level) return;
+  var o = opts || {};
+  var flight = !!o.flight;
+  var zoneAlpha = flight ? 0.15 : 1;
+  var fixtures = level.fixtures || [];
+  var i, fx;
+
+  drawTargetPath(ctx, view, level.target);
+
+  // zones first, they are backdrop
+  for (i = 0; i < fixtures.length; i++) {
+    fx = fixtures[i];
+    if (!fx) continue;
+    if (fx.type === 'allowedZone') drawZone(ctx, view, fx, true, zoneAlpha);
+  }
+  for (i = 0; i < fixtures.length; i++) {
+    fx = fixtures[i];
+    if (!fx) continue;
+    if (fx.type === 'deadZone') drawZone(ctx, view, fx, false, zoneAlpha);
+  }
+
+  var passed = o.waypointsPassed || 0;
+  for (i = 0; i < fixtures.length; i++) {
+    fx = fixtures[i];
+    if (!fx) continue;
+    if (fx.type === 'waypoint') {
+      var order = fx.order != null ? fx.order : 0;
+      drawWaypoint(ctx, view, fx, order <= passed, order === passed + 1, t);
+    } else if (fx.type === 'well') {
+      drawFixedWell(ctx, view, fx, o.killRadiusFn || defaultKillRadius, { dim: flight, reach: o.reach });
+    } else if (fx.type === 'repulsor') {
+      drawRepulsor(ctx, view, fx, t, { dim: flight, reach: o.reach });
+    }
+  }
+}
+
+// Fallback so render.js still works if a caller does not pass sim's killRadius.
+function defaultKillRadius(n) { return 18 + 8 * Math.sqrt(n); }
+
+// How many waypoints a level declares (0 when it has none).
+export function waypointCount(level) {
+  var n = 0;
+  var fixtures = (level && level.fixtures) || [];
+  for (var i = 0; i < fixtures.length; i++) {
+    if (fixtures[i] && fixtures[i].type === 'waypoint') n++;
+  }
+  return n;
 }
 
 // --------------------------------------------------------------- trajectory

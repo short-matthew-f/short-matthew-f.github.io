@@ -58,6 +58,37 @@
 // eaten. Loop-de-loop levels therefore want a slow ship and a wide, grazing
 // line - not a close one.
 //
+// Level ingredients beyond the basic fixtures (all additive; 'gw-2' unchanged)
+// ---------------------------------------------------------------------------
+// * `deadZone` / `allowedZone` fixtures are placement rules with NO physics.
+//   Shapes: {shape:'circle',x,y,r}, {shape:'rect',x,y,w,h} (x,y = top-left) or
+//   {shape:'poly',points:[{x,y}...]}. validateWells rejects a well centred in
+//   any deadZone ('deadzone'), and when a level has at least one allowedZone
+//   every well must sit inside one of them ('allowed'). pointInZone() is
+//   exported so the editor and renderer test the same geometry.
+// * `waypoint` fixtures {id,x,y,r=34,order} gate the target: the ship must pass
+//   them in ascending `order` (centre within r + SHIP_RADIUS) before the target
+//   counts at all, and rings reached out of turn simply do not count. Read
+//   state.waypoints (sorted), state.waypointsPassed (count) and
+//   state.nextWaypoint (the waypoint body still to pass, or null). Each pass
+//   pushes {kind:'waypoint', id, order} and sets `passed` on that body.
+// * `well` fixtures are DESIGNER-placed wells {id,x,y,charges}: real gravity,
+//   real lethal core, but not movable and not part of the player's budget.
+//   `repulsor` fixtures are the same thing with the sign flipped - they push,
+//   have no core at all, are never lethal and are never consumed.
+//   state.wells stays the PLAYER's wells (that is what the UI edits and what
+//   validateWells checks); state.fixedWells and state.repulsors hold the
+//   designer's; and state.sources - fixed wells, then repulsors, then player
+//   wells - is what the integrator, the consumption pass and willReturn read.
+//   Repulsors carry negative `charges`, which is all the sign flip needs.
+//   fieldAt(wells, x, y) keeps its signature; fieldAtState(state, x, y) is the
+//   convenience wrapper over state.sources. Player wells must keep
+//   MIN_WELL_DISTANCE from fixed wells and repulsors too (reason 'spacing').
+// * A target may patrol: level.target {path:[{x,y}...], speed, loop} uses the
+//   same kinematic path code as asteroids, so its position stays a pure
+//   function of t. state.target.moving says whether it does, and predict()
+//   returns target:[{t,x,y}] samples (null for a stationary target).
+//
 // Wormholes
 // ---------
 // A `wormhole` fixture is a linked pair of mouths, each with an outward facing
@@ -123,6 +154,9 @@ export const HUNTER_LEASH = 2000;
 // permissive: validateWells is the gate.
 export const MIN_WELL_DISTANCE = 100;
 
+// Default radius of a `waypoint` ring (per-fixture `r` overrides).
+export const WAYPOINT_RADIUS = 34;
+
 // Wormhole mouth radius (per-fixture `r` overrides), the per-(body, wormhole)
 // lockout after a jump, and how far outside the far mouth a body is placed.
 export const WORMHOLE_RADIUS = 26;
@@ -138,7 +172,12 @@ const LETHAL_TYPES = { obstacle: 1, asteroid: 1, drone: 1, hunter: 1 };
 
 // Types that never take part in the collision pass (pure zones): they are not
 // lethal, are never consumed by wells and never bounce anything.
-const ZONE_TYPES = { oreReceiver: 1, wormhole: 1 };
+const ZONE_TYPES = { oreReceiver: 1, wormhole: 1, waypoint: 1, deadZone: 1, allowedZone: 1 };
+
+// Fixture types that are gravity sources rather than bodies: they are lifted
+// out of `fixtures` into state.fixedWells / state.repulsors and never appear in
+// state.bodies.
+const SOURCE_TYPES = { well: 1, repulsor: 1 };
 
 // Types that feel the gravity field.
 const RESPONSIVE_TYPES = { drone: 1, hunter: 1, ore: 1 };
@@ -225,6 +264,48 @@ export function fieldAt(wells, x, y) {
   return { ax: ax, ay: ay };
 }
 
+/**
+ * Is (x, y) inside a zone-shaped object? Accepts either a raw level fixture or
+ * the body createState() built from it: `{shape:'circle', x, y, r}`,
+ * `{shape:'rect', x, y, w, h}` (x,y = top-left) or `{shape:'poly', points:[]}`.
+ * Exported for the editor and the renderer so placement feedback and the
+ * validator can never disagree.
+ */
+export function pointInZone(zone, x, y) {
+  if (!zone) return false;
+  if (zone.shape === 'rect') {
+    return x >= zone.x && x <= zone.x + (zone.w || 0) && y >= zone.y && y <= zone.y + (zone.h || 0);
+  }
+  if (zone.shape === 'poly') {
+    const pts = zone.points || [];
+    let inside = false;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const xi = pts[i].x;
+      const yi = pts[i].y;
+      const xj = pts[j].x;
+      const yj = pts[j].y;
+      // Ray crossing to the right of (x, y); vertices are counted once.
+      if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  }
+  const dx = x - zone.x;
+  const dy = y - zone.y;
+  const r = zone.r || 0;
+  return dx * dx + dy * dy <= r * r;
+}
+
+/**
+ * The field at a point from EVERY source in a running state: designer-placed
+ * fixed wells, repulsors (negative charges) and the player's wells. This is
+ * what the integrator uses; `fieldAt` keeps its (wells, x, y) signature for
+ * callers that only have a well list (the renderer's arrow grid can pass
+ * `state.sources`).
+ */
+export function fieldAtState(state, x, y) {
+  return fieldAt(state.sources, x, y);
+}
+
 // ---------------------------------------------------------------------------
 // Kinematic patrol paths
 //
@@ -293,7 +374,7 @@ function makeBody(fx, index) {
   const body = {
     id: fx.id != null ? String(fx.id) : type + String(index),
     type: type,
-    shape: fx.shape === 'rect' ? 'rect' : 'circle',
+    shape: fx.shape === 'rect' ? 'rect' : fx.shape === 'poly' ? 'poly' : 'circle',
     x: fx.x || 0,
     y: fx.y || 0,
     vx: fx.vx || 0,
@@ -315,10 +396,40 @@ function makeBody(fx, index) {
     body.r = 0.5 * Math.sqrt(body.w * body.w + body.h * body.h); // bounding radius
   }
 
-  if (type === 'obstacle' || type === 'oreReceiver' || type === 'wormhole') {
+  if (body.shape === 'poly') {
+    // Polygons are a zone-only shape (placement rules), never physics.
+    body.points = [];
+    const pts = fx.points || [];
+    let cx = 0;
+    let cy = 0;
+    for (let i = 0; i < pts.length; i++) {
+      body.points.push({ x: pts[i].x, y: pts[i].y });
+      cx += pts[i].x;
+      cy += pts[i].y;
+    }
+    if (pts.length > 0) {
+      body.x = cx / pts.length;
+      body.y = cy / pts.length;
+      let rr = 0;
+      for (let i = 0; i < pts.length; i++) {
+        const d = Math.sqrt((pts[i].x - body.x) * (pts[i].x - body.x) + (pts[i].y - body.y) * (pts[i].y - body.y));
+        if (d > rr) rr = d;
+      }
+      body.r = rr; // bounding radius around the centroid
+    }
+  }
+
+  if (type === 'obstacle' || ZONE_TYPES[type]) {
     body.static = true;
     body.vx = 0;
     body.vy = 0;
+  }
+  if (ZONE_TYPES[type]) body.zone = true;
+
+  if (type === 'waypoint') {
+    body.r = fx.r != null ? fx.r : WAYPOINT_RADIUS;
+    body.order = fx.order != null ? fx.order : 0;
+    body.passed = false;
   }
 
   if (type === 'wormhole') {
@@ -367,6 +478,25 @@ function makeBody(fx, index) {
   return body;
 }
 
+/** The target, which may itself patrol a path exactly like a kinematic mover. */
+function makeTarget(t) {
+  if (!t) return null;
+  const target = { x: t.x, y: t.y, r: t.r, vx: 0, vy: 0, moving: false };
+  if (t.path && t.path.length > 0) {
+    target.moving = true;
+    target.path = buildPath(t.path, t.loop !== false);
+    target.speed = t.speed != null ? t.speed : 60;
+    target.pathT0 = t.pathT != null ? t.pathT : 0;
+    target.pathT = target.pathT0;
+    const p = pathAt(target.path, target.speed, target.pathT);
+    target.x = p.x;
+    target.y = p.y;
+    target.vx = p.dx * target.speed;
+    target.vy = p.dy * target.speed;
+  }
+  return target;
+}
+
 /**
  * Deep-copies `level` into a fresh mutable state with the player's wells baked
  * in. `wells` is [{x, y, charges}]; it is copied, never aliased.
@@ -382,8 +512,34 @@ export function createState(level, wells) {
   }
 
   const bodies = [];
+  const fixedWells = [];
+  const repulsors = [];
   const fixtures = src.fixtures || [];
-  for (let i = 0; i < fixtures.length; i++) bodies.push(makeBody(fixtures[i], i));
+  for (let i = 0; i < fixtures.length; i++) {
+    const fx = fixtures[i];
+    if (!SOURCE_TYPES[fx.type]) {
+      bodies.push(makeBody(fx, i));
+      continue;
+    }
+    // Gravity sources are not bodies: they never collide, drift or die.
+    const charges = Math.max(1, Math.round(fx.charges || 1));
+    if (fx.type === 'well') {
+      fixedWells.push({
+        id: fx.id != null ? String(fx.id) : 'fixedwell' + String(i),
+        x: fx.x, y: fx.y, charges: charges, r: killRadius(charges), fixed: true, repulsor: false
+      });
+    } else {
+      repulsors.push({
+        // Negative charges flip the sign of the same formula: it pushes.
+        id: fx.id != null ? String(fx.id) : 'repulsor' + String(i),
+        x: fx.x, y: fx.y, charges: -charges, r: 0, fixed: true, repulsor: true
+      });
+    }
+  }
+
+  // Waypoints must be passed in ascending `order`; ties keep fixture order.
+  const waypoints = bodies.filter(function (b) { return b.type === 'waypoint'; });
+  waypoints.sort(function (a, b) { return a.order - b.order; });
 
   const state = {
     physicsVersion: PHYSICS_VERSION,
@@ -409,8 +565,20 @@ export function createState(level, wells) {
       lethal: false,
       wormholeCooldown: {}
     },
-    target: src.target ? { x: src.target.x, y: src.target.y, r: src.target.r } : null,
+    target: makeTarget(src.target),
     bodies: bodies,
+    // Designer-placed gravity, lifted out of `fixtures`. `wells` stays the
+    // player's wells alone (that is what the UI edits and validates);
+    // `sources` is what the physics actually reads: fixed wells, then
+    // repulsors, then player wells.
+    fixedWells: fixedWells,
+    repulsors: repulsors,
+    sources: fixedWells.concat(repulsors).concat(placed),
+    waypoints: waypoints,
+    waypointsPassed: 0,
+    // The next waypoint body to pass (same object as in `waypoints` and
+    // `bodies`), or null when they are all done / there are none.
+    nextWaypoint: waypoints.length > 0 ? waypoints[0] : null,
     // Same objects as the matching entries in `bodies`, listed for the
     // renderer and for the teleport pass.
     wormholes: bodies.filter(function (b) { return b.type === 'wormhole'; }),
@@ -433,7 +601,7 @@ export function createState(level, wells) {
 // ---------------------------------------------------------------------------
 
 function integrateResponsive(state, body) {
-  const a = fieldAt(state.wells, body.x, body.y);
+  const a = fieldAt(state.sources, body.x, body.y);
   let ax = a.ax;
   let ay = a.ay;
 
@@ -464,6 +632,17 @@ function integrateResponsive(state, body) {
 }
 
 function integrate(state) {
+  // A patrolling target is scenery on rails: a pure function of sim time.
+  const tg = state.target;
+  if (tg && tg.moving) {
+    tg.pathT = tg.pathT0 + state.t;
+    const p = pathAt(tg.path, tg.speed, tg.pathT);
+    tg.x = p.x;
+    tg.y = p.y;
+    tg.vx = p.dx * tg.speed;
+    tg.vy = p.dy * tg.speed;
+  }
+
   const ship = state.ship;
   if (ship.alive) integrateResponsive(state, ship);
 
@@ -562,11 +741,14 @@ function killShip(state, reason, otherId) {
 }
 
 function wellPass(state) {
-  const wells = state.wells;
+  // Repulsors have no core: they push instead of swallowing, so they are
+  // skipped here even though they are gravity sources.
+  const wells = state.sources;
   if (wells.length === 0) return;
 
   for (let i = 0; i < wells.length; i++) {
     const w = wells[i];
+    if (w.repulsor) continue;
     if (state.ship.alive) {
       const dx = state.ship.x - w.x;
       const dy = state.ship.y - w.y;
@@ -583,6 +765,7 @@ function wellPass(state) {
     if (!b.alive || b.immune || b.static) continue;
     for (let j = 0; j < wells.length; j++) {
       const w = wells[j];
+      if (w.repulsor) continue;
       const dx = b.x - w.x;
       const dy = b.y - w.y;
       if (dx * dx + dy * dy <= w.r * w.r) {
@@ -774,8 +957,8 @@ function rayHitsDisc(px, py, dx, dy, cx, cy, r) {
 export function willReturn(state, body) {
   if (insideBounds(state, body)) return true;
 
-  for (let i = 0; i < state.wells.length; i++) {
-    const w = state.wells[i];
+  for (let i = 0; i < state.sources.length; i++) {
+    const w = state.sources[i];
     const dx = body.x - w.x;
     const dy = body.y - w.y;
     if (dx * dx + dy * dy <= WELL_REACH * WELL_REACH) return true; // still in the field
@@ -795,8 +978,8 @@ export function willReturn(state, body) {
 
   if (rayHitsRect(body.x, body.y, dx, dy, state.bounds.w, state.bounds.h)) return true;
 
-  for (let i = 0; i < state.wells.length; i++) {
-    const w = state.wells[i];
+  for (let i = 0; i < state.sources.length; i++) {
+    const w = state.sources[i];
     if (rayHitsDisc(body.x, body.y, dx, dy, w.x, w.y, WELL_REACH)) return true;
   }
 
@@ -851,8 +1034,30 @@ function receiverPass(state) {
   }
 }
 
+/**
+ * Waypoints are passed strictly in ascending `order`: only the next one is
+ * live, and flying through a later ring early does nothing (it is not fatal,
+ * it simply does not count).
+ */
+function waypointPass(state) {
+  if (!state.ship.alive) return;
+  while (state.nextWaypoint) {
+    const wp = state.nextWaypoint;
+    const rr = wp.r + SHIP_RADIUS;
+    const dx = state.ship.x - wp.x;
+    const dy = state.ship.y - wp.y;
+    if (dx * dx + dy * dy > rr * rr) return;
+    wp.passed = true;
+    state.waypointsPassed += 1;
+    pushEvent(state, 'waypoint', wp.id, { order: wp.order });
+    state.nextWaypoint = state.waypoints[state.waypointsPassed] || null;
+  }
+}
+
 function winPass(state) {
   if (!state.ship.alive || !state.target) return;
+  // The target is inert until every waypoint has been collected.
+  if (state.nextWaypoint) return;
   const dx = state.ship.x - state.target.x;
   const dy = state.ship.y - state.target.y;
   const rr = state.target.r + SHIP_RADIUS;
@@ -887,6 +1092,7 @@ export function step(state) {
   if (state.outcome) return state;
 
   receiverPass(state);
+  waypointPass(state);
   winPass(state);
   if (state.outcome) return state;
 
@@ -957,8 +1163,9 @@ function gapToShip(ship, body) {
 /**
  * Run a throwaway copy of the sim for `seconds` and report sampled paths.
  * Cheap enough to recompute on every planning gesture.
- * Returns { ship:[{t,x,y}], bodies:{[id]:[{t,x,y}]}, outcome|null, reason|null,
- *           closestApproach:{id,dist,t}|null, t }.
+ * Returns { ship:[{t,x,y}], bodies:{[id]:[{t,x,y}]}, target:[{t,x,y}]|null,
+ *           outcome|null, reason|null, closestApproach:{id,dist,t}|null, t }.
+ * `target` is null unless the level's target patrols a path.
  * `closestApproach` is the minimum surface gap between the ship and any lethal
  * body or well core over the horizon, evaluated every DT (not just at samples).
  */
@@ -967,10 +1174,12 @@ export function predict(level, wells, seconds) {
   const state = createState(level, wells);
   const shipPath = [];
   const bodyPaths = {};
+  const targetPath = state.target && state.target.moving ? [] : null;
   let closest = null;
 
   const recordSample = function () {
     if (state.ship.alive) shipPath.push({ t: state.t, x: state.ship.x, y: state.ship.y });
+    if (targetPath) targetPath.push({ t: state.t, x: state.target.x, y: state.target.y });
     for (let i = 0; i < state.bodies.length; i++) {
       const b = state.bodies[i];
       if (!b.alive || b.static) continue;
@@ -987,8 +1196,9 @@ export function predict(level, wells, seconds) {
       const d = gapToShip(state.ship, b);
       if (!closest || d < closest.dist) closest = { id: b.id, dist: d, t: state.t };
     }
-    for (let i = 0; i < state.wells.length; i++) {
-      const w = state.wells[i];
+    for (let i = 0; i < state.sources.length; i++) {
+      const w = state.sources[i];
+      if (w.repulsor) continue; // pushes, never kills
       const dx = state.ship.x - w.x;
       const dy = state.ship.y - w.y;
       let d = Math.sqrt(dx * dx + dy * dy) - state.ship.r - w.r;
@@ -1009,6 +1219,8 @@ export function predict(level, wells, seconds) {
   return {
     ship: shipPath,
     bodies: bodyPaths,
+    // Sampled positions of a patrolling target, or null when it never moves.
+    target: targetPath,
     outcome: state.outcome,
     reason: state.reason,
     closestApproach: closest,
@@ -1021,14 +1233,27 @@ export function predict(level, wells, seconds) {
 // ---------------------------------------------------------------------------
 
 /**
- * Check a proposed well list against the level budget, stack limit and bounds.
+ * Check a proposed well list against everything the level says about placement:
+ * budget, stack limit, bounds, dead / allowed zones and spacing (from other
+ * player wells AND from designer-placed fixed wells and repulsors).
  * Returns { ok, reason, message }; reason is null when ok, otherwise one of
- * 'stack' | 'budget' | 'bounds' | 'charges'.
+ * 'stack' | 'budget' | 'bounds' | 'charges' | 'deadzone' | 'allowed' |
+ * 'spacing'.
  */
 export function validateWells(level, wells) {
   const list = wells || [];
   const stackLimit = level.stackLimit != null ? level.stackLimit : level.charges;
   const budget = level.charges != null ? level.charges : 0;
+  const fixtures = level.fixtures || [];
+  const deadZones = [];
+  const allowedZones = [];
+  const fixedSources = [];
+  for (let i = 0; i < fixtures.length; i++) {
+    const fx = fixtures[i];
+    if (fx.type === 'deadZone') deadZones.push(fx);
+    else if (fx.type === 'allowedZone') allowedZones.push(fx);
+    else if (SOURCE_TYPES[fx.type]) fixedSources.push(fx);
+  }
   let total = 0;
 
   for (let i = 0; i < list.length; i++) {
@@ -1046,6 +1271,22 @@ export function validateWells(level, wells) {
     if (w.x < 0 || w.y < 0 || w.x > level.bounds.w || w.y > level.bounds.h) {
       return { ok: false, reason: 'bounds', message: 'Well is outside the playfield' };
     }
+
+    for (let j = 0; j < deadZones.length; j++) {
+      if (pointInZone(deadZones[j], w.x, w.y)) {
+        return { ok: false, reason: 'deadzone', message: 'No charge can go there' };
+      }
+    }
+    if (allowedZones.length > 0) {
+      let ok = false;
+      for (let j = 0; j < allowedZones.length && !ok; j++) {
+        if (pointInZone(allowedZones[j], w.x, w.y)) ok = true;
+      }
+      if (!ok) {
+        return { ok: false, reason: 'allowed', message: 'Charges only go in the marked zones' };
+      }
+    }
+
     total += n;
   }
 
@@ -1054,18 +1295,19 @@ export function validateWells(level, wells) {
   }
 
   // Wells packed together behave as one bigger well; keep them apart so the
-  // stack limit means something.
+  // stack limit means something. Designer-placed wells and repulsors count too.
+  const spaced = { ok: false, reason: 'spacing', message: 'Wells must be at least ' + MIN_WELL_DISTANCE + ' units apart' };
+  const near = function (ax, ay, bx, by) {
+    const dx = ax - bx;
+    const dy = ay - by;
+    return dx * dx + dy * dy < MIN_WELL_DISTANCE * MIN_WELL_DISTANCE;
+  };
   for (let i = 0; i < list.length; i++) {
     for (let j = i + 1; j < list.length; j++) {
-      const dx = list[i].x - list[j].x;
-      const dy = list[i].y - list[j].y;
-      if (dx * dx + dy * dy < MIN_WELL_DISTANCE * MIN_WELL_DISTANCE) {
-        return {
-          ok: false,
-          reason: 'spacing',
-          message: 'Wells must be at least ' + MIN_WELL_DISTANCE + ' units apart'
-        };
-      }
+      if (near(list[i].x, list[i].y, list[j].x, list[j].y)) return spaced;
+    }
+    for (let j = 0; j < fixedSources.length; j++) {
+      if (near(list[i].x, list[i].y, fixedSources[j].x, fixedSources[j].y)) return spaced;
     }
   }
 

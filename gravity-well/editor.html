@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!-- Gravity Well — level editor. One full-viewport canvas with a pannable /
+     zoomable camera, a slim top bar, and a tool panel that is a bottom sheet on
+     a phone and a right sidebar on a desktop. editor/editor.js fills the panel
+     bodies; nothing here is game state. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#05070f">
+<meta name="description" content="Gravity Well level editor — author level packs on a phone or a desktop.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Gravity Well — Level Editor</title>
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="editor/editor.css">
+</head>
+<body class="ed-body">
+
+<canvas id="ed-canvas"></canvas>
+
+<!-- ------------------------------------------------------------- top bar -->
+<header id="ed-top" class="ed-top">
+  <a id="ed-menu" class="btn btn-ghost ed-top-btn" href="index.html" aria-label="Back to the game">&#8249;</a>
+  <div class="ed-crumbs">
+    <select id="ed-stage-select" class="ed-select" aria-label="Stage"></select>
+    <select id="ed-level-select" class="ed-select" aria-label="Level"></select>
+  </div>
+  <div class="ed-top-right">
+    <button id="ed-undo" class="btn ed-top-btn" type="button" aria-label="Undo" title="Undo">&#8630;</button>
+    <button id="ed-redo" class="btn ed-top-btn" type="button" aria-label="Redo" title="Redo">&#8631;</button>
+    <button id="ed-test" class="btn btn-primary ed-top-btn ed-test" type="button">Test</button>
+  </div>
+</header>
+
+<!-- ------------------------------------------------- floating canvas chrome -->
+<div id="ed-hud" class="ed-hud" aria-live="polite"></div>
+
+<div id="ed-toolstrip" class="ed-toolstrip" hidden>
+  <span id="ed-toolstrip-text" class="ed-toolstrip-text"></span>
+  <button id="ed-tool-done" class="btn ed-strip-btn" type="button">Done</button>
+  <button id="ed-tool-cancel" class="btn btn-ghost ed-strip-btn" type="button">Cancel</button>
+</div>
+
+<div class="ed-zoom">
+  <button id="ed-zoom-in" class="btn ed-zoom-btn" type="button" aria-label="Zoom in">+</button>
+  <button id="ed-zoom-out" class="btn ed-zoom-btn" type="button" aria-label="Zoom out">&minus;</button>
+  <button id="ed-zoom-fit" class="btn ed-zoom-btn" type="button" aria-label="Fit level to view">&#9635;</button>
+</div>
+
+<!-- --------------------------------------------------------------- panel -->
+<section id="ed-panel" class="ed-panel" aria-label="Editor tools">
+  <button id="ed-grip" class="ed-grip" type="button" aria-label="Collapse or expand the tool panel"><span></span></button>
+  <nav id="ed-tabs" class="ed-tabs" role="tablist">
+    <button id="tab-palette" class="ed-tab" type="button" role="tab" data-tab="palette">Palette</button>
+    <button id="tab-inspect" class="ed-tab" type="button" role="tab" data-tab="inspect">Inspect</button>
+    <button id="tab-level" class="ed-tab" type="button" role="tab" data-tab="level">Level</button>
+    <button id="tab-tutorial" class="ed-tab" type="button" role="tab" data-tab="tutorial">Tutorial</button>
+    <button id="tab-analyse" class="ed-tab" type="button" role="tab" data-tab="analyse">Analyse</button>
+    <button id="tab-pack" class="ed-tab" type="button" role="tab" data-tab="pack">Pack</button>
+  </nav>
+  <div class="ed-panel-body">
+    <div id="panel-palette" class="ed-pane" role="tabpanel" aria-labelledby="tab-palette"></div>
+    <div id="panel-inspect" class="ed-pane" role="tabpanel" aria-labelledby="tab-inspect" hidden></div>
+    <div id="panel-level" class="ed-pane" role="tabpanel" aria-labelledby="tab-level" hidden></div>
+    <div id="panel-tutorial" class="ed-pane" role="tabpanel" aria-labelledby="tab-tutorial" hidden></div>
+    <div id="panel-analyse" class="ed-pane" role="tabpanel" aria-labelledby="tab-analyse" hidden></div>
+    <div id="panel-pack" class="ed-pane" role="tabpanel" aria-labelledby="tab-pack" hidden></div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------- toast + confirm -->
+<div id="ed-toast" class="toast ed-toast" hidden role="status"></div>
+
+<div id="ed-confirm" class="overlay ed-overlay" hidden>
+  <div class="result-card ed-dialog" role="dialog" aria-modal="true" aria-labelledby="ed-confirm-text">
+    <p id="ed-confirm-text" class="ed-dialog-text"></p>
+    <div class="result-actions">
+      <button id="ed-confirm-cancel" class="btn" type="button">Cancel</button>
+      <button id="ed-confirm-ok" class="btn btn-primary" type="button">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="editor/editor.js"></script>
+</body>
+</html>
