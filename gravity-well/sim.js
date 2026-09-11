@@ -37,9 +37,14 @@
 // so with exactly the speed it arrived with, and far-away wells contribute
 // nothing at all: a well is a local tool with a visible edge.
 //
-// The board edge is soft: a body is only lost once its centre is more than
-// BOUNDS_MARGIN outside the bounds rectangle, so a well near the rim can catch
-// a ship that has just slipped off the board and pull it back in.
+// The board edge is soft. Straying off the board is not itself a failure: a
+// body is lost only when it can provably never come back - it is outside the
+// bounds rectangle, outside every well's reach, and its straight line from
+// there meets neither the board, nor a well's reach disc, nor a wormhole mouth
+// (see willReturn). So a well near the rim can catch a ship that has just
+// slipped off the edge, and a ship still aimed at the board keeps flying.
+// Hunters are exempt from the ray test because they steer; they are given up on
+// only past HUNTER_LEASH or on drift.
 //
 // Slow ships can be BOUND and loop. The speed needed to escape from rest is
 // ~75 u/s at 200 units from a 1-charge well (102 u/s at 150 units) and ~129 u/s
@@ -99,10 +104,19 @@ export const RESTITUTION = 1;
 export const HUNTER_ACCEL = 60;
 export const HUNTER_MAX_SPEED = 140;
 
-// How far a body may stray outside the level bounds before it is gone. The
-// board edge is a soft boundary: a body inside this margin keeps simulating
-// normally (gravity, wormholes, collisions) and can be pulled back in.
-export const BOUNDS_MARGIN = 120;
+// DEPRECATED as a physics rule (kept exported for the renderer, which uses it
+// as the "start zooming out" hint in world units). Leaving the board is no
+// longer decided by a margin at all - see willReturn().
+export const BOUNDS_MARGIN = 0;
+
+// A body drifting outside the board with no force on it is lost the moment its
+// straight line is known to miss everything. Below this speed there is no line
+// to follow, so an outside body that has effectively stopped is lost too.
+const MIN_RETURN_SPEED = 1e-6;
+
+// Hunters steer, so their path is not a straight line and the ray test does not
+// apply; they are only given up on this far outside the board (or on drift).
+export const HUNTER_LEASH = 2000;
 
 // Wormhole mouth radius (per-fixture `r` overrides), the per-(body, wormhole)
 // lockout after a jump, and how far outside the far mouth a body is placed.
@@ -698,15 +712,103 @@ function collisionPass(state) {
 
 // ---------------------------------------------------------------------------
 // Bounds, ore delivery, win condition
+//
+// Leaving the board is not a failure by itself. Outside the bounds rectangle
+// AND outside every well's reach a body has no force on it at all, so it
+// travels in a straight line for ever and the question "can this ever come
+// back?" is exactly decidable: cast the ray and see whether it still meets the
+// board, a well's reach disc, or a wormhole mouth. Only a ray that meets
+// nothing is lost.
 // ---------------------------------------------------------------------------
 
+function insideBounds(state, body) {
+  return body.x >= 0 && body.x <= state.bounds.w && body.y >= 0 && body.y <= state.bounds.h;
+}
+
+/** Does the ray p + t*d (t >= 0) meet the axis-aligned box [0,w]x[0,h]? */
+function rayHitsRect(px, py, dx, dy, w, h) {
+  let t0 = 0;
+  let t1 = Infinity;
+  const p = [px, py];
+  const d = [dx, dy];
+  const lo = [0, 0];
+  const hi = [w, h];
+  for (let i = 0; i < 2; i++) {
+    if (Math.abs(d[i]) < 1e-12) {
+      if (p[i] < lo[i] || p[i] > hi[i]) return false; // parallel and outside the slab
+      continue;
+    }
+    let ta = (lo[i] - p[i]) / d[i];
+    let tb = (hi[i] - p[i]) / d[i];
+    if (ta > tb) { const sw = ta; ta = tb; tb = sw; }
+    if (ta > t0) t0 = ta;
+    if (tb < t1) t1 = tb;
+    if (t0 > t1) return false;
+  }
+  return t1 >= 0;
+}
+
+/** Does the ray p + t*d (t >= 0) meet the disc (cx, cy, r)? */
+function rayHitsDisc(px, py, dx, dy, cx, cy, r) {
+  const ox = px - cx;
+  const oy = py - cy;
+  const c = ox * ox + oy * oy - r * r;
+  if (c <= 0) return true; // already inside
+  const b = ox * dx + oy * dy;
+  if (b >= 0) return false; // heading away
+  const a = dx * dx + dy * dy;
+  return b * b - a * c >= 0;
+}
+
 /**
- * Gone for good: the centre is more than BOUNDS_MARGIN outside the bounds
- * rectangle. Straying just off the edge is survivable and recoverable.
+ * Can this body still come back into play? True whenever it is on the board,
+ * still inside some well's reach, or aimed at the board, a well's reach disc or
+ * a wormhole mouth. Exported for the renderer (to flag a doomed body) and for
+ * tests. Hunters always answer true inside their leash: they steer.
  */
+export function willReturn(state, body) {
+  if (insideBounds(state, body)) return true;
+
+  for (let i = 0; i < state.wells.length; i++) {
+    const w = state.wells[i];
+    const dx = body.x - w.x;
+    const dy = body.y - w.y;
+    if (dx * dx + dy * dy <= WELL_REACH * WELL_REACH) return true; // still in the field
+  }
+
+  if (body.type === 'hunter') {
+    // It is under thrust towards the ship, so no straight line to test.
+    return (
+      body.x > -HUNTER_LEASH && body.x < state.bounds.w + HUNTER_LEASH &&
+      body.y > -HUNTER_LEASH && body.y < state.bounds.h + HUNTER_LEASH
+    );
+  }
+
+  const dx = body.vx;
+  const dy = body.vy;
+  if (Math.sqrt(dx * dx + dy * dy) < MIN_RETURN_SPEED) return false; // adrift, going nowhere
+
+  if (rayHitsRect(body.x, body.y, dx, dy, state.bounds.w, state.bounds.h)) return true;
+
+  for (let i = 0; i < state.wells.length; i++) {
+    const w = state.wells[i];
+    if (rayHitsDisc(body.x, body.y, dx, dy, w.x, w.y, WELL_REACH)) return true;
+  }
+
+  // A mover can also be posted back in through a wormhole mouth.
+  for (let i = 0; i < state.wormholes.length; i++) {
+    const hole = state.wormholes[i];
+    for (let k = 0; k < 2; k++) {
+      const mouth = hole.mouths[k];
+      if (k === 1 && hole.oneWay) continue; // that mouth swallows nothing
+      if (rayHitsDisc(body.x, body.y, dx, dy, mouth.x, mouth.y, hole.r)) return true;
+    }
+  }
+  return false;
+}
+
 function outOfBounds(state, body) {
-  const m = BOUNDS_MARGIN;
-  return body.x < -m || body.x > state.bounds.w + m || body.y < -m || body.y > state.bounds.h + m;
+  return !willReturn(state, body);
 }
 
 function boundsPass(state) {

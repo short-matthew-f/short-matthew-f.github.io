@@ -9,12 +9,13 @@ import {
   EPS,
   SHIP_RADIUS,
   PREDICT_SAMPLE_DT,
-  BOUNDS_MARGIN,
+  HUNTER_LEASH,
   WELL_REACH,
   WELL_TAPER,
   WORMHOLE_COOLDOWN,
   WORMHOLE_RADIUS,
   killRadius,
+  willReturn,
   cloneLevel,
   bodyIsLethal,
   createState,
@@ -200,7 +201,7 @@ test('leaving the playfield fails with reason lost', function () {
   const res = run(l, [], {});
   assert.equal(res.outcome, 'fail');
   assert.equal(res.reason, 'lost');
-  near(res.t, (600 + BOUNDS_MARGIN) / 200, 0.02, 'exit time (crosses the margin, not the edge)');
+  near(res.t, 600 / 200, 0.02, 'lost as soon as it clears the edge heading away');
   assert.ok(res.events.some(function (e) { return e.kind === 'left' && e.id === 'ship'; }));
 });
 
@@ -257,7 +258,7 @@ test('a drone bounces elastically off a circular and a rectangular obstacle', fu
     });
     const state = createState(l, []);
     const d = byId(state, 'drone0');
-    advance(state, 6);
+    advance(state, 4);
     return d;
   }
 
@@ -552,22 +553,93 @@ test('the board edge is soft: a ship just outside can be pulled back in', functi
     if (sample.x > maxX) { maxX = sample.x; outT = sample.t; }
   }
   const stray = maxX - l.bounds.w;
-  assert.ok(stray > 40 && stray < BOUNDS_MARGIN, 'strayed ' + stray.toFixed(0) + ' units off the board');
+  assert.ok(stray > 40 && stray < 100, 'strayed ' + stray.toFixed(0) + ' units off the board');
   assert.ok(saved.t > outT, 'and only reached the target after coming back');
 });
 
-test('a ship more than BOUNDS_MARGIN outside the bounds is lost', function () {
-  const l = level({ ship: { x: 100, y: 600, vx: 0, vy: -200 }, target: { x: 800, y: 1100, r: 28 } });
-  const state = createState(l, []);
-  while (!state.outcome && state.ship.y > -100) step(state);
-  assert.equal(state.outcome, null, 'still flying 100 units above the board');
-  assert.equal(state.ship.alive, true);
+test('willReturn decides whether an off-board body can still come back', function () {
+  const l = level({ fixtures: [{ type: 'wormhole', id: 'wh', a: { x: 450, y: 40, angle: 0 }, b: { x: 450, y: 1160, angle: 0 }, r: 26 }] });
+  const state = createState(l, [{ x: 700, y: 300, charges: 1 }]);
+  const probe = function (x, y, vx, vy, type) {
+    return willReturn(state, { type: type || 'ore', x: x, y: y, vx: vx, vy: vy });
+  };
 
-  advance(state, 10);
-  assert.equal(state.reason, 'lost');
-  assert.ok(state.ship.y < -BOUNDS_MARGIN, 'only gone once past the margin: ' + state.ship.y);
-  near(state.t, (600 + BOUNDS_MARGIN) / 200, 0.02, 'crossed the margin, not the edge');
+  assert.equal(probe(450, 600, 0, -100), true, 'on the board');
+  assert.equal(probe(450, 0, 0, -100), true, 'exactly on the edge counts as on the board');
+  assert.equal(probe(450, -5, 0, -100), false, 'just outside and heading away');
+  assert.equal(probe(450, -5, 0, 100), true, 'just outside but aimed back at the board');
+  assert.equal(probe(-500, 600, -100, 0), false, 'far outside heading away');
+  assert.equal(probe(-500, 600, 100, 0), true, 'far outside but aimed at the board');
+  assert.equal(probe(450, -5, 0, 0), false, 'outside and stopped: no line to follow');
+
+  // Still inside a well's reach, or aimed at one, is never lost.
+  assert.equal(probe(700, -50, 0, -100), true, 'inside the reach of the well at (700, 300)');
+  assert.equal(probe(1500, 300 - 200, -100, 0), true, 'aimed across the reach disc');
+  assert.equal(probe(1500, 300 - 500, -100, 0), false, 'aimed past the reach disc');
+
+  // A wormhole mouth counts: it can post the body back onto the board.
+  assert.equal(probe(450, -60, 0.0001, -1), false, 'mouth a is behind it');
+  assert.equal(probe(1500, 40, -100, 0), true, 'aimed at wormhole mouth a');
+
+  // Hunters steer, so they are kept until the leash runs out.
+  assert.equal(probe(450, -5, 0, -100, 'hunter'), true, 'a hunter just off the board is still chasing');
+  assert.equal(probe(450, -HUNTER_LEASH - 10, 0, -100, 'hunter'), false, 'beyond the leash it is gone');
 });
+
+test('a ship outside the bounds and pointing away is lost at once', function () {
+  const l = level({ ship: { x: 100, y: 600, vx: 0, vy: -200 }, target: { x: 800, y: 1100, r: 28 } });
+  const res = run(l, [], {});
+  assert.equal(res.reason, 'lost');
+  near(res.t, 600 / 200, 0.02, 'lost the moment its centre clears the edge');
+  const end = res.trace[res.trace.length - 1];
+  assert.ok(end.y < 0 && end.y > -5, 'no margin is granted: ' + end.y.toFixed(2));
+});
+
+test('a ship outside the bounds but aimed back at the board keeps flying', function () {
+  // Starts off the left-hand edge, still pointing at the board.
+  const l = level({ ship: { x: -60, y: 600, vx: 120, vy: 0 }, target: { x: 400, y: 600, r: 28 } });
+  const state = createState(l, []);
+  advance(state, 0.2);
+  assert.equal(state.outcome, null, 'not lost while it is aimed at the board');
+  assert.ok(state.ship.x < 0, 'and it really is outside: ' + state.ship.x.toFixed(1));
+  assert.equal(willReturn(state, state.ship), true);
+
+  const res = run(l, [], {});
+  assert.equal(res.outcome, 'win', 'it flies back in and reaches the target');
+  near(res.t, (400 - 28 - SHIP_RADIUS + 60) / 120, 0.02, 'arrival time');
+
+  // Aim the same ship away from the board and it is gone immediately.
+  const away = run(level({ ship: { x: -60, y: 600, vx: -120, vy: 0 }, target: { x: 400, y: 600, r: 28 } }), [], {});
+  assert.equal(away.reason, 'lost');
+  near(away.t, DT, DT, 'lost on the first step');
+});
+
+test('a ship aimed at a well reach disc is not lost, and gets bent back in', function () {
+  // Flying up the outside of the right-hand edge: the board is not in its path,
+  // but the reach disc of the well at (820, 400) is.
+  const l = level({
+    charges: 3,
+    stackLimit: 3,
+    ship: { x: 1050, y: 1000, vx: 0, vy: -90 },
+    target: { x: 634, y: 413, r: 28 },
+    fixtures: []
+  });
+  const wells = [{ x: 820, y: 400, charges: 2 }];
+
+  const state = createState(l, wells);
+  assert.equal(willReturn(state, state.ship), true, 'the ray meets the reach disc');
+  assert.ok(Math.hypot(1050 - 820, 1000 - 400) > WELL_REACH, 'but it starts outside the reach');
+
+  const res = run(l, wells, {});
+  assert.equal(res.outcome, 'win', 'the well hooks it back over the board');
+  assert.ok(res.t > 5, 'after a long way round: t = ' + res.t.toFixed(2));
+
+  // Take the well away and the same ship is written off on the first step.
+  const zero = run(l, [], {});
+  assert.equal(zero.reason, 'lost');
+  near(zero.t, DT, DT, 'nothing in its path at all');
+});
+
 
 // --- wormholes -------------------------------------------------------------
 
