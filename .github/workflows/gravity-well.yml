@@ -1,0 +1,36 @@
+name: Gravity Well
+
+on:
+  push:
+    branches:
+      - master
+      - claude/web-game-pwa-2q3530
+    paths:
+      - 'gravity-well/**'
+      - '.github/workflows/gravity-well.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'gravity-well/**'
+      - '.github/workflows/gravity-well.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check
+        run: for f in gravity-well/*.js gravity-well/tools/*.js; do node --check "$f"; done
+      - name: Unit and level tests
+        run: node --test gravity-well/test/
+      - name: Install Playwright
+        run: npm i --no-save playwright && npx playwright install --with-deps chromium
+      - name: Browser smoke test
+        run: node gravity-well/test/ui.smoke.mjs
