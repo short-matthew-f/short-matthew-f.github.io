@@ -4,6 +4,12 @@
 // scale; all drawing happens in CSS pixels (the caller applies devicePixelRatio
 // via ctx.setTransform before calling in).
 
+import * as Sim from './sim.js';
+
+// The well influence cutoff. Read from sim.js when it exports it; 360 is the
+// spec value and keeps the ring correct while the retune is still landing.
+export var WELL_REACH = Sim.WELL_REACH != null ? Sim.WELL_REACH : 360;
+
 export const COLORS = {
   bg: '#05070f',
   bgDeep: '#02030a',
@@ -201,9 +207,12 @@ export function drawFieldArrows(ctx, view, samples, opts) {
 // -------------------------------------------------------------------- wells
 
 // wells: [{x,y,charges}]; killRadiusFn(n) -> world units.
+// opts: {selected, dim, reach}. `dim` fades the reach ring for flight state.
 export function drawWells(ctx, view, wells, killRadiusFn, opts) {
   if (!wells) return;
   var o = opts || {};
+  var reach = (o.reach != null ? o.reach : WELL_REACH) * view.scale;
+  var dim = !!o.dim;
   ctx.save();
   for (var i = 0; i < wells.length; i++) {
     var w = wells[i];
@@ -211,17 +220,31 @@ export function drawWells(ctx, view, wells, killRadiusFn, opts) {
     var kr = killRadiusFn(w.charges) * view.scale;
     var selected = o.selected === i;
 
-    // influence rings scale with charge count
-    var rings = 3;
-    for (var r = rings; r >= 1; r--) {
-      var rr = kr * (1 + r * 0.9 * Math.sqrt(w.charges));
+    // Reach ring: beyond this the well contributes nothing, so the field is
+    // visibly bounded rather than looking infinite.
+    ctx.globalAlpha = dim ? 0.10 : 0.26;
+    ctx.strokeStyle = COLORS.well;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 9]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, reach, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Influence rings, spaced between the core and a band that always stays
+    // inside the reach ring.
+    var outer = Math.min(reach * 0.8, kr * (1 + 2.7 * Math.sqrt(w.charges)));
+    if (outer < kr * 1.4) outer = kr * 1.4;
+    for (var k = 3; k >= 1; k--) {
+      var rr = kr + (outer - kr) * (k / 3);
       ctx.beginPath();
       ctx.arc(cx, cy, rr, 0, Math.PI * 2);
       ctx.strokeStyle = COLORS.well;
-      ctx.globalAlpha = 0.05 + 0.09 / r;
+      ctx.globalAlpha = (dim ? 0.5 : 1) * (0.05 + 0.09 / k);
       ctx.lineWidth = 1;
       ctx.stroke();
     }
+
     // soft glow
     ctx.globalAlpha = 1;
     var g = ctx.createRadialGradient(cx, cy, kr * 0.4, cx, cy, kr * 3.2);
@@ -243,7 +266,7 @@ export function drawWells(ctx, view, wells, killRadiusFn, opts) {
 
     // charge numeral
     ctx.fillStyle = COLORS.wellRim;
-    ctx.font = '600 ' + Math.max(10, Math.round(kr * 0.95)) + 'px ui-monospace, Menlo, monospace';
+    ctx.font = '600 ' + Math.max(10, Math.round(kr * 0.85)) + 'px ui-monospace, Menlo, monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(String(w.charges), cx, cy + 0.5);

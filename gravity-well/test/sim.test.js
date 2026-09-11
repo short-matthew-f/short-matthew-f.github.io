@@ -9,6 +9,9 @@ import {
   EPS,
   SHIP_RADIUS,
   PREDICT_SAMPLE_DT,
+  BOUNDS_MARGIN,
+  WELL_REACH,
+  WELL_TAPER,
   WORMHOLE_COOLDOWN,
   WORMHOLE_RADIUS,
   killRadius,
@@ -60,14 +63,17 @@ function near(actual, expected, tol, msg) {
 // --- constants -------------------------------------------------------------
 
 test('constants and helpers', function () {
-  assert.equal(PHYSICS_VERSION, 'gw-1');
+  assert.equal(PHYSICS_VERSION, 'gw-2');
   assert.equal(DT, 1 / 120);
   assert.equal(MAX_FLIGHT_SECONDS, 90);
   assert.equal(SHIP_RADIUS, 10);
   assert.ok(G > 0 && EPS > 0);
   assert.equal(PREDICT_SAMPLE_DT, 1 / 20);
-  near(killRadius(1), 20, 1e-9, 'killRadius(1)');
-  near(killRadius(4), 26, 1e-9, 'killRadius(4)');
+  near(killRadius(1), 26, 1e-9, 'killRadius(1)');
+  near(killRadius(4), 34, 1e-9, 'killRadius(4)');
+  assert.ok(killRadius(3) < killRadius(4), 'grows with charges');
+  assert.equal(WELL_REACH, 360);
+  assert.equal(WELL_TAPER, 90);
 
   // cloneLevel is a deep copy, not an alias.
   const l = level({});
@@ -172,7 +178,7 @@ test('a side well bends the trajectory towards it without capturing the ship', f
   assert.ok(end.y < 600, 'well above the path (smaller y) pulls the ship up: ' + end.y);
   assert.ok(end.vy < 0, 'final vy points towards the well');
   const bend = (Math.atan2(-end.vy, end.vx) * 180) / Math.PI;
-  assert.ok(bend > 15 && bend < 80, 'noticeable but non-capturing bend, got ' + bend.toFixed(1) + ' deg');
+  assert.ok(bend > 40 && bend < 110, 'big but non-capturing bend, got ' + bend.toFixed(1) + ' deg');
 
   // Mirror the well below the path: the deflection mirrors exactly.
   const down = run(l, [{ x: 450, y: 750, charges: 1 }], {});
@@ -180,10 +186,13 @@ test('a side well bends the trajectory towards it without capturing the ship', f
   assert.ok(dend.y > 600 && dend.vy > 0, 'mirrored pull deflects the other way');
   near(dend.vy, -end.vy, 1e-9, 'symmetric deflection');
 
-  // More charges bend it harder.
+  // More charges bend it harder. Past 90 degrees |vy| starts shrinking again,
+  // so compare the turn angle rather than the y component.
   const strong = run(l, [{ x: 450, y: 450, charges: 3 }], {});
+  assert.equal(strong.reason, 'lost', 'a 3-charge well at 150 units is survivable');
   const send = strong.trace[strong.trace.length - 1];
-  assert.ok(Math.abs(send.vy) > Math.abs(end.vy) * 1.8, 'stacking bends much harder');
+  const bend3 = (Math.atan2(-send.vy, send.vx) * 180) / Math.PI;
+  assert.ok(bend3 > bend + 30, 'stacking bends much harder: ' + bend3.toFixed(1) + ' vs ' + bend.toFixed(1));
 });
 
 test('leaving the playfield fails with reason lost', function () {
@@ -191,7 +200,7 @@ test('leaving the playfield fails with reason lost', function () {
   const res = run(l, [], {});
   assert.equal(res.outcome, 'fail');
   assert.equal(res.reason, 'lost');
-  near(res.t, 610 / 200, 0.02, 'exit time (crosses y = -shipRadius)');
+  near(res.t, (600 + BOUNDS_MARGIN) / 200, 0.02, 'exit time (crosses the margin, not the edge)');
   assert.ok(res.events.some(function (e) { return e.kind === 'left' && e.id === 'ship'; }));
 });
 
@@ -444,6 +453,122 @@ test('predict samples every 1/20 s and reports the closest approach', function (
   assert.equal(doomed.closestApproach.dist, 0);
 });
 
+/** Total heading change along a trace, in degrees (unwrapped). */
+function totalTurn(trace) {
+  let total = 0;
+  let prev = null;
+  for (let i = 0; i < trace.length; i++) {
+    const h = Math.atan2(trace[i].vy, trace[i].vx);
+    if (prev !== null) {
+      let d = h - prev;
+      while (d > Math.PI) d -= 2 * Math.PI;
+      while (d < -Math.PI) d += 2 * Math.PI;
+      total += d;
+    }
+    prev = h;
+  }
+  return (total * 180) / Math.PI;
+}
+
+test('a well has a hard reach with a smooth taper at the rim', function () {
+  const wells = [{ x: 0, y: 0, charges: 1 }];
+  const mag = function (r) {
+    const a = fieldAt(wells, r, 0);
+    return Math.hypot(a.ax, a.ay);
+  };
+  const plain = function (r) {
+    const soft = r * r + EPS * EPS;
+    return (G * r) / (soft * Math.sqrt(soft));
+  };
+
+  // Nothing at all at or beyond the reach.
+  assert.deepEqual(fieldAt(wells, 361, 0), { ax: 0, ay: 0 });
+  assert.equal(mag(WELL_REACH), 0, 'zero exactly at the rim');
+  assert.equal(mag(4000), 0, 'and far outside');
+  assert.equal(fieldAt([{ x: 0, y: 0, charges: 3 }], 361, 0).ax, 0, 'stacking does not extend the reach');
+
+  // Full strength everywhere inside the taper.
+  const inner = WELL_REACH - WELL_TAPER; // 270
+  near(mag(100), plain(100), 1e-12, 'full strength deep inside');
+  near(mag(269), plain(269), 1e-12, 'full strength at 269');
+  near(mag(inner), plain(inner), 1e-12, 'smoothstep is 1 at the inner edge');
+
+  // Inside the taper: weaker than plain, monotone, faded out by the rim.
+  assert.ok(mag(300) > 0 && mag(300) < plain(300), 'tapered at 300');
+  assert.ok(mag(359.9) < plain(359.9) * 1e-3, 'essentially gone at the rim');
+  for (let r = 260; r < 360; r += 0.5) {
+    assert.ok(mag(r) >= mag(r + 0.5), 'monotone through the taper at r = ' + r);
+  }
+  // No step anywhere across the rim: the field is continuous, so nothing kicks.
+  let biggest = 0;
+  for (let r = 200; r < 400; r += 0.25) {
+    const d = Math.abs(mag(r) - mag(r + 0.25));
+    if (d > biggest) biggest = d;
+  }
+  assert.ok(biggest < 0.5, 'continuous across the rim, biggest step ' + biggest.toFixed(4));
+});
+
+test('a slow ship is swung right around a stacked well instead of past it', function () {
+  // 3000x3000 box so the loop has room. The ship passes 340 units from the
+  // well - just inside WELL_REACH - at 60 u/s, which is far below the escape
+  // speed there, so it winds all the way around before it finally gets away.
+  const wide = {
+    bounds: { w: 3000, h: 3000 },
+    charges: 3,
+    stackLimit: 3,
+    ship: { x: 200, y: 1500 - 340, vx: 60, vy: 0 },
+    target: { x: 1e6, y: 1e6, r: 10 },
+    fixtures: []
+  };
+  const well = [{ x: 1000, y: 1500, charges: 3 }];
+  const res = run(level(wide), well, {});
+  assert.notEqual(res.reason, 'well', 'it never touches the core');
+  const turned = totalTurn(res.trace);
+  assert.ok(Math.abs(turned) > 300, 'loops right around, turned ' + turned.toFixed(0) + ' deg');
+
+  // The same ship on a tighter line is simply eaten: close passes are fatal.
+  const tight = level(Object.assign({}, wide, { ship: { x: 200, y: 1500 - 180, vx: 60, vy: 0 } }));
+  assert.equal(run(tight, well, {}).reason, 'well');
+});
+
+test('the board edge is soft: a ship just outside can be pulled back in', function () {
+  const l = level({
+    bounds: { w: 900, h: 1200 },
+    charges: 3,
+    stackLimit: 3,
+    ship: { x: 820, y: 600, vx: 60, vy: 0 }, // drifting off the right-hand edge
+    target: { x: 783, y: 307, r: 28 },
+    fixtures: []
+  });
+
+  const lost = run(l, [], {});
+  assert.equal(lost.reason, 'lost', 'without help it just sails off the board');
+
+  const saved = run(l, [{ x: 670, y: 400, charges: 1 }], {});
+  assert.equal(saved.outcome, 'win', 'the well reels it back in');
+  let maxX = 0;
+  let outT = 0;
+  for (const sample of saved.trace) {
+    if (sample.x > maxX) { maxX = sample.x; outT = sample.t; }
+  }
+  const stray = maxX - l.bounds.w;
+  assert.ok(stray > 40 && stray < BOUNDS_MARGIN, 'strayed ' + stray.toFixed(0) + ' units off the board');
+  assert.ok(saved.t > outT, 'and only reached the target after coming back');
+});
+
+test('a ship more than BOUNDS_MARGIN outside the bounds is lost', function () {
+  const l = level({ ship: { x: 100, y: 600, vx: 0, vy: -200 }, target: { x: 800, y: 1100, r: 28 } });
+  const state = createState(l, []);
+  while (!state.outcome && state.ship.y > -100) step(state);
+  assert.equal(state.outcome, null, 'still flying 100 units above the board');
+  assert.equal(state.ship.alive, true);
+
+  advance(state, 10);
+  assert.equal(state.reason, 'lost');
+  assert.ok(state.ship.y < -BOUNDS_MARGIN, 'only gone once past the margin: ' + state.ship.y);
+  near(state.t, (600 + BOUNDS_MARGIN) / 200, 0.02, 'crossed the margin, not the edge');
+});
+
 // --- wormholes -------------------------------------------------------------
 
 /** Step until an event of `kind` is pushed; returns it (or null). */
@@ -508,9 +633,10 @@ test('a ship entering mouth a leaves mouth b along b.angle at the same speed', f
   // Gravity never reaches through a mouth: fieldAt only knows about wells and
   // plain distance, so a well parked on mouth b pulls on the far-side ship
   // exactly as the softened inverse-square law says.
-  const a = fieldAt([{ x: 400, y: 200, charges: 3 }], 100, 600);
-  const soft = 300 * 300 + 400 * 400 + EPS * EPS;
-  near(a.ax, (G * 3 * 300) / (soft * Math.sqrt(soft)), 1e-12, 'no shortcut through the hole');
+  const a = fieldAt([{ x: 400, y: 200, charges: 3 }], 400, 400);
+  const soft = 200 * 200 + EPS * EPS;
+  near(a.ay, (G * 3 * -200) / (soft * Math.sqrt(soft)), 1e-12, 'no shortcut through the hole');
+  near(a.ax, 0, 1e-12, 'straight up the y axis');
 });
 
 test('a two-way wormhole carries bodies in both directions', function () {

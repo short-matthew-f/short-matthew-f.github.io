@@ -414,6 +414,9 @@ function recomputeArrows() {
       }
       if (skip) continue;
       var f = fieldAt(wells, x, y);
+      // Outside every well's reach the field is exactly zero; skipping those
+      // samples is what makes the bounded field visible.
+      if (f.ax === 0 && f.ay === 0) continue;
       out.push({ x: x, y: y, ax: f.ax, ay: f.ay });
     }
   }
@@ -609,7 +612,11 @@ function pasteSolution() {
   if (!text) return;
   var parts = String(text).trim().split('|');
   if (parts.length < 3) { toast('Unreadable code'); return; }
-  if (parts[0] !== PHYSICS_VERSION) { toast('Wrong physics version'); return; }
+  if (parts[0] !== PHYSICS_VERSION) {
+    // Solutions are only reproducible under the physics they were flown on.
+    toast('Solution is for physics ' + parts[0] + '; this build is ' + PHYSICS_VERSION);
+    return;
+  }
   if (parts[1] !== app.level.id) { toast('Code is for ' + parts[1]); return; }
   var wells = [];
   var chunks = parts[2] ? parts[2].split(';') : [];
@@ -654,7 +661,7 @@ function draw() {
     drawFlightTrails(view);
   }
 
-  R.drawWells(ctx, view, app.wells, killRadius, { selected: app.dragIndex });
+  R.drawWells(ctx, view, app.wells, killRadius, { selected: app.dragIndex, dim: flying });
 
   if (s.ship && s.ship.alive !== false) {
     R.drawShip(ctx, view, s.ship, SHIP_RADIUS, { showVelocity: !flying });

@@ -18,24 +18,40 @@
 // EPS softens the singularity so a near miss is a hard kick rather than an
 // infinity, and so the numbers stay finite inside the lethal core.
 //
-// Tuning (G = 5.2e5, EPS = 40). `node test/tune.js` flies the ship at 120 u/s
-// past a single well at impact parameter b and prints the measured bend plus
-// the gap left between the ship and the lethal core:
+// Tuning (G = 1.6e6, EPS = 40, reach 360 / taper 90). `node test/tune.js` flies
+// the ship at 120 u/s past a single well at impact parameter b and prints the
+// measured bend plus the gap left between the ship and the lethal core:
 //
-//   charges   b=100            b=150            b=200
-//     1       33 deg, gap 49   26 deg, gap 99   20 deg, gap 152
-//     2       58 deg, gap 30   51 deg, gap 78   41 deg, gap 131
-//     3       72 deg, gap 18   73 deg, gap 59   63 deg, gap 110
+//   charges   b=100               b=150               b=200
+//     1       74 deg, gap 16      75 deg, gap 60      61 deg, gap 118
+//     2       87 deg, gap 0       113 deg, gap 25     122 deg, gap 68
+//     3       eaten by the core   123 deg, gap 7      150 deg, gap 37
 //
-// So 1 charge at ~150 units is a gentle, survivable bend of a couple of tens
-// of degrees, while 3 charges at ~100 units swings the ship through ~70 deg
-// with only ~18 units of clearance from the core — a real capture risk (at
-// b = 60..80 a 3-charge well grazes or eats the ship). Because the field is
-// conservative and static, a flyby cannot be captured into an orbit: "capture"
-// in play means the bend is sharp enough to curve the ship into the core.
+// So one charge swings a 120 u/s ship through most of a right angle, a stacked
+// well can turn it right around, and a careless close pass is genuinely fatal
+// (a 3-charge well eats a 120 u/s ship at b <= 100). EPS flattens the force
+// inside r < EPS, which is why very small impact parameters bend *less* than
+// mid-range ones - they are just eaten instead.
 //
-// EPS also flattens the force inside r < EPS, which is why very small impact
-// parameters bend *less* than mid-range ones.
+// Because the field is cut off at WELL_REACH, a body that leaves the reach does
+// so with exactly the speed it arrived with, and far-away wells contribute
+// nothing at all: a well is a local tool with a visible edge.
+//
+// The board edge is soft: a body is only lost once its centre is more than
+// BOUNDS_MARGIN outside the bounds rectangle, so a well near the rim can catch
+// a ship that has just slipped off the board and pull it back in.
+//
+// Slow ships can be BOUND and loop. The speed needed to escape from rest is
+// ~75 u/s at 200 units from a 1-charge well (102 u/s at 150 units) and ~129 u/s
+// at 200 units from a 3-charge well, so a ship that starts inside the reach at
+// well under those speeds cannot leave and will orbit.
+// For a ship arriving from outside the reach the picture is sharper than that:
+// it always carries enough energy to get away again, but it can still wind
+// around several times on the way. A 60 u/s ship passing a 3-charge well at
+// b = 340 (just inside the reach) turns through more than 400 degrees before it
+// escapes, while the same ship at b = 180 is pulled straight into the core and
+// eaten. Loop-de-loop levels therefore want a slow ship and a wide, grazing
+// line - not a close one.
 //
 // Wormholes
 // ---------
@@ -58,13 +74,19 @@
 // killRadius or the integration order change, bump it. Wormholes added no
 // change to any pre-existing behaviour, so 'gw-1' still stands.
 
-export const PHYSICS_VERSION = 'gw-1';
+export const PHYSICS_VERSION = 'gw-2';
 
 export const DT = 1 / 120;
 export const MAX_FLIGHT_SECONDS = 90;
-export const G = 5.2e5;
+export const G = 1.6e6;
 export const EPS = 40;
 export const SHIP_RADIUS = 10;
+
+// Influence cutoff: past WELL_REACH a well contributes nothing at all, and over
+// the last WELL_TAPER units before that its force is smoothstepped to zero so
+// the field stays continuous. The reach does NOT grow with charges.
+export const WELL_REACH = 360;
+export const WELL_TAPER = 90;
 
 // Prediction sampling period (spec: 1/20 s). DT divides it exactly.
 export const PREDICT_SAMPLE_DT = 1 / 20;
@@ -76,6 +98,11 @@ export const RESTITUTION = 1;
 // Hunter defaults (per-fixture `accel` / `maxSpeed` override these).
 export const HUNTER_ACCEL = 60;
 export const HUNTER_MAX_SPEED = 140;
+
+// How far a body may stray outside the level bounds before it is gone. The
+// board edge is a soft boundary: a body inside this margin keeps simulating
+// normally (gravity, wormholes, collisions) and can be pulled back in.
+export const BOUNDS_MARGIN = 120;
 
 // Wormhole mouth radius (per-fixture `r` overrides), the per-(body, wormhole)
 // lockout after a jump, and how far outside the far mouth a body is placed.
@@ -111,7 +138,7 @@ export function cloneLevel(level) {
 
 /** Lethal core radius of a well holding `n` charges. */
 export function killRadius(n) {
-  return 14 + 6 * Math.sqrt(n);
+  return 18 + 8 * Math.sqrt(n);
 }
 
 /** Does contact with this body kill the ship? */
@@ -150,16 +177,29 @@ function pushEvent(state, kind, id, extra) {
 /**
  * Gravity acceleration produced by `wells` at world point (x, y).
  * Used by the sim and by the renderer's field arrows.
+ *
+ * Softened inverse-square, cut off at WELL_REACH with a smoothstep taper over
+ * the last WELL_TAPER units: a well is a local tool with a readable edge, not a
+ * board-wide background pull. The taper keeps the force continuous, so nothing
+ * kicks as a body crosses the rim.
  */
 export function fieldAt(wells, x, y) {
+  const reach2 = WELL_REACH * WELL_REACH;
+  const inner = WELL_REACH - WELL_TAPER;
   let ax = 0;
   let ay = 0;
   for (let i = 0; i < wells.length; i++) {
     const w = wells[i];
     const dx = w.x - x;
     const dy = w.y - y;
-    const soft = dx * dx + dy * dy + EPS * EPS;
-    const f = (G * w.charges) / (soft * Math.sqrt(soft));
+    const d2 = dx * dx + dy * dy;
+    if (d2 >= reach2) continue; // out of reach entirely
+    const soft = d2 + EPS * EPS;
+    let f = (G * w.charges) / (soft * Math.sqrt(soft));
+    if (d2 > inner * inner) {
+      const u = (WELL_REACH - Math.sqrt(d2)) / WELL_TAPER; // 1 at the inner edge, 0 at the rim
+      f *= u * u * (3 - 2 * u);
+    }
     ax += f * dx;
     ay += f * dy;
   }
@@ -660,11 +700,13 @@ function collisionPass(state) {
 // Bounds, ore delivery, win condition
 // ---------------------------------------------------------------------------
 
+/**
+ * Gone for good: the centre is more than BOUNDS_MARGIN outside the bounds
+ * rectangle. Straying just off the edge is survivable and recoverable.
+ */
 function outOfBounds(state, body) {
-  const w = state.bounds.w;
-  const h = state.bounds.h;
-  const r = body.r;
-  return body.x < -r || body.x > w + r || body.y < -r || body.y > h + r;
+  const m = BOUNDS_MARGIN;
+  return body.x < -m || body.x > state.bounds.w + m || body.y < -m || body.y > state.bounds.h + m;
 }
 
 function boundsPass(state) {
