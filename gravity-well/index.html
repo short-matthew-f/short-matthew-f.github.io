@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!-- Gravity Well — entry document. Two views (menu / play) live in one page;
+     main.js swaps them. The canvas fills the viewport; bars overlay it. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#05070f">
+<meta name="description" content="Gravity Well — a deterministic space-physics puzzle. Place gravity charges, launch, and watch the field do the steering.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Gravity Well</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ------------------------------------------------------------ menu view -->
+<section id="view-menu" class="view" aria-label="Level select">
+  <header class="menu-head">
+    <h1>Gravity&nbsp;Well</h1>
+    <p class="tagline">Your engine is dead. Bend space instead.</p>
+  </header>
+  <div id="menu-list" class="menu-list"></div>
+  <footer class="menu-foot">
+    <button id="btn-reset-progress" class="btn btn-ghost" type="button">Reset progress</button>
+  </footer>
+</section>
+
+<!-- ------------------------------------------------------------ play view -->
+<section id="view-play" class="view" aria-label="Mission" hidden>
+  <canvas id="game"></canvas>
+
+  <div id="topbar" class="bar bar-top">
+    <button id="btn-menu" class="btn btn-icon" type="button" aria-label="Back to level select">&#8249;</button>
+    <div class="top-mid">
+      <div id="level-name" class="level-name">&nbsp;</div>
+      <div id="closest" class="closest" hidden></div>
+    </div>
+    <div id="charges" class="charges"><span id="charges-used">0</span><span class="sep">/</span><span id="charges-budget">0</span></div>
+  </div>
+
+  <div id="radio" class="radio-card" hidden role="status">
+    <div class="radio-head">
+      <span class="radio-dot"></span><span class="radio-who">MISSION CONTROL</span>
+    </div>
+    <p id="radio-text" class="radio-text"></p>
+  </div>
+
+  <div id="bottombar" class="bar bar-bottom">
+    <div id="plan-controls" class="controls">
+      <button id="btn-reset" class="btn" type="button">Reset</button>
+      <button id="btn-paste" class="btn btn-ghost" type="button">Paste</button>
+      <button id="btn-launch" class="btn btn-primary" type="button">Launch</button>
+    </div>
+    <div id="flight-controls" class="controls" hidden>
+      <button id="btn-abort" class="btn" type="button">Abort</button>
+      <div id="flight-time" class="flight-time">0.0s</div>
+      <button id="btn-speed" class="btn" type="button">1&times;</button>
+    </div>
+  </div>
+
+  <div id="result" class="overlay" hidden>
+    <div class="result-card">
+      <h2 id="result-title">Target reached</h2>
+      <p id="result-body" class="result-body"></p>
+      <p id="result-bonus" class="result-bonus" hidden></p>
+      <div class="result-actions">
+        <button id="btn-adjust" class="btn" type="button">Adjust</button>
+        <button id="btn-copy" class="btn btn-ghost" type="button">Copy solution</button>
+        <button id="btn-next" class="btn btn-primary" type="button" hidden>Next level</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+</section>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>
