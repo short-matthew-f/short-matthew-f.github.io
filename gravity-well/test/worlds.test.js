@@ -128,7 +128,7 @@ test('radio lines stay sparse and sit on introduce levels', () => {
       assert.equal(index, 1, level.id + ' start radio only on the introduce level of a world');
     }
     if (level.radio.some((r) => r.when === 'fail')) {
-      assert.ok(level.phase <= 6, level.id + ' fail nudges are for the early worlds only');
+      assert.equal(index, 1, level.id + ' fail nudges belong on the introduce level of a world');
     }
   }
 });
