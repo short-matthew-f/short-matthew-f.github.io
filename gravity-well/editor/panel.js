@@ -157,8 +157,8 @@ export function createPanel(app) {
     for (var i = 0; i < list.length; i++) list[i].sync();
   }
 
-  function btn(text, onClick, cls) {
-    return h('button', { class: 'ed-btn ' + (cls || ''), type: 'button', text: text, onclick: onClick });
+  function btn(text, onClick, cls, id) {
+    return h('button', { class: 'ed-btn ' + (cls || ''), type: 'button', text: text, onclick: onClick, id: id || false });
   }
 
   // ------------------------------------------------------------- Palette
@@ -323,8 +323,8 @@ export function createPanel(app) {
     if (sel.length > 1) {
       pane.appendChild(h('p', { class: 'ed-note', text: sel.length + ' objects selected. Drag to move them together.' }));
       pane.appendChild(h('div', { class: 'ed-row' }, [
-        btn('Duplicate', function () { app.duplicateSelection(); }),
-        btn('Delete', function () { app.deleteSelection(); }, 'ed-btn-danger')
+        btn('Duplicate', function () { app.duplicateSelection(); }, '', 'insp-duplicate'),
+        btn('Delete', function () { app.deleteSelection(); }, 'ed-btn-danger', 'insp-delete')
       ]));
       return;
     }
@@ -429,8 +429,8 @@ export function createPanel(app) {
       makeField('inspect', 'insp-belt-seed', 'seed', { step: '1', get: function () { return belt.seed; }, set: function (v) { belt.seed = Math.round(v); } })
     ]));
     pane.appendChild(h('div', { class: 'ed-row' }, [
-      btn('Apply', apply),
-      btn('Re-roll', function () { belt.seed = (belt.seed || 0) + 1; apply(); }),
+      btn('Apply', apply, '', 'insp-belt-apply'),
+      btn('Re-roll', function () { belt.seed = (belt.seed || 0) + 1; apply(); }, '', 'insp-belt-reroll'),
       btn('Delete belt', function () {
         app.confirm('Delete belt ' + belt.id + ' and its ' + (belt.ids || []).length + ' rocks?').then(function (yes) {
           if (!yes) return;
@@ -439,7 +439,7 @@ export function createPanel(app) {
           app.commit('Delete belt');
           refresh();
         });
-      }, 'ed-btn-danger')
+      }, 'ed-btn-danger', 'insp-belt-delete')
     ]));
   }
 
@@ -532,8 +532,8 @@ export function createPanel(app) {
     }
 
     pane.appendChild(h('div', { class: 'ed-row' }, [
-      btn('Duplicate', function () { app.duplicateSelection(); }),
-      btn('Delete', function () { app.deleteSelection(); }, 'ed-btn-danger')
+      btn('Duplicate', function () { app.duplicateSelection(); }, '', 'insp-duplicate'),
+      btn('Delete', function () { app.deleteSelection(); }, 'ed-btn-danger', 'insp-delete')
     ]));
   }
 
@@ -598,7 +598,7 @@ export function createPanel(app) {
         app.setSel([{ kind: 'solution', index: lv.solution.length - 1 }]);
         app.commit('Add solution well');
         refresh();
-      }),
+      }, '', 'lvl-add-well'),
       btn('Clear solution', function () {
         app.confirm('Remove all solution wells?').then(function (yes) {
           if (!yes) return;
@@ -607,7 +607,7 @@ export function createPanel(app) {
           app.commit('Clear solution');
           refresh();
         });
-      }, 'ed-btn-danger')
+      }, 'ed-btn-danger', 'lvl-clear-solution')
     ]));
   }
 

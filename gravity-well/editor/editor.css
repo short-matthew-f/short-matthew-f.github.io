@@ -28,7 +28,7 @@
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
-  cursor: crosshair;
+  cursor: default;
 }
 
 .ed-body { overscroll-behavior: none; }
@@ -115,9 +115,18 @@
   background: var(--bg-panel-solid);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   max-width: calc(100vw - 24px);
+  /* The strip is a hint that floats over the board: only its buttons take
+     pointer events, so a tap on the label still reaches the canvas beneath. */
+  pointer-events: none;
 }
-.ed-toolstrip-text { font-size: 13px; color: var(--text-dim); padding: 0 4px; }
-.ed-strip-btn { min-height: 44px; padding: 0 14px; font-size: 14px; }
+.ed-toolstrip-text {
+  font-size: 13px;
+  color: var(--text-dim);
+  padding: 0 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.ed-strip-btn { min-height: 44px; padding: 0 14px; font-size: 14px; flex: 0 0 auto; pointer-events: auto; }
 
 .ed-zoom {
   position: absolute;
@@ -155,14 +164,16 @@
   transition: transform 180ms ease;
   padding-bottom: var(--sab);
 }
-.ed-panel.collapsed { transform: translateY(calc(var(--ed-sheet-h) - 92px)); }
+.ed-panel.collapsed { transform: translateY(calc(var(--ed-sheet-h) - 108px)); }
 
 .ed-grip {
   appearance: none;
   border: 0;
   background: transparent;
   width: 100%;
-  height: 26px;
+  flex: 0 0 44px;
+  height: 44px;
+  min-height: 44px;
   padding: 0;
   display: flex;
   align-items: center;
@@ -191,18 +202,21 @@
 
 .ed-tab {
   appearance: none;
-  flex: 1 0 auto;
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 44px;
-  padding: 0 12px;
+  padding: 0 4px;
   border: 1px solid transparent;
   border-radius: 10px;
   background: transparent;
   color: var(--text-dim);
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .ed-tab[aria-selected="true"] {
   background: rgba(79, 227, 208, 0.12);
@@ -432,5 +446,7 @@
   .ed-panel-body { padding: 6px 14px 20px; }
   .ed-zoom { right: calc(var(--ed-side-w) + 12px); }
   .ed-toolstrip { left: calc((100vw - var(--ed-side-w)) / 2); }
-  .ed-toast { left: 20px; right: calc(var(--ed-side-w) + 20px); }
+  /* .toast in style.css centres itself with translateX(-50%); keep that and
+     just move the centre to the middle of the canvas area. */
+  .ed-toast { left: calc((100vw - var(--ed-side-w)) / 2); right: auto; }
 }

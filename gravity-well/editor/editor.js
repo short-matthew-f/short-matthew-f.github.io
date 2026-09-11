@@ -229,6 +229,7 @@ function confirmDialog(message, okLabel) {
 function setToolstrip(text, opts) {
   if (!text) {
     stripEl.hidden = true;
+    if (canvasApi) canvasApi.notifyChrome();
     return;
   }
   var o = opts || {};
@@ -237,6 +238,7 @@ function setToolstrip(text, opts) {
   stripCancel.textContent = o.cancelLabel || 'Cancel';
   stripDone.hidden = o.hideDone === true;
   stripEl.hidden = false;
+  if (canvasApi) canvasApi.notifyChrome();
   stripDone.onclick = function () {
     stripEl.hidden = true;
     if (o.onDone) o.onDone();
@@ -256,8 +258,8 @@ function setTool(tool) {
   app.tool = tool;
   app.pickMode = null;
   if (canvasApi && canvasApi.hasPolyDraft()) canvasApi.cancelPoly();
-  if (isPolyTool(tool)) setToolstrip('Tap to add points, then Done to close the shape');
-  else if (tool === 'belt') setToolstrip('Drag a stroke to brush a belt', { hideDone: true });
+  if (isPolyTool(tool)) setToolstrip('Tap points, then Done');
+  else if (tool === 'belt') setToolstrip('Drag a stroke', { hideDone: true });
   else setToolstrip(null);
   panel.refresh();
   updateHud();

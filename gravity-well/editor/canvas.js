@@ -144,14 +144,24 @@ export function createEditorCanvas(app, canvasEl) {
   var pinch = null;
   var polyDraft = null;  // { fixture, points:[] }
   var beltDraft = null;  // { points:[] }
-  var hover = null;
+  // True once the designer has panned or zoomed: after that the camera is
+  // theirs and chrome appearing must not yank it back to the fitted view.
+  var camMoved = false;
 
   // ------------------------------------------------------------- geometry
 
+  // How much of the viewport the chrome covers. The camera fits the board into
+  // what is left, so nothing the designer needs to tap ever sits under the top
+  // bar, the tool strip or the panel.
   function chromePad() {
-    var top = 0, right = 0, bottom = 0, left = 8;
+    var top = 0, right = 8, bottom = 8, left = 8;
     var topEl = document.getElementById('ed-top');
     if (topEl) top = topEl.getBoundingClientRect().height + 8;
+    var strip = document.getElementById('ed-toolstrip');
+    if (strip && !strip.hidden) {
+      var sr = strip.getBoundingClientRect();
+      if (sr.height > 0 && sr.bottom + 8 > top) top = sr.bottom + 8;
+    }
     var panel = document.getElementById('ed-panel');
     if (panel) {
       var pr = panel.getBoundingClientRect();
@@ -162,6 +172,7 @@ export function createEditorCanvas(app, canvasEl) {
   }
 
   function fit() {
+    camMoved = false;
     var lv = app.level();
     var b = (lv && lv.bounds) || { w: 900, h: 1200 };
     var v = R.computeView(view.cssW, view.cssH, b, chromePad());
@@ -211,6 +222,7 @@ export function createEditorCanvas(app, canvasEl) {
     view.ox = sx - (sx - view.ox) * f;
     view.oy = sy - (sy - view.oy) * f;
     view.scale = next;
+    camMoved = true;
     draw();
   }
 
@@ -342,7 +354,7 @@ export function createEditorCanvas(app, canvasEl) {
         ctx.arc(R.wx2sx(view, d.x), R.wy2sy(view, d.y), Math.max(2, d.r * view.scale), 0, Math.PI * 2);
         ctx.fillStyle = d.ok === false ? 'rgba(255,107,107,0.16)' : 'rgba(79,227,208,0.16)';
         ctx.fill();
-        ctx.strokeStyle = d.ok === false ? ZONE_BAD : '#4fe3d0';
+        ctx.strokeStyle = d.ok === false ? R.COLORS.bad : '#4fe3d0';
         ctx.globalAlpha = 0.8;
         ctx.lineWidth = 1.2;
         ctx.stroke();
@@ -787,7 +799,7 @@ export function createEditorCanvas(app, canvasEl) {
     var lv = app.level();
     if (!polyDraft) {
       polyDraft = { tool: app.tool, points: [] };
-      app.setToolstrip('Tap to add points, tap the first point or Done to close');
+      app.setToolstrip('Tap points · first point or Done closes');
     }
     var first = polyDraft.points[0];
     if (first && polyDraft.points.length >= 3 &&
@@ -881,7 +893,9 @@ export function createEditorCanvas(app, canvasEl) {
 
   function onPointerDown(e) {
     if (e.button != null && e.button > 0) return;
-    canvasEl.setPointerCapture(e.pointerId);
+    // Capture keeps a drag alive over the zoom buttons and the panel edge; a
+    // synthetic pointer (tests) has nothing to capture, which is not an error.
+    try { canvasEl.setPointerCapture(e.pointerId); } catch (err) { /* no live pointer */ }
     var p = eventPoint(e);
     pointers[e.pointerId] = { x: p.x, y: p.y, x0: p.x, y0: p.y, t0: Date.now() };
     pointerCount++;
@@ -952,10 +966,7 @@ export function createEditorCanvas(app, canvasEl) {
 
   function onPointerMove(e) {
     var rec = pointers[e.pointerId];
-    if (!rec) {
-      hover = eventPoint(e);
-      return;
-    }
+    if (!rec) return;   // a move with no button down: nothing to update
     var p = eventPoint(e);
     rec.x = p.x;
     rec.y = p.y;
@@ -982,6 +993,7 @@ export function createEditorCanvas(app, canvasEl) {
     if (gesture.mode === 'pan') {
       view.ox = gesture.ox + (p.x - gesture.start.x);
       view.oy = gesture.oy + (p.y - gesture.start.y);
+      camMoved = true;
       draw();
       return;
     }
@@ -1040,10 +1052,13 @@ export function createEditorCanvas(app, canvasEl) {
 
     if (g.mode === 'pick') {
       if (isTap && app.pickMode) {
+        // Read the world point BEFORE dismissing the strip: hiding it frees up
+        // board area and re-fits the camera, which would move the point.
+        var picked = toWorld(p.x, p.y);
         var cb = app.pickMode;
         app.pickMode = null;
         app.setToolstrip(null);
-        cb(toWorld(p.x, p.y));
+        cb(picked);
       }
       return;
     }
@@ -1135,6 +1150,9 @@ export function createEditorCanvas(app, canvasEl) {
     worldToScreen: function (x, y) { return { x: R.wx2sx(view, x), y: R.wy2sy(view, y) }; },
     zoomAt: zoomAt,
     zoomBy: function (k) { zoomAt(view.cssW / 2, view.cssH / 2, k); },
+    // The tool strip floats over the board; when it appears or disappears the
+    // usable area changes, so re-fit unless the designer has moved the camera.
+    notifyChrome: function () { if (!camMoved) fit(); },
     finishPoly: finishPoly,
     cancelPoly: cancelPoly,
     hasPolyDraft: function () { return !!polyDraft; },
