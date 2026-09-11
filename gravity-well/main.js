@@ -49,6 +49,7 @@ var el = {
   viewPlay: $('view-play'),
   menuList: $('menu-list'),
   resetProgress: $('btn-reset-progress'),
+  btnInstall: $('btn-install'),
   canvas: $('game'),
   topbar: $('topbar'),
   bottombar: $('bottombar'),
@@ -465,6 +466,7 @@ function launch() {
   app.trails = { ship: [], byId: {} };
   app.flightT = 0;
   app.accumulator = 0;
+  app.eventCursor = 0;
   app.outcomeAt = -1;
   app.mode = 'flight';
   el.planControls.hidden = true;
@@ -505,19 +507,33 @@ function stepFlight(dtSeconds) {
   if (s.outcome && app.outcomeAt < 0) app.outcomeAt = app.clock;
 }
 
+// Ids that went through a wormhole since the last sample; their next trail
+// point starts a new stroke instead of being joined across the jump.
+function teleportedSince(s) {
+  var set = {};
+  var evs = s.events || [];
+  var from = app.eventCursor || 0;
+  for (var i = from; i < evs.length; i++) {
+    if (evs[i].kind === 'teleport') set[evs[i].id] = true;
+  }
+  app.eventCursor = evs.length;
+  return set;
+}
+
 function recordTrails(s) {
   var tr = app.trails;
+  var jumped = teleportedSince(s);
   if (s.ship && s.ship.alive !== false) {
-    tr.ship.push({ x: s.ship.x, y: s.ship.y });
+    tr.ship.push({ x: s.ship.x, y: s.ship.y, brk: !!jumped[s.ship.id || 'ship'] });
     if (tr.ship.length > TRAIL_MAX) tr.ship.shift();
   }
   for (var i = 0; i < s.bodies.length; i++) {
     var b = s.bodies[i];
     if (b.alive === false) continue;
-    if (b.type === 'obstacle' || b.type === 'oreReceiver') continue;
+    if (b.static || b.type === 'obstacle' || b.type === 'oreReceiver' || b.type === 'wormhole') continue;
     var list = tr.byId[b.id];
     if (!list) { list = tr.byId[b.id] = []; }
-    list.push({ x: b.x, y: b.y });
+    list.push({ x: b.x, y: b.y, brk: !!jumped[b.id] });
     if (list.length > TRAIL_MAX) list.shift();
   }
 }
@@ -771,6 +787,42 @@ window.addEventListener('orientationchange', function () { setTimeout(resize, 12
 document.addEventListener('visibilitychange', function () {
   if (document.hidden) stopLoop();
   else startLoop();
+});
+
+// --------------------------------------------------------- PWA / installing
+
+// Register the service worker after load so it never competes with the first
+// paint. Failure is non-fatal: without it the game is simply a normal page.
+function registerServiceWorker() {
+  navigator.serviceWorker.register('./sw.js').catch(function () { /* offline unavailable */ });
+}
+
+if ('serviceWorker' in navigator) {
+  if (document.readyState === 'complete') registerServiceWorker();
+  else window.addEventListener('load', registerServiceWorker);
+}
+
+// Chromium fires beforeinstallprompt when the app qualifies for installation.
+// Stash the event and reveal the Install button in the menu footer; browsers
+// that never fire it (and already-installed instances) keep it hidden.
+var installPrompt = null;
+
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault();
+  installPrompt = e;
+  el.btnInstall.hidden = false;
+});
+
+window.addEventListener('appinstalled', function () {
+  installPrompt = null;
+  el.btnInstall.hidden = true;
+});
+
+el.btnInstall.addEventListener('click', function () {
+  var deferred = installPrompt;
+  installPrompt = null;
+  el.btnInstall.hidden = true;
+  if (deferred) deferred.prompt();
 });
 
 // Expose a tiny surface for the smoke test / debugging. Read-only in spirit.

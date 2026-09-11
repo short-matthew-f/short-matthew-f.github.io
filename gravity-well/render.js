@@ -524,42 +524,161 @@ export function drawOreReceiver(ctx, view, b, t) {
   ctx.restore();
 }
 
-// Wormhole (world 11) and any fixture type this renderer does not know yet:
-// a dashed swirl so the level is never silently missing a piece.
-export function drawWormhole(ctx, view, b, t) {
-  var cx = wx2sx(view, b.x), cy = wy2sy(view, b.y), r = (b.r || 22) * view.scale;
+// ---------------------------------------------------------------- wormholes
+
+// Colour per linked pair, indexed by the fixture's `color` (0..5).
+export var PAIR_COLORS = ['#7fd8ff', '#c58bff', '#7cf6b0', '#ffb347', '#ff7ab8', '#9fb0ff'];
+
+export function pairColor(i) {
+  var n = PAIR_COLORS.length;
+  var k = ((i | 0) % n + n) % n;
+  return PAIR_COLORS[k];
+}
+
+// A few deterministic spiral arcs inside a mouth, turning with t.
+function wormholeSwirl(ctx, r, t, color, dir) {
   ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(t * 0.6);
-  ctx.strokeStyle = '#7fd8ff';
-  ctx.lineWidth = 1.6;
+  ctx.rotate(dir * t * 0.9);
+  ctx.strokeStyle = color;
+  ctx.lineCap = 'round';
   for (var k = 0; k < 3; k++) {
-    ctx.globalAlpha = 0.75 - k * 0.2;
-    ctx.setLineDash([5, 7]);
+    var rr = r * (0.78 - k * 0.22);
+    var a0 = k * (Math.PI * 2 / 3);
+    ctx.globalAlpha = 0.75 - k * 0.16;
+    ctx.lineWidth = 1.6 - k * 0.35;
     ctx.beginPath();
-    ctx.arc(0, 0, r * (1 - k * 0.26), 0, Math.PI * 2);
+    ctx.arc(0, 0, rr, a0, a0 + Math.PI * 1.15);
     ctx.stroke();
   }
-  ctx.setLineDash([]);
-  ctx.globalAlpha = 0.35;
+  ctx.restore();
+}
+
+// Short outward tick showing the direction a body LEAVES from this mouth.
+function exitTick(ctx, r, angle, color, alpha) {
+  var ux = Math.cos(angle), uy = Math.sin(angle);
+  var len = Math.max(9, r * 0.62);
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(ux * r, uy * r);
+  ctx.lineTo(ux * (r + len), uy * (r + len));
+  ctx.stroke();
+  var hx = ux * (r + len), hy = uy * (r + len), hs = Math.max(4, len * 0.42);
+  ctx.beginPath();
+  ctx.moveTo(hx - Math.cos(angle - 0.45) * hs, hy - Math.sin(angle - 0.45) * hs);
+  ctx.lineTo(hx, hy);
+  ctx.lineTo(hx - Math.cos(angle + 0.45) * hs, hy - Math.sin(angle + 0.45) * hs);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawMouth(ctx, view, mouth, r, color, t, opts) {
+  var o = opts || {};
+  var cx = wx2sx(view, mouth.x), cy = wy2sy(view, mouth.y);
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // throat glow
   var g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
-  g.addColorStop(0, 'rgba(127,216,255,0.45)');
-  g.addColorStop(1, 'rgba(127,216,255,0)');
+  g.addColorStop(0, 'rgba(0,0,0,0.85)');
+  g.addColorStop(0.65, 'rgba(10,14,30,0.55)');
+  g.addColorStop(1, 'rgba(10,14,30,0)');
   ctx.fillStyle = g;
   ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+
+  wormholeSwirl(ctx, r, t, color, o.spin || 1);
+
+  // ring — dashed when this mouth is exit-only (one-way pair)
+  ctx.globalAlpha = 0.95;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  if (o.dashed) { ctx.setLineDash([6, 5]); ctx.lineDashOffset = -t * 12; }
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 0.3;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(0, 0, r + 4, 0, Math.PI * 2); ctx.stroke();
+
+  exitTick(ctx, r, mouth.angle || 0, color, o.tickAlpha == null ? 0.9 : o.tickAlpha);
+
+  // Label the mouths only when the pair is one-way, where which end is which
+  // actually matters to the player.
+  if (o.label) {
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = color;
+    ctx.font = '700 10px ui-monospace, Menlo, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(mouth.key || '').toUpperCase(), 0, -r - 11);
+  }
   ctx.restore();
-  if (b.immune) { hatch(ctx, cx, cy, r); immuneOutline(ctx, cx, cy, r); }
+}
+
+// A wormhole body: two linked mouths, each drawn as a coloured ring with an
+// inner swirl and an exit tick, joined by a faint dotted pairing line.
+export function drawWormhole(ctx, view, b, t) {
+  var mouths = b.mouths || [b.a, b.b];
+  if (!mouths || !mouths[0] || !mouths[1]) return;
+  var color = pairColor(b.color || 0);
+  var r = (b.r != null ? b.r : 26) * view.scale;
+
+  // pairing line first, so the rings sit on top of it
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = 0.16;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 8]);
+  ctx.lineDashOffset = -t * 10;
+  ctx.beginPath();
+  ctx.moveTo(wx2sx(view, mouths[0].x), wy2sy(view, mouths[0].y));
+  ctx.lineTo(wx2sx(view, mouths[1].x), wy2sy(view, mouths[1].y));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // Mouth a: entry (always). Mouth b: exit-only when one-way, so dash its ring
+  // and dim a's tick, since nothing ever leaves from a in that case.
+  drawMouth(ctx, view, mouths[0], r, color, t, {
+    spin: 1,
+    dashed: false,
+    label: !!b.oneWay,
+    tickAlpha: b.oneWay ? 0.28 : 0.9
+  });
+  drawMouth(ctx, view, mouths[1], r, color, t, {
+    spin: -1,
+    dashed: !!b.oneWay,
+    label: !!b.oneWay,
+    tickAlpha: 0.9
+  });
+}
+
+// Fallback for a fixture type this renderer has not learned yet: a faint dashed
+// circle, so a level is never silently missing a piece.
+export function drawUnknownFixture(ctx, view, b) {
+  var cx = wx2sx(view, b.x), cy = wy2sy(view, b.y), r = Math.max(6, (b.r || 12) * view.scale);
+  ctx.save();
+  ctx.strokeStyle = COLORS.text;
+  ctx.globalAlpha = 0.35;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 4]);
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
 }
 
 // Dispatch over a body list (state.bodies).
 export function drawBodies(ctx, view, bodies, t, ship) {
   if (!bodies) return;
-  // receivers first (they are background zones)
+  // zones first — receivers and wormholes sit behind everything that moves
   var i, b;
   for (i = 0; i < bodies.length; i++) {
     b = bodies[i];
     if (b.alive === false) continue;
     if (b.type === 'oreReceiver') drawOreReceiver(ctx, view, b, t);
+    else if (b.type === 'wormhole') drawWormhole(ctx, view, b, t);
   }
   for (i = 0; i < bodies.length; i++) {
     b = bodies[i];
@@ -570,12 +689,25 @@ export function drawBodies(ctx, view, bodies, t, ship) {
       case 'drone': drawDrone(ctx, view, b, t); break;
       case 'hunter': drawHunter(ctx, view, b, ship); break;
       case 'ore': drawOre(ctx, view, b, t); break;
-      default: drawWormhole(ctx, view, b, t); break;
+      case 'oreReceiver': break;  // drawn in the zone pass above
+      case 'wormhole': break;     // drawn in the zone pass above
+      default: drawUnknownFixture(ctx, view, b); break;
     }
   }
 }
 
 // --------------------------------------------------------------- trajectory
+
+// A jump larger than this between consecutive samples is a wormhole transit,
+// not motion: break the polyline instead of drawing a long false chord.
+export var JUMP_BREAK_WORLD = 100;
+
+// True when the step from a to b is a teleport rather than travel.
+function isJump(a, b) {
+  if (b && b.brk) return true;
+  var dx = b.x - a.x, dy = b.y - a.y;
+  return (dx * dx + dy * dy) > JUMP_BREAK_WORLD * JUMP_BREAK_WORLD;
+}
 
 // pts: [{t,x,y}]. opts: {bright, color, markers, endMark:'x'|'ring'|null}
 export function drawTrajectory(ctx, view, pts, opts) {
@@ -591,7 +723,8 @@ export function drawTrajectory(ctx, view, pts, opts) {
   ctx.beginPath();
   ctx.moveTo(wx2sx(view, pts[0].x), wy2sy(view, pts[0].y));
   for (var i = 1; i < pts.length; i++) {
-    ctx.lineTo(wx2sx(view, pts[i].x), wy2sy(view, pts[i].y));
+    if (isJump(pts[i - 1], pts[i])) ctx.moveTo(wx2sx(view, pts[i].x), wy2sy(view, pts[i].y));
+    else ctx.lineTo(wx2sx(view, pts[i].x), wy2sy(view, pts[i].y));
   }
   ctx.stroke();
   ctx.setLineDash([]);
@@ -604,10 +737,10 @@ export function drawTrajectory(ctx, view, pts, opts) {
     ctx.globalAlpha = 1;
     ctx.strokeStyle = COLORS.bad;
     ctx.lineWidth = 2.4;
-    var s = 8;
+    var sz = 8;
     ctx.beginPath();
-    ctx.moveTo(lx - s, ly - s); ctx.lineTo(lx + s, ly + s);
-    ctx.moveTo(lx + s, ly - s); ctx.lineTo(lx - s, ly + s);
+    ctx.moveTo(lx - sz, ly - sz); ctx.lineTo(lx + sz, ly + sz);
+    ctx.moveTo(lx + sz, ly - sz); ctx.lineTo(lx - sz, ly + sz);
     ctx.stroke();
   } else if (o.endMark === 'ring') {
     ctx.globalAlpha = 1;
@@ -619,7 +752,8 @@ export function drawTrajectory(ctx, view, pts, opts) {
   ctx.restore();
 }
 
-// Ticks every 1 s, numerals every 5 s.
+// Ticks every 1 s, numerals every 5 s. Markers are interpolated within a
+// segment, so a teleport step is skipped rather than placed mid-jump.
 function drawTimeMarkers(ctx, view, pts, bright, color) {
   ctx.save();
   ctx.strokeStyle = color;
@@ -631,7 +765,9 @@ function drawTimeMarkers(ctx, view, pts, bright, color) {
   var nextMark = 1;
   for (var i = 1; i < pts.length; i++) {
     var p = pts[i], q = pts[i - 1];
+    var jump = isJump(q, p);
     while (p.t >= nextMark - 1e-9) {
+      if (jump) { nextMark += 1; continue; }
       var u = (p.t - q.t) > 1e-9 ? (nextMark - q.t) / (p.t - q.t) : 0;
       var mxw = q.x + (p.x - q.x) * u, myw = q.y + (p.y - q.y) * u;
       var mx = wx2sx(view, mxw), my = wy2sy(view, myw);
@@ -696,7 +832,8 @@ export function drawClosestApproach(ctx, view, shipPts, bodyPts, ca) {
 
 // ------------------------------------------------------------------- trails
 
-// trail: [{x,y}] oldest..newest
+// trail: [{x,y,brk?}] oldest..newest. A point flagged `brk` (main.js sets it
+// from a 'teleport' event) starts a new stroke, as does any outsized jump.
 export function drawTrail(ctx, view, trail, color, width) {
   if (!trail || trail.length < 2) return;
   ctx.save();
@@ -706,6 +843,7 @@ export function drawTrail(ctx, view, trail, color, width) {
   ctx.lineWidth = width || 1.6;
   var n = trail.length;
   for (var i = 1; i < n; i++) {
+    if (isJump(trail[i - 1], trail[i])) continue;
     ctx.globalAlpha = (i / n) * 0.55;
     ctx.beginPath();
     ctx.moveTo(wx2sx(view, trail[i - 1].x), wy2sy(view, trail[i - 1].y));

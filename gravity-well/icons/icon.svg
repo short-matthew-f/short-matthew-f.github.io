@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Gravity Well">
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1428"/>
+      <stop offset="1" stop-color="#04060e"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#9b6cff" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#9b6cff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="url(#plate)"/>
+  <g>
+    <circle cx="300" cy="296" r="150" fill="url(#halo)"/>
+    <circle cx="96" cy="120" r="4" fill="#cfe0ff" opacity=".55"/>
+    <circle cx="158" cy="74" r="3" fill="#cfe0ff" opacity=".35"/>
+    <circle cx="434" cy="392" r="3.5" fill="#cfe0ff" opacity=".40"/>
+    <circle cx="392" cy="446" r="2.5" fill="#cfe0ff" opacity=".30"/>
+    <circle cx="300" cy="296" r="122" fill="none" stroke="#9b6cff" stroke-opacity=".40" stroke-width="9"/>
+    <circle cx="300" cy="296" r="80" fill="none" stroke="#9b6cff" stroke-opacity=".85" stroke-width="14"/>
+    <circle cx="300" cy="296" r="34" fill="#120a24" stroke="#c9a7ff" stroke-width="7"/>
+    <path d="M 88 452 C 148 332 188 252 264 208 C 320 176 362 160 404 150" fill="none" stroke="#4fe3d0" stroke-opacity=".95" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(444,134) rotate(-14)"><path d="M 34 0 L -22 -22 L -10 0 L -22 22 Z" fill="#4fe3d0"/></g>
+  </g>
+</svg>
