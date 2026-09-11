@@ -24,12 +24,47 @@
   <header class="menu-head">
     <h1>Gravity&nbsp;Well</h1>
     <p class="tagline">Your engine is dead. Bend space instead.</p>
+    <button id="btn-packs" class="pack-bar" type="button" aria-haspopup="dialog">
+      <span class="pack-label">Pack</span>
+      <span id="pack-name" class="pack-name">Gravity Well</span>
+      <span class="pack-caret" aria-hidden="true">&#9662;</span>
+    </button>
   </header>
   <div id="menu-list" class="menu-list"></div>
   <footer class="menu-foot">
+    <a id="btn-editor" class="btn btn-ghost" href="editor.html">Level editor</a>
     <button id="btn-reset-progress" class="btn btn-ghost" type="button">Reset progress</button>
     <button id="btn-install" class="btn btn-ghost" type="button" style="margin-left:10px" hidden>Install</button>
   </footer>
+
+  <!-- pack picker -->
+  <div id="packs" class="overlay" hidden role="dialog" aria-label="Level packs">
+    <div class="result-card">
+      <h2>Level packs</h2>
+      <div id="packs-list" class="packs-list"></div>
+      <div class="result-actions">
+        <button id="btn-import-pack" class="btn" type="button">Import pack</button>
+        <button id="btn-packs-close" class="btn btn-ghost" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- import pack -->
+  <div id="import" class="overlay" hidden role="dialog" aria-label="Import pack">
+    <div class="result-card">
+      <h2>Import pack</h2>
+      <p class="result-body">Paste pack JSON below, or choose a <code>.json</code> file.</p>
+      <textarea id="import-text" class="import-text" rows="6" spellcheck="false"
+        placeholder='{"format":"gw-pack-1", ...}'></textarea>
+      <input id="import-file" type="file" accept="application/json,.json" hidden>
+      <p id="import-msg" class="import-msg" hidden></p>
+      <div class="result-actions">
+        <button id="btn-import-file" class="btn" type="button">Choose file</button>
+        <button id="btn-import-cancel" class="btn btn-ghost" type="button">Cancel</button>
+        <button id="btn-import-go" class="btn btn-primary" type="button">Import</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- ------------------------------------------------------------ play view -->
@@ -38,6 +73,7 @@
 
   <div id="topbar" class="bar bar-top">
     <button id="btn-menu" class="btn btn-icon" type="button" aria-label="Back to level select">&#8249;</button>
+    <a id="btn-back-editor" class="btn btn-ghost btn-small" href="editor.html" hidden>Editor</a>
     <div class="top-mid">
       <div id="level-name" class="level-name">&nbsp;</div>
       <div id="closest" class="closest" hidden></div>

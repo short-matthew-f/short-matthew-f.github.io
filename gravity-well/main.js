@@ -7,39 +7,85 @@ import {
   killRadius, createState, step, predict, fieldAt, validateWells
 } from './sim.js';
 import * as Sim from './sim.js';
-import * as levelsModule from './levels.js';
 import { createInput } from './input.js';
 import * as R from './render.js';
-
-// levels.js is authored in a later stage; read it through the namespace so a
-// missing optional export (WORLDS) is a fallback rather than a load failure.
-var LEVELS = levelsModule.LEVELS || [];
-var WORLDS = levelsModule.WORLDS || null;
+import * as Packs from './packs.js';
+import { CAMPAIGN_PACK, CAMPAIGN_PACK_ID } from './campaign.js';
 
 // ------------------------------------------------------------------ storage
+//
+// Progress is per pack (`gw.progress.<packId>`). Pre-pack saves under the bare
+// `gw.progress` key are folded into the campaign's key once, on first load.
 
-var PROGRESS_KEY = 'gw.progress';
+Packs.migrateLegacyProgress(CAMPAIGN_PACK_ID);
 
-function loadProgress() {
-  var empty = { completed: {}, radioSeen: {}, lastLevel: null };
-  try {
-    var raw = window.localStorage.getItem(PROGRESS_KEY);
-    if (!raw) return empty;
-    var p = JSON.parse(raw);
-    if (!p || typeof p !== 'object') return empty;
-    return {
-      completed: p.completed || {},
-      radioSeen: p.radioSeen || {},
-      lastLevel: p.lastLevel == null ? null : p.lastLevel
-    };
-  } catch (e) { return empty; }
-}
+var pack = CAMPAIGN_PACK;                 // the pack currently being browsed
+var packEntries = Packs.packLevels(pack); // flattened [{level, stage, ...}]
+var progress = Packs.loadProgress(pack.id);
 
 function saveProgress() {
-  try { window.localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch (e) { /* private mode */ }
+  if (testMode.active) return;            // Test mode never writes progress
+  Packs.saveProgress(pack.id, progress);
 }
 
-var progress = loadProgress();
+function selectPack(p) {
+  pack = p;
+  packEntries = Packs.packLevels(pack);
+  progress = Packs.loadProgress(pack.id);
+}
+
+// --------------------------------------------------------------- test mode
+//
+// index.html?test=1 runs a level handed over by the editor through
+// localStorage. No progress is written and the flight result is reported back.
+
+var TEST_LEVEL_KEY = 'gw.editor.testLevel';
+var TEST_WELLS_KEY = 'gw.editor.testWells';
+var TEST_TRAIL_KEY = 'gw.editor.lastTrail';
+
+var testMode = { active: false, level: null, wells: null };
+
+function readTestMode() {
+  var q;
+  try { q = new URL(window.location.href).searchParams.get('test'); } catch (e) { q = null; }
+  if (q !== '1') return;
+  var raw = null, wellsRaw = null;
+  try {
+    raw = window.localStorage.getItem(TEST_LEVEL_KEY);
+    wellsRaw = window.localStorage.getItem(TEST_WELLS_KEY);
+  } catch (e) { /* storage blocked */ }
+  if (!raw) return;
+  try {
+    testMode.level = JSON.parse(raw);
+    testMode.active = !!(testMode.level && testMode.level.bounds);
+  } catch (e) { testMode.active = false; }
+  if (!testMode.active) return;
+  if (wellsRaw) {
+    try {
+      var w = JSON.parse(wellsRaw);
+      if (Array.isArray(w)) testMode.wells = w;
+    } catch (e) { /* ignore */ }
+  }
+}
+
+function writeTestResult() {
+  if (!testMode.active) return;
+  try {
+    var trail = (app.trails && app.trails.ship) || [];
+    var out = [];
+    for (var i = 0; i < trail.length; i++) {
+      out.push({ x: trail[i].x, y: trail[i].y, brk: !!trail[i].brk });
+    }
+    window.localStorage.setItem(TEST_TRAIL_KEY, JSON.stringify({
+      levelId: app.level ? app.level.id : null,
+      outcome: app.sim ? app.sim.outcome : null,
+      reason: app.sim ? app.sim.reason : null,
+      t: app.sim ? app.sim.t : 0,
+      points: out
+    }));
+    window.localStorage.setItem(TEST_WELLS_KEY, JSON.stringify(app.wells));
+  } catch (e) { /* storage blocked */ }
+}
 
 // ---------------------------------------------------------------- DOM refs
 
@@ -50,6 +96,20 @@ var el = {
   viewPlay: $('view-play'),
   menuList: $('menu-list'),
   resetProgress: $('btn-reset-progress'),
+  packName: $('pack-name'),
+  btnPacks: $('btn-packs'),
+  packs: $('packs'),
+  packsList: $('packs-list'),
+  btnPacksClose: $('btn-packs-close'),
+  btnImportPack: $('btn-import-pack'),
+  importOverlay: $('import'),
+  importText: $('import-text'),
+  importFile: $('import-file'),
+  importMsg: $('import-msg'),
+  btnImportFile: $('btn-import-file'),
+  btnImportCancel: $('btn-import-cancel'),
+  btnImportGo: $('btn-import-go'),
+  btnBackEditor: $('btn-back-editor'),
   btnInstall: $('btn-install'),
   canvas: $('game'),
   topbar: $('topbar'),
@@ -105,6 +165,9 @@ var app = {
   flightT: 0,
   outcomeAt: -1,
   trails: null,          // {ship: [], byId: {}}
+  markers: [],           // active tutorial world markers
+  uiMarkerEl: null,      // DOM element a 'ui' marker is pointing at
+  waypointTotal: 0,
   clock: 0,              // animation clock (seconds) for pulses/spins
   lastFrame: 0,
   rafId: 0
@@ -221,71 +284,75 @@ function updateCamera(dt) {
 }
 
 // ------------------------------------------------------------------- menu
+//
+// Pack -> stage -> level. Unlock rules are per stage: required levels unlock in
+// sequence across the pack, and a stage's optional (★) levels unlock once that
+// stage's required levels are done.
 
-function worldTitle(phase) {
-  if (WORLDS) {
-    for (var i = 0; i < WORLDS.length; i++) {
-      if (WORLDS[i] && WORLDS[i].phase === phase) {
-        return 'World ' + phase + ' — ' + WORLDS[i].title;
-      }
-    }
+function isOptional(lv) { return Packs.isOptional(lv); }
+
+function entryAt(index) { return packEntries[index] || null; }
+
+function indexOfLevelId(id) {
+  for (var i = 0; i < packEntries.length; i++) {
+    if (packEntries[i].level.id === id) return i;
   }
-  return 'World ' + phase;
+  return -1;
 }
 
-function isOptional(lv) { return !!(lv && lv.optional); }
-
-// A required level unlocks when the previous REQUIRED level is complete (or it
-// is the first one). An optional level unlocks when every required level in its
-// own world is complete.
 function isUnlocked(index) {
-  var lv = LEVELS[index];
-  if (!lv) return false;
-  if (isOptional(lv)) {
-    for (var j = 0; j < LEVELS.length; j++) {
-      var o = LEVELS[j];
-      if (o.phase !== lv.phase || isOptional(o)) continue;
-      if (!progress.completed[o.id]) return false;
+  var e = entryAt(index);
+  if (!e) return false;
+  if (isOptional(e.level)) {
+    var levels = (e.stage && e.stage.levels) || [];
+    for (var j = 0; j < levels.length; j++) {
+      if (isOptional(levels[j])) continue;
+      if (!progress.completed[levels[j].id]) return false;
     }
     return true;
   }
   for (var k = index - 1; k >= 0; k--) {
-    if (isOptional(LEVELS[k])) continue;
-    return !!progress.completed[LEVELS[k].id];
+    if (isOptional(packEntries[k].level)) continue;
+    return !!progress.completed[packEntries[k].level.id];
   }
-  return true; // first required level
+  return true; // first required level in the pack
 }
 
 // Index of the next REQUIRED level after `index`, or -1.
 function nextRequiredIndex(index) {
-  for (var i = index + 1; i < LEVELS.length; i++) {
-    if (!isOptional(LEVELS[i])) return i;
+  for (var i = index + 1; i < packEntries.length; i++) {
+    if (!isOptional(packEntries[i].level)) return i;
   }
   return -1;
 }
 
 function buildMenu() {
+  el.packName.textContent = pack.name || pack.id;
   el.menuList.innerHTML = '';
-  if (!LEVELS || !LEVELS.length) {
+  if (!packEntries.length) {
     var empty = document.createElement('p');
     empty.className = 'menu-empty';
-    empty.textContent = 'No levels found.';
+    empty.textContent = 'This pack has no levels.';
     el.menuList.appendChild(empty);
     return;
   }
-  var lastPhase = null;
-  var nInWorld = 0;
-  for (var i = 0; i < LEVELS.length; i++) {
-    var lv = LEVELS[i];
-    if (lv.phase !== lastPhase) {
-      lastPhase = lv.phase;
-      nInWorld = 0;
+  var lastStage = null;
+  for (var i = 0; i < packEntries.length; i++) {
+    var e = packEntries[i];
+    var lv = e.level;
+    if (e.stage !== lastStage) {
+      lastStage = e.stage;
       var h = document.createElement('div');
       h.className = 'phase-head';
-      h.textContent = worldTitle(lv.phase);
+      h.textContent = 'Stage ' + (e.stageIndex + 1) + ' \u2014 ' + (e.stage.title || e.stage.id);
       el.menuList.appendChild(h);
+      if (e.stage.blurb) {
+        var b = document.createElement('p');
+        b.className = 'stage-blurb';
+        b.textContent = e.stage.blurb;
+        el.menuList.appendChild(b);
+      }
     }
-    nInWorld++;
     var optional = isOptional(lv);
     var unlocked = isUnlocked(i);
     var done = !!progress.completed[lv.id];
@@ -299,7 +366,7 @@ function buildMenu() {
 
     var idx = document.createElement('span');
     idx.className = 'lv-index';
-    idx.textContent = optional ? '\u2605' : String(nInWorld);
+    idx.textContent = optional ? '\u2605' : String(e.indexInStage + 1);
 
     var name = document.createElement('span');
     name.className = 'lv-name';
@@ -333,13 +400,120 @@ function showMenu() {
   buildMenu();
 }
 
-// -------------------------------------------------------------- level load
+// ------------------------------------------------------------- pack picker
 
-function openLevel(index) {
-  startLevel(LEVELS[index], index);
+function buildPackList() {
+  var all = Packs.listPacks();
+  el.packsList.innerHTML = '';
+  for (var i = 0; i < all.length; i++) {
+    var p = all[i];
+    var levelCount = Packs.packLevels(p).length;
+    var wrap = document.createElement('div');
+    wrap.style.display = 'flex';
+    wrap.style.gap = '8px';
+    wrap.style.alignItems = 'center';
+
+    var row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'pack-row' + (p.id === pack.id ? ' current' : '');
+    row.setAttribute('data-pack', p.id);
+    var nm = document.createElement('span');
+    nm.className = 'pk-name';
+    nm.textContent = p.name || p.id;
+    var meta = document.createElement('span');
+    meta.className = 'pk-meta';
+    meta.textContent = (p.builtIn ? 'built-in \u00b7 ' : '') +
+      p.stages.length + ' stage' + (p.stages.length === 1 ? '' : 's') + ' \u00b7 ' + levelCount;
+    row.appendChild(nm);
+    row.appendChild(meta);
+    row.addEventListener('click', onPackRowClick);
+    wrap.appendChild(row);
+
+    if (!p.builtIn) {
+      var rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'pack-remove';
+      rm.setAttribute('data-pack', p.id);
+      rm.setAttribute('aria-label', 'Remove ' + (p.name || p.id));
+      rm.textContent = '\u2715';
+      rm.addEventListener('click', onPackRemoveClick);
+      wrap.appendChild(rm);
+    }
+    el.packsList.appendChild(wrap);
+  }
 }
 
-// `index` is -1 for a level that is not part of the campaign (test fixtures).
+function onPackRowClick(e) {
+  var id = e.currentTarget.getAttribute('data-pack');
+  var p = Packs.getPack(id);
+  if (!p) return;
+  selectPack(p);
+  el.packs.hidden = true;
+  buildMenu();
+}
+
+function onPackRemoveClick(e) {
+  var id = e.currentTarget.getAttribute('data-pack');
+  var p = Packs.getPack(id);
+  if (!p) return;
+  if (!window.confirm('Remove "' + (p.name || id) + '" and its progress?')) return;
+  Packs.removePack(id);
+  if (pack.id === id) selectPack(CAMPAIGN_PACK);
+  buildPackList();
+  buildMenu();
+}
+
+function openPacks() {
+  buildPackList();
+  el.packs.hidden = false;
+}
+
+function showImportMsg(text, ok) {
+  el.importMsg.textContent = text;
+  el.importMsg.className = 'import-msg' + (ok ? ' ok' : '');
+  el.importMsg.hidden = !text;
+}
+
+function doImport(text) {
+  var res = Packs.importPack(text);
+  if (!res.ok) {
+    showImportMsg('Could not import:\n\u2022 ' + res.errors.slice(0, 6).join('\n\u2022 '), false);
+    return;
+  }
+  var msg = 'Imported "' + (res.pack.name || res.pack.id) + '".';
+  if (res.warnings && res.warnings.length) msg += '\n' + res.warnings.join('\n');
+  showImportMsg(msg, true);
+  selectPack(res.pack);
+  buildMenu();
+  setTimeout(function () {
+    el.importOverlay.hidden = true;
+    el.packs.hidden = true;
+  }, res.warnings && res.warnings.length ? 2200 : 700);
+}
+
+// -------------------------------------------------------------- level load
+
+// Accepts an index into the current pack or a level id (searched in the current
+// pack first, then across every pack, switching to it if found).
+function openLevel(ref) {
+  if (typeof ref === 'number') { startLevel(entryAt(ref) && entryAt(ref).level, ref); return; }
+  if (typeof ref !== 'string') return;
+  var i = indexOfLevelId(ref);
+  if (i >= 0) { startLevel(packEntries[i].level, i); return; }
+  var all = Packs.listPacks();
+  for (var p = 0; p < all.length; p++) {
+    var entries = Packs.packLevels(all[p]);
+    for (var j = 0; j < entries.length; j++) {
+      if (entries[j].level.id !== ref) continue;
+      selectPack(all[p]);
+      startLevel(packEntries[j].level, j);
+      return;
+    }
+  }
+}
+
+// `index` is -1 for a level that is not part of a pack (test fixtures, and the
+// editor's Test mode).
 function startLevel(lv, index) {
   if (!lv) return;
   app.level = lv;
@@ -353,6 +527,8 @@ function startLevel(lv, index) {
   app.outcomeAt = -1;
   app.trails = { ship: [], byId: {} };
   app.planState = createState(lv, []);
+  app.waypointTotal = R.waypointCount(lv);
+  app.markers = [];
 
   progress.lastLevel = lv.id;
   saveProgress();
@@ -366,28 +542,103 @@ function startLevel(lv, index) {
 
   resize();
   enterPlan(true);
-  fireRadio('start');
+  fireTutorial('start');
 }
 
-// ------------------------------------------------------------------- radio
+// --------------------------------------------------------------- tutorial
+//
+// One pipeline for guidance. Modern levels carry `tutorial.steps`; older ones
+// carry `radio` (messages) and `hint` (a well ghost), which are folded into the
+// same step shape so everything downstream sees one list.
 
 var radioTimer = 0;
+var tutorialCache = { level: null, steps: null };
 
-function radioKey(levelId, when, index) { return levelId + ':' + when + ':' + index; }
+function tutorialSteps(lv) {
+  if (!lv) return [];
+  if (tutorialCache.level === lv) return tutorialCache.steps;
+  var steps = [];
+  if (lv.tutorial && Array.isArray(lv.tutorial.steps)) {
+    steps = lv.tutorial.steps.slice(0);
+  } else {
+    var radio = lv.radio || [];
+    for (var i = 0; i < radio.length; i++) {
+      steps.push({ when: radio[i].when, text: radio[i].text, once: radio[i].once });
+    }
+    if (lv.hint && lv.hint.well) {
+      // The old hint is a marker on the opening message, or its own start step.
+      var attached = false;
+      for (var j = 0; j < steps.length; j++) {
+        if (steps[j].when === 'start' && !steps[j].marker) {
+          steps[j] = {
+            when: 'start', text: steps[j].text, once: steps[j].once,
+            marker: { kind: 'well', x: lv.hint.well.x, y: lv.hint.well.y, charges: lv.hint.well.charges }
+          };
+          attached = true;
+          break;
+        }
+      }
+      if (!attached) {
+        steps.unshift({
+          when: 'start', text: '', once: false,
+          marker: { kind: 'well', x: lv.hint.well.x, y: lv.hint.well.y, charges: lv.hint.well.charges }
+        });
+      }
+    }
+  }
+  tutorialCache.level = lv;
+  tutorialCache.steps = steps;
+  return steps;
+}
 
-function fireRadio(when) {
+// A level is "guided" when it points at something, not merely when it talks.
+function hasGuidance(lv) {
+  if (!lv) return false;
+  if (lv.hint && lv.hint.well) return true;
+  var steps = tutorialSteps(lv);
+  for (var i = 0; i < steps.length; i++) {
+    if (steps[i] && steps[i].marker) return true;
+  }
+  return false;
+}
+
+function stepKey(levelId, when, index) { return levelId + ':' + when + ':' + index; }
+
+function fireTutorial(when) {
   var lv = app.level;
-  if (!lv || !lv.radio) return;
-  for (var i = 0; i < lv.radio.length; i++) {
-    var m = lv.radio[i];
-    if (m.when !== when) continue;
-    var key = radioKey(lv.id, when, i);
-    if (m.once && progress.radioSeen[key]) continue;
-    if (m.once) { progress.radioSeen[key] = true; saveProgress(); }
-    showRadio(m.text);
+  if (!lv) return;
+  var steps = tutorialSteps(lv);
+  for (var i = 0; i < steps.length; i++) {
+    var st = steps[i];
+    if (!st || st.when !== when) continue;
+    var key = stepKey(lv.id, when, i);
+    if (st.once && progress.radioSeen[key]) continue;
+    if (st.once) { progress.radioSeen[key] = true; saveProgress(); }
+    if (st.text) showRadio(st.text);
+    applyMarker(st.marker);
     return;
   }
 }
+
+function applyMarker(marker) {
+  clearUiMarkers();
+  if (!marker) return;
+  if (marker.kind === 'ui') {
+    var target = marker.target === 'reset' ? el.btnReset
+      : marker.target === 'charges' ? el.charges
+      : el.btnLaunch;
+    if (target) { target.classList.add('tut-target'); app.uiMarkerEl = target; }
+    return;
+  }
+  app.markers = [marker];
+}
+
+function clearUiMarkers() {
+  if (app.uiMarkerEl) { app.uiMarkerEl.classList.remove('tut-target'); app.uiMarkerEl = null; }
+}
+
+// World markers only make sense until the player has acted on them.
+function clearWorldMarkers() { app.markers = []; }
 
 function showRadio(text) {
   el.radioText.textContent = text;
@@ -415,12 +666,76 @@ function updateChargeReadout() {
   el.chargesUsed.textContent = String(used);
   if (used >= app.level.charges) el.charges.classList.add('full');
   else el.charges.classList.remove('full');
-  // Tutorial: once a well exists, draw attention to Launch.
-  if (app.level.hint && app.mode === 'plan' && app.wells.length > 0) {
+  // Tutorial: on guided levels, once a well exists, draw attention to Launch.
+  if (hasGuidance(app.level) && app.mode === 'plan' && app.wells.length > 0) {
     el.btnLaunch.classList.add('btn-attention');
   } else {
     el.btnLaunch.classList.remove('btn-attention');
   }
+}
+
+// ---- placement rules ------------------------------------------------------
+//
+// Fixed wells and repulsors also reserve MIN_WELL_DISTANCE, and dead/allowed
+// zones gate whole regions. The gestures enforce all of it live so the player
+// can never build a field that validateWells would later reject.
+
+function insideZone(fx, x, y) {
+  if (!fx) return false;
+  // The sim owns this test; only fall back when running against an older build.
+  if (Sim.pointInZone) return Sim.pointInZone(fx, x, y);
+  if (fx.shape === 'rect') {
+    return x >= fx.x && x <= fx.x + (fx.w || 0) && y >= fx.y && y <= fx.y + (fx.h || 0);
+  }
+  if (fx.shape === 'poly') {
+    var pts = fx.points || [];
+    if (pts.length < 3) return false;
+    var inside = false;
+    for (var i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      var yi = pts[i].y, yj = pts[j].y;
+      if ((yi > y) === (yj > y)) continue;
+      var xAt = pts[i].x + ((y - yi) / (yj - yi)) * (pts[j].x - pts[i].x);
+      if (x < xAt) inside = !inside;
+    }
+    return inside;
+  }
+  var dx = x - fx.x, dy = y - fx.y, r = fx.r || 0;
+  return (dx * dx + dy * dy) <= r * r;
+}
+
+// Fixtures that reserve space around themselves (designer wells, repulsors).
+function nearReservedFixture(x, y) {
+  var fixtures = (app.level && app.level.fixtures) || [];
+  for (var i = 0; i < fixtures.length; i++) {
+    var fx = fixtures[i];
+    if (!fx || (fx.type !== 'well' && fx.type !== 'repulsor')) continue;
+    var dx = x - fx.x, dy = y - fx.y;
+    if ((dx * dx + dy * dy) < MIN_WELL_DISTANCE * MIN_WELL_DISTANCE) return true;
+  }
+  return false;
+}
+
+// null when the point is placeable, otherwise the reason to show the player.
+function placementProblem(x, y, skipWellIndex) {
+  var fixtures = (app.level && app.level.fixtures) || [];
+  var i, fx;
+  for (i = 0; i < fixtures.length; i++) {
+    fx = fixtures[i];
+    if (fx && fx.type === 'deadZone' && insideZone(fx, x, y)) return "Can't place here";
+  }
+  var hasAllowed = false, inAllowed = false;
+  for (i = 0; i < fixtures.length; i++) {
+    fx = fixtures[i];
+    if (!fx || fx.type !== 'allowedZone') continue;
+    hasAllowed = true;
+    if (insideZone(fx, x, y)) { inAllowed = true; break; }
+  }
+  if (hasAllowed && !inAllowed) return 'Only inside the marked zones';
+  if (nearReservedFixture(x, y)) return 'Too close to a fixed well';
+  if (nearestWell(x, y, MIN_WELL_DISTANCE, skipWellIndex == null ? -1 : skipWellIndex) >= 0) {
+    return 'Wells must be ' + MIN_WELL_DISTANCE + ' units apart';
+  }
+  return null;
 }
 
 // Index of the nearest well within `dist` of (wx, wy), ignoring `skip`, else -1.
@@ -450,8 +765,11 @@ function handleTap(wx, wy, index) {
   } else {
     if (used >= lv.charges) { toast('No charges left'); return; }
     var p = clampToBounds({ x: wx, y: wy }, lv.bounds);
+    var problem = placementProblem(p.x, p.y, -1);
+    if (problem) { toast(problem); return; }
     app.wells.push({ x: p.x, y: p.y, charges: 1 });
-    if (app.wells.length === 1) fireRadio('firstWell');
+    clearWorldMarkers();
+    if (app.wells.length === 1) fireTutorial('firstWell');
   }
   markWellsChanged();
 }
@@ -475,9 +793,9 @@ function handleDragMove(index, wx, wy) {
   var w = app.wells[index];
   if (!w) return;
   var p = clampToBounds({ x: wx, y: wy }, app.level.bounds);
-  // Too close to a neighbour: hold the well where it was. It sticks at the
-  // boundary and tints red rather than nagging with a toast.
-  if (nearestWell(p.x, p.y, MIN_WELL_DISTANCE, index) >= 0) {
+  // Too close to a neighbour, inside a dead zone, or outside the allowed zones:
+  // hold the well where it was. It sticks and tints red rather than nagging.
+  if (placementProblem(p.x, p.y, index)) {
     app.dragBlocked = true;
     return;
   }
@@ -493,22 +811,49 @@ function handleDragEnd() {
 
 // ------------------------------------------------------- prediction / field
 
+// Every gravity source the field sees: designer wells, repulsors (negative
+// charges, so the same formula pushes), then the player's wells — the same
+// order createState() builds state.sources in.
+function fieldSources() {
+  var out = [];
+  var fixtures = (app.level && app.level.fixtures) || [];
+  var i, fx, n;
+  for (i = 0; i < fixtures.length; i++) {
+    fx = fixtures[i];
+    if (!fx || fx.type !== 'well') continue;
+    n = Math.max(1, Math.round(fx.charges || 1));
+    out.push({ x: fx.x, y: fx.y, charges: n, r: killRadius(n) });
+  }
+  for (i = 0; i < fixtures.length; i++) {
+    fx = fixtures[i];
+    if (!fx || fx.type !== 'repulsor') continue;
+    n = Math.max(1, Math.round(fx.charges || 1));
+    out.push({ x: fx.x, y: fx.y, charges: -n, r: 0 });
+  }
+  for (i = 0; i < app.wells.length; i++) {
+    out.push({ x: app.wells[i].x, y: app.wells[i].y, charges: app.wells[i].charges });
+  }
+  return out;
+}
+
 function recomputeArrows() {
   var lv = app.level;
   if (!lv) return;
+  var sources = fieldSources();
   var out = [];
-  var wells = app.wells;
   for (var y = ARROW_SPACING / 2; y < lv.bounds.h; y += ARROW_SPACING) {
     for (var x = ARROW_SPACING / 2; x < lv.bounds.w; x += ARROW_SPACING) {
       var skip = false;
-      for (var i = 0; i < wells.length; i++) {
-        var dx = x - wells[i].x, dy = y - wells[i].y;
-        var kr = killRadius(wells[i].charges) + 6;
+      for (var i = 0; i < sources.length; i++) {
+        // Inside a lethal core there is nothing to advise about. Repulsors have
+        // no core (r = 0), so they never blank out their own neighbourhood.
+        var kr = (sources[i].charges > 0 ? killRadius(sources[i].charges) : 0) + 6;
+        var dx = x - sources[i].x, dy = y - sources[i].y;
         if (dx * dx + dy * dy <= kr * kr) { skip = true; break; }
       }
       if (skip) continue;
-      var f = fieldAt(wells, x, y);
-      // Outside every well's reach the field is exactly zero; skipping those
+      var f = fieldAt(sources, x, y);
+      // Outside every source's reach the field is exactly zero; skipping those
       // samples is what makes the bounded field visible.
       if (f.ax === 0 && f.ay === 0) continue;
       out.push({ x: x, y: y, ax: f.ax, ay: f.ay });
@@ -570,8 +915,10 @@ function launch() {
   el.flightControls.hidden = false;
   el.closest.hidden = true;
   el.btnLaunch.classList.remove('btn-attention');
+  clearWorldMarkers();
+  clearUiMarkers();
   hideRadio();
-  fireRadio('launch');
+  fireTutorial('launch');
 }
 
 function abort() {
@@ -668,14 +1015,15 @@ function showResult() {
     el.resultBonus.hidden = true;
   }
 
-  el.btnNext.hidden = !win || nextRequiredIndex(app.levelIndex) < 0;
+  el.btnNext.hidden = !win || testMode.active || nextRequiredIndex(app.levelIndex) < 0;
 
   if (win) {
     progress.completed[app.level.id] = true;
     saveProgress();
   }
   el.result.hidden = false;
-  fireRadio(win ? 'win' : 'fail');
+  writeTestResult();
+  fireTutorial(win ? 'win' : 'fail');
 }
 
 // ------------------------------------------------------ solution clipboard
@@ -746,8 +1094,18 @@ function draw() {
   R.drawFieldArrows(ctx, view, app.arrows, { spacing: ARROW_SPACING });
   ctx.restore();
 
+  var passed = waypointsPassed(s);
+  R.drawLevelFixtures(ctx, view, lv, app.clock, {
+    flight: flying,
+    waypointsPassed: passed,
+    killRadiusFn: killRadius
+  });
   R.drawBodies(ctx, view, s.bodies, app.clock, s.ship);
-  R.drawTarget(ctx, view, lv.target, app.clock);
+  // A moving target lives on the state; fall back to the level's own position.
+  var targetNow = (s && s.target) ? s.target : lv.target;
+  R.drawTarget(ctx, view, targetNow, app.clock, {
+    dimmed: app.waypointTotal > 0 && passed < app.waypointTotal
+  });
 
   if (!flying) {
     drawPlanPreview(view, lv);
@@ -763,8 +1121,33 @@ function draw() {
     if (flying) R.drawOutOfBoundsMarker(ctx, view, s.ship, lv.bounds);
   }
 
-  if (!flying && lv.hint && lv.hint.well && app.wells.length === 0) {
-    R.drawHint(ctx, view, lv.hint.well, app.clock);
+  if (!flying) drawTutorialMarkers(view);
+}
+
+// How many waypoints the ship has cleared, as reported by the sim (0 for a sim
+// build that does not know about waypoints yet).
+function waypointsPassed(s) {
+  if (!s) return 0;
+  if (typeof s.waypointsPassed === 'number') return s.waypointsPassed;
+  if (typeof s.nextWaypoint === 'number') return Math.max(0, s.nextWaypoint - 1);
+  return 0;
+}
+
+// Tutorial markers placed in the world: a ghost well to copy, or a spot to look
+// at. 'ui' markers are a CSS class on a button instead and need no drawing.
+function drawTutorialMarkers(view) {
+  var markers = app.markers || [];
+  for (var i = 0; i < markers.length; i++) {
+    var m = markers[i];
+    if (!m) continue;
+    if (m.kind === 'well') {
+      if (app.wells.length > 0) continue; // already acted on
+      R.drawHint(ctx, view, m, app.clock);
+      R.drawWells(ctx, view, [{ x: m.x, y: m.y, charges: m.charges || 1 }], killRadius,
+        { selected: -1, dim: true });
+    } else if (m.kind === 'point') {
+      R.drawHint(ctx, view, m, app.clock);
+    }
   }
 }
 
@@ -794,6 +1177,11 @@ function drawPlanPreview(view, lv) {
       if (!Object.prototype.hasOwnProperty.call(pred.bodies, id)) continue;
       R.drawTrajectory(ctx, view, pred.bodies[id], { bright: false });
     }
+  }
+  // A patrolling target gets its own faint predicted track with time ticks, so
+  // the player can compare arrival times the same way as for any other mover.
+  if (pred.target && pred.target.length > 1) {
+    R.drawTrajectory(ctx, view, pred.target, { bright: false, color: R.COLORS.target });
   }
   var end = null;
   if (pred.outcome === 'win') end = 'ring';
@@ -897,10 +1285,37 @@ el.btnNext.addEventListener('click', function () {
 });
 el.radio.addEventListener('click', hideRadio);
 el.resetProgress.addEventListener('click', function () {
-  if (!window.confirm('Erase all progress?')) return;
+  if (!window.confirm('Erase progress for "' + (pack.name || pack.id) + '"?')) return;
   progress = { completed: {}, radioSeen: {}, lastLevel: null };
-  saveProgress();
+  Packs.saveProgress(pack.id, progress);
   buildMenu();
+});
+
+el.btnPacks.addEventListener('click', openPacks);
+el.btnPacksClose.addEventListener('click', function () { el.packs.hidden = true; });
+el.btnImportPack.addEventListener('click', function () {
+  el.importText.value = '';
+  showImportMsg('', false);
+  el.importOverlay.hidden = false;
+});
+el.btnImportCancel.addEventListener('click', function () { el.importOverlay.hidden = true; });
+el.btnImportGo.addEventListener('click', function () {
+  var text = (el.importText.value || '').trim();
+  if (!text) { showImportMsg('Paste some JSON first, or choose a file.', false); return; }
+  doImport(text);
+});
+el.btnImportFile.addEventListener('click', function () { el.importFile.click(); });
+el.importFile.addEventListener('change', function () {
+  var f = el.importFile.files && el.importFile.files[0];
+  if (!f) return;
+  var reader = new FileReader();
+  reader.onload = function () {
+    el.importText.value = String(reader.result || '');
+    doImport(el.importText.value);
+  };
+  reader.onerror = function () { showImportMsg('Could not read that file.', false); };
+  reader.readAsText(f);
+  el.importFile.value = '';
 });
 
 window.addEventListener('resize', resize);
@@ -947,18 +1362,52 @@ el.btnInstall.addEventListener('click', function () {
   if (deferred) deferred.prompt();
 });
 
-// Expose a tiny surface for the smoke test / debugging. Read-only in spirit.
+// Expose a tiny surface for the smoke tests / debugging. Read-only in spirit.
 window.GW = {
   get mode() { return app.mode; },
   get wells() { return app.wells; },
   get level() { return app.level; },
   get view() { return app.view; },
   get baseView() { return app.baseView; },
+  get pack() { return pack; },
+  get testMode() { return testMode.active; },
+  // Accepts an index into the current pack or a level id.
   openLevel: openLevel,
   // Load a level object directly, for tests and debugging.
-  loadLevel: function (lv) { startLevel(lv, -1); }
+  loadLevel: function (lv) { startLevel(lv, -1); },
+  selectPack: function (id) {
+    var p = Packs.getPack(id);
+    if (!p) return false;
+    selectPack(p);
+    buildMenu();
+    return true;
+  }
 };
 
-showMenu();
+// ------------------------------------------------------------------- boot
+
+readTestMode();
+
+if (testMode.active) {
+  // Editor hand-off: no menu, no progress, and a way back.
+  el.btnBackEditor.hidden = false;
+  el.btnMenu.hidden = true;
+  document.title = 'Gravity Well — test';
+  startLevel(testMode.level, -1);
+  if (testMode.wells && testMode.wells.length) {
+    var seeded = [];
+    for (var ti = 0; ti < testMode.wells.length; ti++) {
+      var tw = testMode.wells[ti];
+      if (tw && isFinite(tw.x) && isFinite(tw.y)) {
+        seeded.push({ x: tw.x, y: tw.y, charges: Math.max(1, Math.round(tw.charges || 1)) });
+      }
+    }
+    app.wells = seeded;
+    markWellsChanged();
+  }
+} else {
+  showMenu();
+}
+
 resize();
 startLoop();

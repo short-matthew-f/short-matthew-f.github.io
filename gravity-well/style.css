@@ -370,3 +370,72 @@ body { position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* ------------------------------------------------------- packs & editor */
+
+.pack-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  min-height: 48px;
+  padding: 0 14px;
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(16, 24, 44, 0.8);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.pack-bar:active { background: rgba(28, 40, 72, 0.9); }
+.pack-label {
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-dim); font-weight: 700;
+}
+.pack-name { flex: 1 1 auto; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pack-caret { color: var(--text-dim); }
+
+.packs-list { max-height: 46vh; overflow-y: auto; margin: 6px 0 2px; }
+.pack-row {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; min-height: 52px; margin-bottom: 8px; padding: 8px 12px;
+  border-radius: 12px; border: 1px solid var(--line);
+  background: rgba(16, 24, 44, 0.8); color: var(--text);
+  font-family: inherit; font-size: 15px; text-align: left; cursor: pointer;
+}
+.pack-row.current { border-color: rgba(79, 227, 208, 0.5); }
+.pack-row .pk-name { flex: 1 1 auto; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pack-row .pk-meta { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+.pack-remove {
+  min-width: 44px; min-height: 44px; border-radius: 10px;
+  border: 1px solid var(--line); background: transparent;
+  color: var(--bad); font-size: 18px; cursor: pointer;
+}
+
+.import-text {
+  width: 100%; margin-top: 10px; padding: 10px;
+  border-radius: 10px; border: 1px solid var(--line);
+  background: #060a16; color: var(--text);
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px;
+  resize: vertical;
+}
+.import-msg { margin: 10px 0 0; font-size: 12px; line-height: 1.45; color: var(--bad); white-space: pre-wrap; }
+.import-msg.ok { color: var(--good); }
+
+.stage-blurb {
+  margin: -4px 6px 10px;
+  font-size: 12px; line-height: 1.45; color: var(--text-dim);
+}
+
+.btn-small { min-height: 40px; min-width: 40px; padding: 0 10px; font-size: 13px; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center; }
+a.btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+
+.menu-foot { gap: 10px; flex-wrap: wrap; }
+
+/* tutorial: a UI element the current step is pointing at */
+.tut-target { animation: attention 1.2s ease-in-out infinite; }

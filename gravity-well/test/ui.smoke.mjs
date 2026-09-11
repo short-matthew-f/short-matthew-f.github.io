@@ -50,6 +50,32 @@ const SPACING_LEVEL = {
   fixtures: [], radio: [], hint: null, solution: []
 };
 
+// A tiny importable pack, used to exercise the pack picker end to end.
+const IMPORT_PACK = {
+  format: 'gw-pack-1',
+  physicsVersion: 'gw-2',
+  id: 'smoke-pack', name: 'Smoke Pack', author: 'tests', version: 1,
+  stages: [{
+    id: 'st1', title: 'Only Stage', blurb: 'one level',
+    levels: [{
+      id: 'sp-1', name: 'Imported One', bounds: { w: 900, h: 1200 },
+      charges: 2, stackLimit: 2, previewSeconds: 0, showBodyPreview: false,
+      ship: { x: 450, y: 1100, vx: 0, vy: -160 },
+      target: { x: 450, y: 120, r: 28 },
+      fixtures: [], radio: [], solution: []
+    }]
+  }]
+};
+
+// Handed to the page through localStorage the way the editor's Test button does.
+const TEST_MODE_LEVEL = {
+  id: 'editor-test', name: 'Editor Test', bounds: { w: 900, h: 1200 },
+  charges: 2, stackLimit: 2, previewSeconds: 6, showBodyPreview: false,
+  ship: { x: 450, y: 1100, vx: 0, vy: -160 },
+  target: { x: 450, y: 200, r: 28 },
+  fixtures: [], radio: [], solution: []
+};
+
 // Stage 4 adds manifest.webmanifest / icons; until then the 404 is expected and
 // is the only console noise we tolerate.
 const IGNORED_CONSOLE = [/manifest/i, /favicon/i];
@@ -159,8 +185,18 @@ async function runViewport(browser, vp, baseURL) {
   await page.goto(baseURL + '/gravity-well/', { waitUntil: 'load' });
   await page.waitForFunction(() => !!window.GW, null, { timeout: 10000 });
 
-  // Start from a clean slate so level 1 is the first unlocked row.
-  await page.evaluate(() => { try { localStorage.removeItem('gw.progress'); } catch (e) {} });
+  // Start from a clean slate so level 1 is the first unlocked row. Progress is
+  // per pack now (gw.progress.<packId>), plus the legacy key it migrates from.
+  await page.evaluate(() => {
+    try {
+      const doomed = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k === 'gw.progress' || k.indexOf('gw.progress.') === 0 || k === 'gw.packs')) doomed.push(k);
+      }
+      doomed.forEach((k) => localStorage.removeItem(k));
+    } catch (e) { /* private mode */ }
+  });
   await page.reload({ waitUntil: 'load' });
   await page.waitForFunction(() => !!window.GW, null, { timeout: 10000 });
 
@@ -249,6 +285,35 @@ async function runViewport(browser, vp, baseURL) {
   await page.waitForFunction(() => window.GW.mode === 'plan', null, { timeout: 5000 });
   assert((await charges(page)) === '1', 'Adjust returns to plan with wells intact');
 
+  // ---- packs: the menu groups by stage and can import / switch / remove
+  await page.click('#btn-menu');
+  await page.waitForFunction(() => window.GW.mode === 'menu', null, { timeout: 5000 });
+  assert(await page.evaluate(() => window.GW.pack.id) === 'campaign', 'the campaign pack is selected by default');
+  await page.click('#btn-packs');
+  await page.waitForSelector('#packs:not([hidden])', { timeout: 5000 });
+  assert(await page.locator('.pack-row').count() === 1, 'only the built-in pack is listed at first');
+
+  await page.click('#btn-import-pack');
+  await page.waitForSelector('#import:not([hidden])', { timeout: 5000 });
+  await page.evaluate((json) => {
+    document.getElementById('import-text').value = JSON.stringify(json);
+  }, IMPORT_PACK);
+  await page.click('#btn-import-go');
+  await page.waitForFunction(() => window.GW.pack.id === 'smoke-pack', null, { timeout: 5000 });
+  assert(true, 'importing a pack selects it');
+  assert((await page.textContent('#pack-name')).trim() === 'Smoke Pack', 'the menu shows the imported pack name');
+  assert(await page.locator('.level-row').count() === 1, 'the imported pack lists its one level');
+  await page.screenshot({ path: path.join(SHOT_DIR, 'gw-' + vp.name + '-packs.png') });
+
+  const backOk = await page.evaluate(() => window.GW.selectPack('campaign'));
+  assert(backOk === true, 'switching back to the campaign works');
+  assert(await page.locator('.level-row').count() > 1, 'the campaign levels are listed again');
+  const removed = await page.evaluate(() => {
+    const raw = localStorage.getItem('gw.packs');
+    return raw ? JSON.parse(raw).length : 0;
+  });
+  assert(removed === 1, 'the imported pack persists in gw.packs');
+
   // ---- well spacing: a tap inside the exclusion zone grows the nearest well
   await page.evaluate((lv) => window.GW.loadLevel(lv), SPACING_LEVEL);
   await page.waitForFunction(() => window.GW.mode === 'plan', null, { timeout: 5000 });
@@ -285,6 +350,40 @@ async function runViewport(browser, vp, baseURL) {
     baseScale.toFixed(3) + ' -> ' + zoomed.toFixed(3) + ')');
   assert(zoomed >= baseScale / 2.2 - 1e-6, 'zoom-out stays within the 2.2x cap');
   await page.screenshot({ path: path.join(SHOT_DIR, 'gw-' + vp.name + '-camera.png') });
+
+  // ---- editor test mode: ?test=1 plays a handed-over level, writes no progress
+  await page.evaluate((lv) => {
+    localStorage.setItem('gw.editor.testLevel', JSON.stringify(lv));
+    localStorage.setItem('gw.editor.testWells', JSON.stringify([{ x: 300, y: 700, charges: 1 }]));
+    localStorage.removeItem('gw.editor.lastTrail');
+  }, TEST_MODE_LEVEL);
+  await page.goto(baseURL + '/gravity-well/?test=1', { waitUntil: 'load' });
+  await page.waitForFunction(() => window.GW && window.GW.mode === 'plan', null, { timeout: 10000 });
+  assert(await page.evaluate(() => window.GW.testMode) === true, 'test mode is active with ?test=1');
+  assert(await page.evaluate(() => window.GW.level.id) === 'editor-test', 'test mode loads gw.editor.testLevel');
+  assert(await page.evaluate(() => window.GW.wells.length) === 1, 'test mode seeds gw.editor.testWells');
+  assert(await page.isVisible('#btn-back-editor'), 'test mode shows a Back to editor link');
+  assert((await page.getAttribute('#btn-back-editor', 'href')) === 'editor.html',
+    'Back to editor points at editor.html');
+
+  await page.click('#btn-launch');
+  await page.waitForFunction(() => window.GW.mode === 'flight', null, { timeout: 5000 });
+  await page.click('#btn-speed');
+  await page.waitForSelector('#result:not([hidden])', { timeout: 60000 });
+  const trail = await page.evaluate(() => {
+    const raw = localStorage.getItem('gw.editor.lastTrail');
+    return raw ? JSON.parse(raw) : null;
+  });
+  assert(!!trail && Array.isArray(trail.points) && trail.points.length > 1,
+    'the flight trail is written back to gw.editor.lastTrail');
+  assert(trail.levelId === 'editor-test' && !!trail.outcome, 'the trail records the level and outcome');
+  const wroteProgress = await page.evaluate(() => {
+    const raw = localStorage.getItem('gw.progress.campaign');
+    const p = raw ? JSON.parse(raw) : { completed: {} };
+    return !!(p.completed && p.completed['editor-test']);
+  });
+  assert(wroteProgress === false, 'test mode never writes progress');
+  await page.screenshot({ path: path.join(SHOT_DIR, 'gw-' + vp.name + '-testmode.png') });
 
   await context.close();
   if (problems.length) throw new Error(vp.name + ' had page problems:\n  - ' + problems.join('\n  - '));
