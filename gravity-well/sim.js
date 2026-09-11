@@ -118,6 +118,11 @@ const MIN_RETURN_SPEED = 1e-6;
 // apply; they are only given up on this far outside the board (or on drift).
 export const HUNTER_LEASH = 2000;
 
+// Two wells this close would act as one stacked well and quietly defeat the
+// level's stackLimit, so placement refuses it. run()/createState stay
+// permissive: validateWells is the gate.
+export const MIN_WELL_DISTANCE = 100;
+
 // Wormhole mouth radius (per-fixture `r` overrides), the per-(body, wormhole)
 // lockout after a jump, and how far outside the far mouth a body is placed.
 export const WORMHOLE_RADIUS = 26;
@@ -1047,5 +1052,22 @@ export function validateWells(level, wells) {
   if (total > budget) {
     return { ok: false, reason: 'budget', message: 'No charges left' };
   }
+
+  // Wells packed together behave as one bigger well; keep them apart so the
+  // stack limit means something.
+  for (let i = 0; i < list.length; i++) {
+    for (let j = i + 1; j < list.length; j++) {
+      const dx = list[i].x - list[j].x;
+      const dy = list[i].y - list[j].y;
+      if (dx * dx + dy * dy < MIN_WELL_DISTANCE * MIN_WELL_DISTANCE) {
+        return {
+          ok: false,
+          reason: 'spacing',
+          message: 'Wells must be at least ' + MIN_WELL_DISTANCE + ' units apart'
+        };
+      }
+    }
+  }
+
   return { ok: true, reason: null, message: null };
 }

@@ -10,6 +10,7 @@ import {
   SHIP_RADIUS,
   PREDICT_SAMPLE_DT,
   HUNTER_LEASH,
+  MIN_WELL_DISTANCE,
   WELL_REACH,
   WELL_TAPER,
   WORMHOLE_COOLDOWN,
@@ -411,6 +412,27 @@ test('validateWells enforces budget, stack limit and bounds', function () {
   // Corners are inside.
   assert.equal(validateWells(l, [{ x: 0, y: 0, charges: 1 }]).ok, true);
   assert.equal(validateWells(l, [{ x: 900, y: 1200, charges: 1 }]).ok, true);
+});
+
+test('validateWells keeps wells apart so they cannot fake a bigger stack', function () {
+  const l = level({ charges: 3, stackLimit: 1 });
+  assert.equal(MIN_WELL_DISTANCE, 100);
+
+  // Two singles 60 apart would pull like one 2-stack.
+  const tooClose = validateWells(l, [{ x: 400, y: 600, charges: 1 }, { x: 460, y: 600, charges: 1 }]);
+  assert.equal(tooClose.ok, false);
+  assert.equal(tooClose.reason, 'spacing');
+  assert.equal(tooClose.message, 'Wells must be at least 100 units apart');
+
+  // Exactly MIN_WELL_DISTANCE apart is allowed, on either axis and diagonally.
+  assert.equal(validateWells(l, [{ x: 400, y: 600, charges: 1 }, { x: 500, y: 600, charges: 1 }]).ok, true);
+  assert.equal(validateWells(l, [{ x: 400, y: 600, charges: 1 }, { x: 400, y: 500, charges: 1 }]).ok, true);
+  assert.equal(validateWells(l, [{ x: 400, y: 600, charges: 1 }, { x: 480, y: 680, charges: 1 }]).ok, true);
+  assert.equal(validateWells(l, [{ x: 400, y: 600, charges: 1 }, { x: 470, y: 670, charges: 1 }]).reason, 'spacing');
+
+  // The spacing check runs after the cheaper ones, and a single well is fine.
+  assert.equal(validateWells(l, [{ x: 400, y: 600, charges: 1 }]).ok, true);
+  assert.equal(validateWells(l, [{ x: 400, y: 600, charges: 2 }, { x: 430, y: 600, charges: 2 }]).reason, 'stack');
 });
 
 test('predict samples every 1/20 s and reports the closest approach', function () {
